@@ -1,5 +1,6 @@
 package com.househost.booking.controller;
 
+import com.househost.booking.dto.BookingFormCreateRequestDTO;
 import com.househost.booking.dto.BookingRequestDTO;
 import com.househost.booking.service.BookingService;
 import com.househost.shared.dto.ResponseDTO;
@@ -27,6 +28,11 @@ public class BookingController {
     @PostMapping
     public ResponseDTO create(@RequestBody BookingRequestDTO request) {
         return bookingService.create(request);
+    }
+
+    @PostMapping("/form")
+    public ResponseDTO createFromForm(@RequestBody BookingFormCreateRequestDTO request) {
+        return bookingService.createFromForm(request);
     }
 
     @GetMapping

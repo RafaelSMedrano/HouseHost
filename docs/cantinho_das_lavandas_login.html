@@ -1,0 +1,902 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cantinho das Lavandas — Acesso</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,600&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --lav:        #7C6B9E;
+    --lav-light:  #C4B5DC;
+    --lav-pale:   #F0EBF8;
+    --lav-dark:   #4A3D6B;
+    --lav-mid:    #5C4E83;
+    --sage:       #6B9470;
+    --sage-light: #B8D4BA;
+    --sage-pale:  #EBF4EC;
+    --cream:      #F7F4EF;
+    --warm:       #FDFBF8;
+    --text:       #2C2438;
+    --text-mid:   #6B5F7A;
+    --text-light: #9B90A8;
+    --border:     #E4DDEF;
+    --border-mid: #CEC4E0;
+    --amber:      #C08030;
+    --amber-pale: #FDF0DC;
+  }
+
+  html, body {
+    height: 100%;
+    font-family: 'DM Sans', sans-serif;
+    background: var(--cream);
+    color: var(--text);
+  }
+
+  /* ── LAYOUT ── */
+  .login-wrap {
+    min-height: 100vh;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+  }
+
+  /* ── LEFT PANEL — ilustração/brand ── */
+  .left {
+    background: var(--lav-dark);
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    padding: 48px 52px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  /* Círculos decorativos de fundo */
+  .left::before {
+    content: '';
+    position: absolute;
+    width: 520px; height: 520px;
+    border-radius: 50%;
+    border: 1px solid rgba(255,255,255,0.06);
+    top: -120px; right: -160px;
+    pointer-events: none;
+  }
+  .left::after {
+    content: '';
+    position: absolute;
+    width: 340px; height: 340px;
+    border-radius: 50%;
+    border: 1px solid rgba(255,255,255,0.06);
+    bottom: -80px; left: -80px;
+    pointer-events: none;
+  }
+
+  /* Círculo grande preenchido (atmosfera) */
+  .deco-circle {
+    position: absolute;
+    border-radius: 50%;
+    pointer-events: none;
+  }
+  .deco-c1 {
+    width: 380px; height: 380px;
+    background: rgba(196,181,220,0.06);
+    top: 50%; right: -120px;
+    transform: translateY(-50%);
+  }
+  .deco-c2 {
+    width: 200px; height: 200px;
+    background: rgba(107,148,112,0.08);
+    bottom: 80px; left: 60px;
+  }
+  .deco-c3 {
+    width: 120px; height: 120px;
+    background: rgba(255,255,255,0.04);
+    top: 120px; left: 200px;
+  }
+
+  /* Brand no topo */
+  .left-brand {
+    position: relative; z-index: 2;
+    display: flex; align-items: center; gap: 14px;
+  }
+  .brand-badge {
+    width: 44px; height: 44px; border-radius: 12px;
+    background: rgba(255,255,255,0.12);
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+  }
+  .brand-badge svg { opacity: 0.9; }
+  .brand-text {}
+  .brand-name {
+    font-family: 'Cormorant Garamond', serif;
+    color: #fff; font-size: 17px; font-weight: 600; line-height: 1.2;
+  }
+  .brand-loc {
+    color: rgba(255,255,255,0.40); font-size: 10px;
+    letter-spacing: 0.12em; text-transform: uppercase; margin-top: 2px;
+  }
+
+  /* Ilustração central */
+  .left-center {
+    position: relative; z-index: 2;
+    display: flex; flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .illus-tag {
+    display: inline-flex; align-items: center; gap: 7px;
+    background: rgba(255,255,255,0.08);
+    border: 1px solid rgba(255,255,255,0.12);
+    border-radius: 20px;
+    padding: 6px 14px;
+    font-size: 11px; letter-spacing: 0.08em;
+    color: rgba(255,255,255,0.55);
+    text-transform: uppercase;
+    margin-bottom: 24px;
+  }
+  .illus-tag i { font-size: 13px; }
+
+  .left-headline {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 46px; font-weight: 600;
+    color: #fff; line-height: 1.1;
+    letter-spacing: -0.01em;
+    margin-bottom: 18px;
+  }
+  .left-headline em {
+    font-style: italic;
+    color: var(--lav-light);
+  }
+
+  .left-desc {
+    font-size: 14px; font-weight: 300;
+    color: rgba(255,255,255,0.50);
+    line-height: 1.7;
+    max-width: 360px;
+    margin-bottom: 40px;
+  }
+
+  /* Métricas rápidas no painel esquerdo */
+  .left-stats {
+    display: flex; gap: 0;
+    border: 1px solid rgba(255,255,255,0.10);
+    border-radius: 12px;
+    overflow: hidden;
+    max-width: 380px;
+  }
+  .stat {
+    flex: 1;
+    padding: 16px 20px;
+    border-right: 1px solid rgba(255,255,255,0.08);
+  }
+  .stat:last-child { border-right: none; }
+  .stat-val {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 28px; font-weight: 600;
+    color: #fff; line-height: 1;
+    margin-bottom: 4px;
+  }
+  .stat-label {
+    font-size: 10px; letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: rgba(255,255,255,0.35);
+  }
+
+  /* Rodapé esquerdo */
+  .left-footer {
+    position: relative; z-index: 2;
+    font-size: 11px; color: rgba(255,255,255,0.22);
+    letter-spacing: 0.04em;
+  }
+
+  /* Flores decorativas SVG */
+  .flowers {
+    position: absolute;
+    bottom: 160px; right: 40px;
+    z-index: 1; opacity: 0.18;
+    pointer-events: none;
+  }
+
+  /* ── RIGHT PANEL — formulário ── */
+  .right {
+    background: var(--warm);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 60px 72px;
+    position: relative;
+  }
+
+  .right-inner {
+    width: 100%;
+    max-width: 380px;
+  }
+
+  /* Ornamento sutil no topo */
+  .right::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0; height: 3px;
+    background: linear-gradient(90deg, transparent, var(--lav-light), transparent);
+    opacity: 0.4;
+  }
+
+  .form-header { margin-bottom: 36px; }
+  .form-eyebrow {
+    font-size: 10px; letter-spacing: 0.14em;
+    text-transform: uppercase; color: var(--text-light);
+    margin-bottom: 10px;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .form-eyebrow::before {
+    content: '';
+    display: inline-block;
+    width: 20px; height: 1px;
+    background: var(--border-mid);
+  }
+
+  .form-title {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 34px; font-weight: 600;
+    color: var(--text); line-height: 1.1;
+    letter-spacing: -0.01em;
+    margin-bottom: 8px;
+  }
+  .form-title em { font-style: italic; color: var(--text-mid); }
+
+  .form-sub {
+    font-size: 13px; color: var(--text-light);
+    font-weight: 300; line-height: 1.6;
+  }
+
+  /* Campos */
+  .field { margin-bottom: 18px; }
+  .field-label {
+    display: block;
+    font-size: 11px; font-weight: 500;
+    letter-spacing: 0.07em; text-transform: uppercase;
+    color: var(--text-mid);
+    margin-bottom: 8px;
+  }
+
+  .input-wrap {
+    position: relative;
+  }
+  .input-wrap i {
+    position: absolute;
+    left: 14px; top: 50%; transform: translateY(-50%);
+    font-size: 16px; color: var(--text-light);
+    pointer-events: none;
+    transition: color 0.2s;
+  }
+
+  .field-input {
+    width: 100%;
+    background: var(--warm);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 12px 14px 12px 42px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px; font-weight: 400;
+    color: var(--text);
+    outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s, background 0.2s;
+    -webkit-appearance: none;
+  }
+  .field-input::placeholder { color: var(--text-light); font-weight: 300; }
+  .field-input:focus {
+    border-color: var(--lav);
+    background: #fff;
+    box-shadow: 0 0 0 3px rgba(124,107,158,0.10);
+  }
+  .field-input:focus + i,
+  .input-wrap:has(.field-input:focus) i { color: var(--lav); }
+
+  /* Ícone dentro do input – ajuste para o ícone ficar antes */
+  .input-wrap .field-input { order: 2; }
+  .input-wrap i { order: 1; }
+
+  /* Toggle senha */
+  .toggle-pass {
+    position: absolute;
+    right: 14px; top: 50%; transform: translateY(-50%);
+    font-size: 16px; color: var(--text-light);
+    cursor: pointer; transition: color 0.2s;
+    background: none; border: none; padding: 0;
+    display: flex; align-items: center;
+  }
+  .toggle-pass:hover { color: var(--lav); }
+
+  /* Linha entre label e esqueci */
+  .field-meta {
+    display: flex; justify-content: space-between; align-items: center;
+    margin-bottom: 8px;
+  }
+  .forgot {
+    font-size: 12px; color: var(--lav);
+    text-decoration: none; font-weight: 400;
+    transition: color 0.2s;
+  }
+  .forgot:hover { color: var(--lav-dark); }
+
+  /* Lembrar */
+  .remember {
+    display: flex; align-items: center; gap: 9px;
+    margin-bottom: 28px; cursor: pointer;
+  }
+  .remember input[type="checkbox"] { display: none; }
+  .check-box {
+    width: 18px; height: 18px; border-radius: 5px;
+    border: 1.5px solid var(--border-mid);
+    background: var(--warm);
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0; transition: all 0.2s;
+  }
+  .remember input:checked ~ .check-box {
+    background: var(--lav); border-color: var(--lav);
+  }
+  .remember input:checked ~ .check-box::after {
+    content: '';
+    width: 10px; height: 6px;
+    border-left: 2px solid #fff;
+    border-bottom: 2px solid #fff;
+    transform: rotate(-45deg) translateY(-1px);
+    display: block;
+  }
+  .remember-label {
+    font-size: 13px; color: var(--text-mid); font-weight: 400;
+    user-select: none;
+  }
+
+  /* Botão principal */
+  .btn-login {
+    width: 100%;
+    background: var(--lav-dark);
+    color: #fff;
+    border: none;
+    border-radius: 10px;
+    padding: 14px 20px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px; font-weight: 500;
+    letter-spacing: 0.02em;
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+    transition: background 0.2s, transform 0.15s, box-shadow 0.2s;
+    margin-bottom: 20px;
+    box-shadow: 0 4px 16px rgba(74,61,107,0.25);
+  }
+  .btn-login:hover {
+    background: var(--lav-mid);
+    transform: translateY(-1px);
+    box-shadow: 0 6px 20px rgba(74,61,107,0.3);
+  }
+  .btn-login:active { transform: none; }
+  .btn-login i { font-size: 18px; }
+
+  /* Divisor */
+  .divider {
+    display: flex; align-items: center; gap: 14px;
+    margin-bottom: 20px;
+  }
+  .divider-line { flex: 1; height: 1px; background: var(--border); }
+  .divider-text {
+    font-size: 11px; color: var(--text-light);
+    letter-spacing: 0.06em; text-transform: uppercase;
+    white-space: nowrap;
+  }
+
+  /* Perfis rápidos */
+  .quick-label {
+    font-size: 11px; color: var(--text-light);
+    text-align: center; margin-bottom: 12px;
+    letter-spacing: 0.04em;
+  }
+  .profiles {
+    display: grid; grid-template-columns: repeat(3, 1fr);
+    gap: 8px; margin-bottom: 32px;
+  }
+  .profile-btn {
+    display: flex; flex-direction: column; align-items: center; gap: 6px;
+    padding: 12px 8px;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    background: transparent;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-family: 'DM Sans', sans-serif;
+  }
+  .profile-btn:hover {
+    border-color: var(--lav-light);
+    background: var(--lav-pale);
+    transform: translateY(-1px);
+  }
+  .profile-avatar {
+    width: 34px; height: 34px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 12px; font-weight: 600; color: #fff;
+    flex-shrink: 0;
+  }
+  .av-a { background: var(--lav); }
+  .av-b { background: var(--sage); }
+  .av-c { background: var(--amber); }
+
+  .profile-name {
+    font-size: 11px; font-weight: 500;
+    color: var(--text-mid); text-align: center;
+    line-height: 1.2;
+  }
+  .profile-role {
+    font-size: 10px; color: var(--text-light);
+    text-align: center;
+  }
+
+  /* Footer direito */
+  .right-footer {
+    text-align: center;
+    font-size: 11px; color: var(--text-light);
+    letter-spacing: 0.03em;
+    border-top: 1px solid var(--border);
+    padding-top: 24px;
+    margin-top: 4px;
+  }
+  .right-footer a { color: var(--lav); text-decoration: none; }
+  .right-footer a:hover { color: var(--lav-dark); }
+
+  /* ── ALERTA DE ERRO ── */
+  .alert {
+    display: flex; align-items: flex-start; gap: 10px;
+    background: #FAE8EC; border: 1px solid #E8A8B6;
+    border-radius: 9px; padding: 12px 14px;
+    margin-bottom: 18px;
+    font-size: 13px; color: #8C3048;
+    line-height: 1.5;
+  }
+  .alert i { font-size: 16px; flex-shrink: 0; margin-top: 1px; }
+  .alert.hidden { display: none; }
+
+  /* ── ANIMAÇÕES ── */
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(16px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  .right-inner {
+    animation: fadeUp 0.5s ease both;
+  }
+  .left-center {
+    animation: fadeUp 0.6s ease 0.1s both;
+  }
+
+  /* ── MOBILE HEADER (só aparece no mobile) ── */
+  .mobile-header { display: none; }
+
+  /* ── RESPONSIVE ── */
+  @media (max-width: 860px) {
+    .login-wrap {
+      grid-template-columns: 1fr;
+      grid-template-rows: auto 1fr;
+    }
+
+    /* Esconde painel esquerdo completo */
+    .left { display: none; }
+
+    /* Mostra header mobile no topo do painel direito */
+    .mobile-header {
+      display: block;
+      background: var(--lav-dark);
+      padding: 24px 28px 20px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    /* Círculo decorativo de fundo */
+    .mobile-header::after {
+      content: '';
+      position: absolute;
+      width: 280px; height: 280px;
+      border-radius: 50%;
+      border: 1px solid rgba(255,255,255,0.06);
+      top: -100px; right: -80px;
+      pointer-events: none;
+    }
+
+    .mh-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 20px;
+      position: relative; z-index: 2;
+    }
+
+    .mh-brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .mh-badge {
+      width: 38px; height: 38px;
+      border-radius: 10px;
+      background: rgba(255,255,255,0.12);
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .mh-name {
+      font-family: 'Cormorant Garamond', serif;
+      color: #fff;
+      font-size: 18px;
+      font-weight: 600;
+      line-height: 1.15;
+    }
+
+    .mh-sub {
+      font-size: 10px;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: rgba(255,255,255,0.38);
+      margin-top: 2px;
+    }
+
+    .mh-tag {
+      display: inline-flex; align-items: center; gap: 5px;
+      background: rgba(255,255,255,0.08);
+      border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 20px;
+      padding: 5px 11px;
+      font-size: 10px;
+      letter-spacing: 0.07em;
+      color: rgba(255,255,255,0.5);
+      text-transform: uppercase;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+    .mh-tag i { font-size: 12px; }
+
+    /* Métricas horizontais */
+    .mh-stats {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 0;
+      border: 1px solid rgba(255,255,255,0.10);
+      border-radius: 10px;
+      overflow: hidden;
+      position: relative; z-index: 2;
+    }
+
+    .mh-stat {
+      padding: 12px 16px;
+      border-right: 1px solid rgba(255,255,255,0.08);
+    }
+    .mh-stat:last-child { border-right: none; }
+
+    .mh-stat-val {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 24px; font-weight: 600;
+      color: #fff; line-height: 1;
+      margin-bottom: 3px;
+    }
+
+    .mh-stat-label {
+      font-size: 9px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: rgba(255,255,255,0.35);
+    }
+
+    /* Flores mini no canto */
+    .mh-flowers {
+      position: absolute;
+      bottom: 0; right: 20px;
+      opacity: 0.12;
+      pointer-events: none;
+      z-index: 1;
+    }
+
+    .right {
+      padding: 36px 28px 48px;
+      justify-content: flex-start;
+    }
+
+    /* Remove ornamento de linha do topo no mobile
+       (já vem do header colorido) */
+    .right::before { display: none; }
+
+    .right-inner { max-width: 100%; }
+
+    .form-header { margin-bottom: 28px; }
+    .form-title { font-size: 28px; }
+  }
+
+  @media (max-width: 400px) {
+    .mobile-header { padding: 20px 20px 18px; }
+    .mh-name { font-size: 16px; }
+    .mh-tag { display: none; }
+    .right { padding: 28px 20px 40px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="login-wrap">
+
+  <!-- ── PAINEL ESQUERDO ── -->
+  <div class="left">
+    <div class="deco-circle deco-c1"></div>
+    <div class="deco-circle deco-c2"></div>
+    <div class="deco-circle deco-c3"></div>
+
+    <!-- Flores SVG decorativas -->
+    <svg class="flowers" width="180" height="220" viewBox="0 0 180 220" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <!-- hastes -->
+      <path d="M90 220 Q88 180 86 140 Q84 100 88 60" stroke="white" stroke-width="1.5" stroke-linecap="round" fill="none"/>
+      <path d="M90 220 Q95 185 100 150 Q105 120 98 85" stroke="white" stroke-width="1.5" stroke-linecap="round" fill="none"/>
+      <path d="M90 220 Q80 195 70 165 Q62 138 68 105" stroke="white" stroke-width="1.5" stroke-linecap="round" fill="none"/>
+      <!-- flores lavanda (esquerda) -->
+      <ellipse cx="68" cy="100" rx="4" ry="8" fill="white" transform="rotate(-15 68 100)"/>
+      <ellipse cx="62" cy="108" rx="4" ry="8" fill="white" transform="rotate(-10 62 108)"/>
+      <ellipse cx="74" cy="92" rx="3.5" ry="7" fill="white" transform="rotate(-20 74 92)"/>
+      <!-- flores lavanda (centro) -->
+      <ellipse cx="88" cy="55" rx="4" ry="9" fill="white" transform="rotate(5 88 55)"/>
+      <ellipse cx="82" cy="63" rx="4" ry="8" fill="white" transform="rotate(0 82 63)"/>
+      <ellipse cx="94" cy="47" rx="3.5" ry="8" fill="white" transform="rotate(10 94 47)"/>
+      <!-- flores lavanda (direita) -->
+      <ellipse cx="98" cy="80" rx="4" ry="8" fill="white" transform="rotate(15 98 80)"/>
+      <ellipse cx="104" cy="90" rx="4" ry="8" fill="white" transform="rotate(18 104 90)"/>
+      <ellipse cx="92" cy="72" rx="3.5" ry="7" fill="white" transform="rotate(10 92 72)"/>
+      <!-- folhas -->
+      <path d="M80 140 Q68 130 65 118" stroke="white" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+      <path d="M95 155 Q108 148 112 135" stroke="white" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+      <path d="M85 175 Q74 168 72 158" stroke="white" stroke-width="1.2" fill="none" stroke-linecap="round"/>
+    </svg>
+
+    <!-- Brand -->
+    <div class="left-brand">
+      <div class="brand-badge">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 2C8 2 5 6 5 10c0 5 7 12 7 12s7-7 7-12c0-4-3-8-7-8z"/>
+          <circle cx="12" cy="10" r="2.5"/>
+        </svg>
+      </div>
+      <div class="brand-text">
+        <div class="brand-name">Cantinho das Lavandas</div>
+        <div class="brand-loc">Pousada & Hospedagem</div>
+      </div>
+    </div>
+
+    <!-- Centro -->
+    <div class="left-center">
+      <div class="illus-tag">
+        <i class="ti ti-lock-open"></i>
+        Sistema de Gestão
+      </div>
+      <h2 class="left-headline">
+        Bem-vindo<br>de <em>volta.</em>
+      </h2>
+      <p class="left-desc">
+        Gerencie reservas, quartos e hóspedes do Cantinho das Lavandas em um só lugar. Tudo que você precisa, ao alcance de um clique.
+      </p>
+
+      <!-- Métricas -->
+      <div class="left-stats">
+        <div class="stat">
+          <div class="stat-val">7</div>
+          <div class="stat-label">Ocupados</div>
+        </div>
+        <div class="stat">
+          <div class="stat-val">3</div>
+          <div class="stat-label">Livres</div>
+        </div>
+        <div class="stat">
+          <div class="stat-val">4</div>
+          <div class="stat-label">Check-ins</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Rodapé -->
+    <div class="left-footer">
+      © 2025 Cantinho das Lavandas · Todos os direitos reservados
+    </div>
+  </div>
+
+  <!-- ── PAINEL DIREITO ── -->
+  <div class="right">
+
+    <!-- Header mobile (visível apenas abaixo de 860px) -->
+    <div class="mobile-header">
+      <div class="mh-top">
+        <div class="mh-brand">
+          <div class="mh-badge">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M12 2C8 2 5 6 5 10c0 5 7 12 7 12s7-7 7-12c0-4-3-8-7-8z"/>
+              <circle cx="12" cy="10" r="2.5"/>
+            </svg>
+          </div>
+          <div>
+            <div class="mh-name">Cantinho das Lavandas</div>
+            <div class="mh-sub">Pousada & Hospedagem</div>
+          </div>
+        </div>
+        <div class="mh-tag"><i class="ti ti-lock-open"></i> Gestão</div>
+      </div>
+      <div class="mh-stats">
+        <div class="mh-stat"><div class="mh-stat-val">7</div><div class="mh-stat-label">Ocupados</div></div>
+        <div class="mh-stat"><div class="mh-stat-val">3</div><div class="mh-stat-label">Livres</div></div>
+        <div class="mh-stat"><div class="mh-stat-val">4</div><div class="mh-stat-label">Check-ins</div></div>
+      </div>
+      <svg class="mh-flowers" width="80" height="100" viewBox="0 0 180 220" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M90 220 Q88 180 86 140 Q84 100 88 60" stroke="white" stroke-width="1.5" stroke-linecap="round" fill="none"/>
+        <path d="M90 220 Q95 185 100 150 Q105 120 98 85" stroke="white" stroke-width="1.5" stroke-linecap="round" fill="none"/>
+        <path d="M90 220 Q80 195 70 165 Q62 138 68 105" stroke="white" stroke-width="1.5" stroke-linecap="round" fill="none"/>
+        <ellipse cx="68" cy="100" rx="4" ry="8" fill="white" transform="rotate(-15 68 100)"/>
+        <ellipse cx="62" cy="108" rx="4" ry="8" fill="white" transform="rotate(-10 62 108)"/>
+        <ellipse cx="88" cy="55" rx="4" ry="9" fill="white" transform="rotate(5 88 55)"/>
+        <ellipse cx="82" cy="63" rx="4" ry="8" fill="white" transform="rotate(0 82 63)"/>
+        <ellipse cx="98" cy="80" rx="4" ry="8" fill="white" transform="rotate(15 98 80)"/>
+        <ellipse cx="104" cy="90" rx="4" ry="8" fill="white" transform="rotate(18 104 90)"/>
+      </svg>
+    </div>
+
+    <div class="right-inner">
+
+      <div class="form-header">
+        <div class="form-eyebrow">Acesso restrito</div>
+        <h1 class="form-title">Entre na<br><em>sua conta</em></h1>
+        <p class="form-sub">Utilize suas credenciais de acesso ao painel de gestão.</p>
+      </div>
+
+      <!-- Alerta de erro (oculto por padrão) -->
+      <div class="alert hidden" id="alert">
+        <i class="ti ti-alert-circle"></i>
+        <span>E-mail ou senha incorretos. Verifique suas credenciais e tente novamente.</span>
+      </div>
+
+      <!-- Formulário -->
+      <form id="loginForm" onsubmit="handleLogin(event)">
+
+        <div class="field">
+          <label class="field-label">E-mail</label>
+          <div class="input-wrap">
+            <i class="ti ti-mail"></i>
+            <input
+              class="field-input"
+              type="email"
+              id="email"
+              placeholder="seu@email.com"
+              autocomplete="email"
+              required
+            >
+          </div>
+        </div>
+
+        <div class="field">
+          <div class="field-meta">
+            <label class="field-label" style="margin:0" for="password">Senha</label>
+            <a href="#" class="forgot">Esqueci minha senha</a>
+          </div>
+          <div class="input-wrap">
+            <i class="ti ti-lock"></i>
+            <input
+              class="field-input"
+              type="password"
+              id="password"
+              placeholder="••••••••"
+              autocomplete="current-password"
+              required
+            >
+            <button type="button" class="toggle-pass" onclick="togglePass()" id="toggleBtn">
+              <i class="ti ti-eye" id="eyeIcon"></i>
+            </button>
+          </div>
+        </div>
+
+        <label class="remember">
+          <input type="checkbox" id="remember">
+          <div class="check-box"></div>
+          <span class="remember-label">Manter-me conectado</span>
+        </label>
+
+        <button type="submit" class="btn-login" id="loginBtn">
+          <i class="ti ti-login"></i>
+          Entrar no painel
+        </button>
+
+      </form>
+
+      <!-- Acesso rápido por perfil -->
+      <div class="divider">
+        <div class="divider-line"></div>
+        <span class="divider-text">ou acesse como</span>
+        <div class="divider-line"></div>
+      </div>
+
+      <div class="profiles">
+        <button class="profile-btn" onclick="quickLogin('Ana Lima','admin@cantinho.com')">
+          <div class="profile-avatar av-a">AL</div>
+          <div class="profile-name">Ana Lima</div>
+          <div class="profile-role">Gerente</div>
+        </button>
+        <button class="profile-btn" onclick="quickLogin('Carlos R.','recep@cantinho.com')">
+          <div class="profile-avatar av-b">CR</div>
+          <div class="profile-name">Carlos R.</div>
+          <div class="profile-role">Recepção</div>
+        </button>
+        <button class="profile-btn" onclick="quickLogin('Marta F.','limpeza@cantinho.com')">
+          <div class="profile-avatar av-c">MF</div>
+          <div class="profile-name">Marta F.</div>
+          <div class="profile-role">Governança</div>
+        </button>
+      </div>
+
+      <div class="right-footer">
+        Precisa de acesso? <a href="#">Solicitar ao administrador</a>
+      </div>
+
+    </div>
+  </div>
+
+</div>
+
+<script>
+  // Toggle senha
+  function togglePass() {
+    const input = document.getElementById('password');
+    const icon  = document.getElementById('eyeIcon');
+    if (input.type === 'password') {
+      input.type = 'text';
+      icon.className = 'ti ti-eye-off';
+    } else {
+      input.type = 'password';
+      icon.className = 'ti ti-eye';
+    }
+  }
+
+  // Login simulado
+  function handleLogin(e) {
+    e.preventDefault();
+    const btn   = document.getElementById('loginBtn');
+    const alert = document.getElementById('alert');
+    const email = document.getElementById('email').value;
+    const pass  = document.getElementById('password').value;
+
+    // Estado de carregando
+    btn.innerHTML = '<i class="ti ti-loader-2" style="animation:spin .7s linear infinite"></i> Verificando...';
+    btn.disabled = true;
+    alert.classList.add('hidden');
+
+    setTimeout(() => {
+      // Credenciais demo
+      if (email === 'admin@cantinho.com' && pass === '123456') {
+        btn.innerHTML = '<i class="ti ti-check"></i> Acesso liberado!';
+        btn.style.background = 'var(--sage)';
+      } else {
+        btn.innerHTML = '<i class="ti ti-login"></i> Entrar no painel';
+        btn.disabled = false;
+        btn.style.background = '';
+        alert.classList.remove('hidden');
+      }
+    }, 1200);
+  }
+
+  // Acesso rápido por perfil
+  function quickLogin(name, email) {
+    document.getElementById('email').value = email;
+    document.getElementById('password').value = '123456';
+    document.getElementById('email').dispatchEvent(new Event('input'));
+    document.getElementById('password').dispatchEvent(new Event('input'));
+    // Foco no botão
+    document.getElementById('loginBtn').focus();
+  }
+
+  // Animação do spinner via CSS
+  const style = document.createElement('style');
+  style.textContent = '@keyframes spin { to { transform: rotate(360deg); } }';
+  document.head.appendChild(style);
+</script>
+</body>
+</html>

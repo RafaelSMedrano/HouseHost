@@ -1,0 +1,687 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cantinho das Lavandas — Hóspedes</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,600&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --lav:        #7C6B9E;
+    --lav-light:  #C4B5DC;
+    --lav-pale:   #F0EBF8;
+    --lav-dark:   #4A3D6B;
+    --lav-mid:    #5C4E83;
+    --sage:       #6B9470;
+    --sage-light: #B8D4BA;
+    --sage-pale:  #EBF4EC;
+    --cream:      #F7F4EF;
+    --warm:       #FDFBF8;
+    --text:       #2C2438;
+    --text-mid:   #6B5F7A;
+    --text-light: #9B90A8;
+    --border:     #E4DDEF;
+    --border-mid: #CEC4E0;
+    --amber:      #C08030;
+    --amber-pale: #FDF0DC;
+    --rose:       #A05070;
+    --rose-pale:  #F8ECF0;
+    --panel-w:    400px;
+  }
+
+  html { scroll-behavior: smooth; }
+  body { font-family: 'DM Sans', sans-serif; background: var(--cream); color: var(--text); min-height: 100vh; -webkit-font-smoothing: antialiased; }
+  .shell { display: flex; min-height: 100vh; }
+
+  /* ── SIDENAV ── */
+  .sidenav { width: 220px; flex-shrink: 0; background: var(--warm); border-right: 1px solid var(--border); display: flex; flex-direction: column; position: fixed; top: 0; left: 0; bottom: 0; z-index: 30; }
+  .sidenav-brand { padding: 22px 20px 18px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 10px; }
+  .brand-badge { width: 32px; height: 32px; border-radius: 9px; background: var(--lav-dark); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  .brand-name  { font-family: 'Cormorant Garamond', serif; font-size: 15px; font-weight: 600; line-height: 1.2; color: var(--text); }
+  .brand-sub   { font-size: 10px; color: var(--text-light); letter-spacing: 0.06em; }
+  .sidenav-menu { padding: 16px 12px; flex: 1; }
+  .menu-label  { font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--text-light); padding: 0 8px; margin-bottom: 8px; margin-top: 16px; }
+  .menu-label:first-child { margin-top: 0; }
+  .menu-item   { display: flex; align-items: center; gap: 10px; padding: 9px 10px; border-radius: 9px; font-size: 13px; font-weight: 400; color: var(--text-mid); text-decoration: none; cursor: pointer; transition: all 0.18s; margin-bottom: 2px; border: none; background: none; width: 100%; text-align: left; }
+  .menu-item i { font-size: 17px; flex-shrink: 0; }
+  .menu-item:hover  { background: var(--lav-pale); color: var(--lav-dark); }
+  .menu-item.active { background: var(--lav-pale); color: var(--lav-dark); font-weight: 500; }
+  .menu-item .badge { margin-left: auto; background: var(--lav-dark); color: #fff; font-size: 10px; font-weight: 600; border-radius: 20px; padding: 1px 7px; }
+  .sidenav-footer { padding: 16px 12px; border-top: 1px solid var(--border); }
+  .user-row { display: flex; align-items: center; gap: 10px; padding: 8px 10px; border-radius: 9px; cursor: pointer; transition: background 0.18s; }
+  .user-row:hover { background: var(--lav-pale); }
+  .user-av  { width: 30px; height: 30px; border-radius: 50%; background: var(--lav); color: #fff; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 600; flex-shrink: 0; }
+  .user-name { font-size: 12px; font-weight: 500; color: var(--text); }
+  .user-role { font-size: 10px; color: var(--text-light); }
+  .user-row > i { margin-left: auto; font-size: 15px; color: var(--text-light); }
+
+  /* ── MAIN ── */
+  .main { margin-left: 220px; flex: 1; display: flex; flex-direction: column; min-width: 0; transition: margin-right 0.3s ease; }
+  .main.panel-open { margin-right: var(--panel-w); }
+
+  /* ── TOPBAR ── */
+  .topbar { position: sticky; top: 0; z-index: 20; background: rgba(253,251,248,0.94); backdrop-filter: blur(12px); border-bottom: 1px solid var(--border); padding: 0 28px; height: 58px; display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+  .topbar-title { font-family: 'Cormorant Garamond', serif; font-size: 20px; font-weight: 600; color: var(--text); }
+  .topbar-actions { display: flex; align-items: center; gap: 10px; }
+  .btn-icon { width: 36px; height: 36px; border-radius: 9px; border: 1px solid var(--border); background: transparent; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 18px; color: var(--text-mid); transition: all 0.18s; }
+  .btn-icon:hover { background: var(--lav-pale); color: var(--lav-dark); border-color: var(--lav-light); }
+  .btn-primary { display: inline-flex; align-items: center; gap: 7px; padding: 9px 18px; border-radius: 9px; background: var(--lav-dark); color: #fff; border: none; font-family: 'DM Sans', sans-serif; font-size: 13px; font-weight: 500; cursor: pointer; transition: all 0.18s; box-shadow: 0 2px 10px rgba(74,61,107,0.22); text-decoration: none; }
+  .btn-primary:hover { background: var(--lav-mid); transform: translateY(-1px); }
+  .btn-primary i { font-size: 17px; }
+
+  /* ── PAGE ── */
+  .page { padding: 28px; display: flex; flex-direction: column; gap: 22px; }
+
+  /* ── KPIs ── */
+  .kpi-strip { display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px; }
+  .kpi { background: var(--warm); border: 1px solid var(--border); border-radius: 12px; padding: 16px 18px; display: flex; flex-direction: column; gap: 4px; transition: box-shadow 0.2s; }
+  .kpi:hover { box-shadow: 0 4px 16px rgba(74,61,107,0.08); }
+  .kpi-dot   { width: 8px; height: 8px; border-radius: 50%; margin-bottom: 4px; }
+  .kpi-label { font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-light); }
+  .kpi-val   { font-family: 'Cormorant Garamond', serif; font-size: 28px; font-weight: 600; color: var(--text); line-height: 1; }
+  .kpi-sub   { font-size: 11px; color: var(--text-light); font-weight: 300; margin-top: 2px; }
+
+  /* ── TOOLBAR ── */
+  .toolbar { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+  .search-wrap { position: relative; flex: 1; min-width: 200px; max-width: 300px; }
+  .search-wrap i { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); font-size: 16px; color: var(--text-light); pointer-events: none; }
+  .search-input { width: 100%; background: var(--warm); border: 1px solid var(--border); border-radius: 9px; padding: 9px 14px 9px 38px; font-family: 'DM Sans', sans-serif; font-size: 13px; color: var(--text); outline: none; transition: all 0.2s; }
+  .search-input::placeholder { color: var(--text-light); }
+  .search-input:focus { border-color: var(--lav); box-shadow: 0 0 0 3px rgba(124,107,158,0.1); background: #fff; }
+  .filter-select { background: var(--warm); border: 1px solid var(--border); border-radius: 9px; padding: 9px 30px 9px 12px; font-family: 'DM Sans', sans-serif; font-size: 13px; color: var(--text-mid); cursor: pointer; outline: none; appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%239B90A8' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 10px center; transition: border-color 0.2s; }
+  .filter-select:focus { border-color: var(--lav); }
+  .toolbar-sep { width: 1px; height: 24px; background: var(--border-mid); flex-shrink: 0; }
+  .results-count { font-size: 12px; color: var(--text-light); white-space: nowrap; }
+
+  /* Col chips */
+  .col-chips { display: flex; gap: 5px; flex-wrap: wrap; margin-left: auto; align-items: center; }
+  .col-chips-label { font-size: 10px; color: var(--text-light); letter-spacing: 0.06em; white-space: nowrap; }
+  .col-chip { padding: 4px 10px; border-radius: 20px; border: 1px solid var(--border); background: var(--warm); font-size: 11px; color: var(--text-mid); cursor: pointer; transition: all 0.15s; white-space: nowrap; user-select: none; }
+  .col-chip.on { background: var(--lav-pale); border-color: var(--lav-light); color: var(--lav-dark); font-weight: 500; }
+
+  /* ── TABLE ── */
+  .table-wrap { background: var(--warm); border: 1px solid var(--border); border-radius: 14px; overflow: hidden; }
+  .table-scroll { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; min-width: 1100px; }
+  thead th { padding: 12px 14px; font-size: 10px; letter-spacing: 0.09em; text-transform: uppercase; color: var(--text-light); font-weight: 500; background: var(--cream); border-bottom: 1px solid var(--border); text-align: left; white-space: nowrap; cursor: pointer; user-select: none; }
+  thead th:hover { color: var(--lav-dark); }
+  thead th .si { font-size: 11px; vertical-align: middle; margin-left: 2px; opacity: 0.4; }
+  thead th.sorted { color: var(--lav-dark); }
+  thead th.sorted .si { opacity: 1; }
+  .hide { display: none !important; }
+
+  tbody tr { border-bottom: 1px solid var(--border); transition: background 0.15s; cursor: pointer; }
+  tbody tr:last-child { border-bottom: none; }
+  tbody tr:hover { background: var(--lav-pale); }
+  tbody tr.selected { background: var(--lav-pale); }
+  td { padding: 13px 14px; font-size: 13px; color: var(--text); vertical-align: middle; white-space: nowrap; }
+
+  /* Célula hóspede */
+  .g-wrap { display: flex; align-items: center; gap: 11px; }
+  .g-av   { width: 34px; height: 34px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 600; color: #fff; flex-shrink: 0; }
+  .g-name  { font-weight: 500; }
+  .g-email { font-size: 11px; color: var(--text-light); font-weight: 300; }
+
+  /* Barra de gasto */
+  .spent-wrap { min-width: 90px; }
+  .spent-val  { font-size: 13px; font-weight: 500; margin-bottom: 3px; }
+  .spent-bar  { height: 3px; background: var(--border); border-radius: 2px; }
+  .spent-fill { height: 100%; border-radius: 2px; background: linear-gradient(90deg, var(--lav-light), var(--lav-dark)); }
+
+  /* Stars */
+  .stars i { font-size: 12px; color: var(--amber); }
+  .stars i.off { color: var(--border-mid); }
+
+  /* Badges */
+  .bvip { display: inline-flex; align-items: center; gap: 4px; padding: 3px 8px; border-radius: 20px; font-size: 10px; font-weight: 600; background: var(--amber-pale); color: var(--amber); border: 1px solid #E8C87A; }
+  .bnew { display: inline-flex; padding: 3px 8px; border-radius: 20px; font-size: 10px; font-weight: 500; background: var(--sage-pale); color: var(--sage); border: 1px solid var(--sage-light); }
+  .breg { font-size: 11px; color: var(--text-light); }
+
+  /* Pref tags */
+  .ptags { display: flex; gap: 3px; flex-wrap: nowrap; }
+  .ptag  { font-size: 10px; padding: 2px 7px; border-radius: 6px; background: var(--lav-pale); color: var(--lav-dark); border: 1px solid var(--lav-light); }
+  .ptag.r { background: var(--rose-pale);  color: var(--rose); border-color: #E8C0CC; }
+  .ptag.s { background: var(--sage-pale);  color: var(--sage); border-color: var(--sage-light); }
+  .ptag.a { background: var(--amber-pale); color: var(--amber); border-color: #E8C87A; }
+
+  /* Aniversário */
+  .bday-cell { display: flex; align-items: center; gap: 6px; }
+  .bday-soon { background: var(--rose-pale); color: var(--rose); border: 1px solid #E8C0CC; border-radius: 20px; font-size: 10px; padding: 2px 7px; font-weight: 500; }
+
+  /* Ações */
+  .acts { display: flex; gap: 4px; opacity: 0; transition: opacity 0.15s; }
+  tr:hover .acts, tr.selected .acts { opacity: 1; }
+  .ab  { width: 28px; height: 28px; border-radius: 7px; border: 1px solid var(--border); background: var(--warm); display: flex; align-items: center; justify-content: center; font-size: 14px; color: var(--text-mid); cursor: pointer; transition: all 0.15s; }
+  .ab:hover       { border-color: var(--lav-light); background: var(--lav-pale); color: var(--lav-dark); }
+  .ab.wd:hover    { border-color: #86d48a; background: #eafaea; color: #2a8a2e; }
+  .ab.del:hover   { border-color: #E8A8B6; background: var(--rose-pale); color: var(--rose); }
+
+  .empty-state { padding: 64px 20px; text-align: center; display: none; flex-direction: column; align-items: center; gap: 12px; }
+  .empty-state i { font-size: 40px; color: var(--text-light); }
+  .empty-state strong { color: var(--text-mid); }
+  .empty-state p { font-size: 13px; color: var(--text-light); font-weight: 300; }
+
+  /* Paginação */
+  .pagination { display: flex; align-items: center; justify-content: space-between; padding: 14px 16px; border-top: 1px solid var(--border); background: var(--cream); flex-wrap: wrap; gap: 10px; }
+  .pag-info { font-size: 12px; color: var(--text-light); }
+  .pag-btns { display: flex; gap: 4px; }
+  .pag-btn  { width: 30px; height: 30px; border-radius: 7px; border: 1px solid var(--border); background: var(--warm); font-size: 12px; font-weight: 500; color: var(--text-mid); cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.15s; }
+  .pag-btn:hover  { border-color: var(--lav-light); color: var(--lav-dark); }
+  .pag-btn.active { background: var(--lav-dark); color: #fff; border-color: var(--lav-dark); }
+  .pag-btn i { font-size: 14px; }
+
+  /* ── PAINEL LATERAL ── */
+  .side-panel { position: fixed; top: 0; right: 0; bottom: 0; width: var(--panel-w); background: var(--warm); border-left: 1px solid var(--border); display: flex; flex-direction: column; transform: translateX(100%); transition: transform 0.3s cubic-bezier(0.4,0,0.2,1); z-index: 25; overflow: hidden; }
+  .side-panel.open { transform: translateX(0); }
+  .sp-header { padding: 20px 22px; border-bottom: 1px solid var(--border); display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; flex-shrink: 0; }
+  .sp-av-row { display: flex; align-items: center; gap: 14px; }
+  .sp-av     { width: 46px; height: 46px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 15px; font-weight: 600; color: #fff; flex-shrink: 0; }
+  .sp-name   { font-family: 'Cormorant Garamond', serif; font-size: 19px; font-weight: 600; color: var(--text); line-height: 1.2; }
+  .sp-email  { font-size: 11px; color: var(--text-light); margin-top: 2px; }
+  .sp-close  { width: 30px; height: 30px; border-radius: 8px; border: 1px solid var(--border); background: transparent; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 17px; color: var(--text-light); transition: all 0.15s; flex-shrink: 0; }
+  .sp-close:hover { background: var(--rose-pale); color: var(--rose); border-color: #E8A8B6; }
+  .sp-body { flex: 1; overflow-y: auto; padding: 18px 22px; display: flex; flex-direction: column; gap: 18px; }
+  .sp-sec  { font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--text-light); margin-bottom: 10px; display: flex; align-items: center; gap: 8px; }
+  .sp-sec::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+  .sp-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1px; background: var(--border); border: 1px solid var(--border); border-radius: 10px; overflow: hidden; }
+  .sp-cell  { background: var(--cream); padding: 11px 13px; }
+  .sp-cell.full { grid-column: 1/-1; }
+  .sp-cl    { font-size: 10px; letter-spacing: 0.09em; text-transform: uppercase; color: var(--text-light); margin-bottom: 3px; }
+  .sp-cv    { font-size: 13px; font-weight: 500; color: var(--text); }
+  .sp-cv.big { font-family: 'Cormorant Garamond', serif; font-size: 20px; }
+  .sp-contact { display: flex; flex-direction: column; gap: 7px; }
+  .sp-cr { display: flex; align-items: center; gap: 10px; padding: 9px 12px; border-radius: 9px; border: 1px solid var(--border); background: var(--cream); font-size: 13px; color: var(--text-mid); transition: all 0.15s; cursor: pointer; }
+  .sp-cr:hover { border-color: var(--lav-light); background: var(--lav-pale); color: var(--lav-dark); }
+  .sp-cr i { font-size: 15px; color: var(--text-light); flex-shrink: 0; }
+  .sp-cr:hover i { color: var(--lav); }
+  .sp-prefs { display: flex; gap: 6px; flex-wrap: wrap; }
+  .sp-pref  { font-size: 12px; padding: 4px 11px; border-radius: 8px; background: var(--lav-pale); color: var(--lav-dark); border: 1px solid var(--lav-light); }
+  .sp-pref.r { background: var(--rose-pale);  color: var(--rose);  border-color: #E8C0CC; }
+  .sp-pref.s { background: var(--sage-pale);  color: var(--sage);  border-color: var(--sage-light); }
+  .sp-pref.a { background: var(--amber-pale); color: var(--amber); border-color: #E8C87A; }
+  .sp-notes { background: var(--cream); border: 1px solid var(--border); border-radius: 9px; padding: 11px 13px; font-size: 13px; color: var(--text-mid); line-height: 1.6; font-weight: 300; }
+  .sp-notes.emp { color: var(--text-light); font-style: italic; }
+  .sp-footer { padding: 14px 22px; border-top: 1px solid var(--border); display: flex; gap: 8px; flex-shrink: 0; }
+  .sp-btn { flex: 1; display: flex; align-items: center; justify-content: center; gap: 6px; padding: 10px; border-radius: 9px; font-family: 'DM Sans', sans-serif; font-size: 12px; font-weight: 500; cursor: pointer; transition: all 0.18s; border: 1.5px solid transparent; }
+  .sp-btn i { font-size: 15px; }
+  .sp-edit  { background: var(--lav-pale);  color: var(--lav-dark); border-color: var(--lav-light); }
+  .sp-edit:hover  { background: var(--lav-light); }
+  .sp-res   { background: var(--sage-pale); color: var(--sage);     border-color: var(--sage-light); }
+  .sp-res:hover   { background: var(--sage-light); }
+  .sp-wa    { background: #eafaea; color: #2a8a2e; border-color: #86d48a; }
+  .sp-wa:hover    { background: #d4f0d4; }
+
+  /* Modal */
+  .modal-overlay { position: fixed; inset: 0; z-index: 50; background: rgba(44,36,56,0.35); backdrop-filter: blur(4px); display: flex; align-items: center; justify-content: center; opacity: 0; pointer-events: none; transition: opacity 0.25s; }
+  .modal-overlay.open { opacity: 1; pointer-events: all; }
+  .modal { background: var(--warm); border: 1px solid var(--border); border-radius: 16px; width: min(560px, 94vw); box-shadow: 0 24px 64px rgba(44,36,56,0.18); transform: translateY(16px) scale(0.98); transition: transform 0.25s cubic-bezier(0.34,1.56,0.64,1); overflow: hidden; }
+  .modal-overlay.open .modal { transform: none; }
+  .modal-header { padding: 20px 24px 16px; border-bottom: 1px solid var(--border); display: flex; align-items: flex-start; justify-content: space-between; }
+  .modal-title { font-family: 'Cormorant Garamond', serif; font-size: 21px; font-weight: 600; color: var(--text); }
+  .modal-sub   { font-size: 12px; color: var(--text-light); font-weight: 300; margin-top: 2px; }
+  .modal-close { width: 30px; height: 30px; border-radius: 8px; border: 1px solid var(--border); background: transparent; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 17px; color: var(--text-light); transition: all 0.15s; flex-shrink: 0; }
+  .modal-close:hover { background: var(--rose-pale); color: var(--rose); border-color: #E8A8B6; }
+  .modal-body { padding: 20px 24px; display: flex; flex-direction: column; gap: 16px; max-height: 68vh; overflow-y: auto; }
+  .modal-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px 18px; }
+  .c2 { grid-column: 1/-1; }
+  .mf { display: flex; flex-direction: column; gap: 6px; }
+  .ml { font-size: 11px; font-weight: 500; letter-spacing: 0.07em; text-transform: uppercase; color: var(--text-mid); }
+  .req { color: var(--rose); }
+  .iw { position: relative; }
+  .iw > i { position: absolute; left: 13px; top: 50%; transform: translateY(-50%); font-size: 15px; color: var(--text-light); pointer-events: none; }
+  .fi, .fs, .ft { width: 100%; background: var(--cream); border: 1px solid var(--border); border-radius: 9px; padding: 10px 14px 10px 38px; font-family: 'DM Sans', sans-serif; font-size: 13px; color: var(--text); outline: none; transition: all 0.2s; -webkit-appearance: none; }
+  .fi::placeholder, .ft::placeholder { color: var(--text-light); font-weight: 300; }
+  .fi:focus, .fs:focus, .ft:focus { border-color: var(--lav); background: #fff; box-shadow: 0 0 0 3px rgba(124,107,158,0.1); }
+  .ni .fi, .ni .fs { padding-left: 14px; }
+  .fs { appearance: none; cursor: pointer; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%239B90A8' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 10px center; padding-right: 30px; }
+  .ft { resize: vertical; min-height: 72px; line-height: 1.6; }
+  .msec { font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-light); padding-bottom: 4px; border-bottom: 1px solid var(--border); }
+  .modal-footer { padding: 14px 24px; border-top: 1px solid var(--border); display: flex; justify-content: flex-end; gap: 10px; background: var(--cream); }
+  .mc { padding: 10px 18px; border-radius: 9px; border: 1.5px solid var(--border-mid); background: transparent; font-family: 'DM Sans', sans-serif; font-size: 13px; font-weight: 500; color: var(--text-mid); cursor: pointer; transition: all 0.18s; }
+  .mc:hover { border-color: var(--rose); color: var(--rose); background: var(--rose-pale); }
+  .ms { display: inline-flex; align-items: center; gap: 7px; padding: 10px 22px; border-radius: 9px; background: var(--lav-dark); color: #fff; border: none; font-family: 'DM Sans', sans-serif; font-size: 13px; font-weight: 500; cursor: pointer; transition: all 0.18s; box-shadow: 0 2px 10px rgba(74,61,107,0.22); }
+  .ms:hover { background: var(--lav-mid); }
+  .ms i { font-size: 16px; }
+
+  /* Toast */
+  .toast { position: fixed; bottom: 28px; left: 50%; transform: translateX(-50%) translateY(20px); background: var(--text); color: #fff; padding: 12px 20px; border-radius: 10px; font-size: 13px; display: flex; align-items: center; gap: 10px; box-shadow: 0 8px 24px rgba(0,0,0,0.18); opacity: 0; pointer-events: none; transition: all 0.35s cubic-bezier(0.34,1.56,0.64,1); z-index: 99; white-space: nowrap; }
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+  .toast i { font-size: 17px; color: var(--sage-light); }
+
+  @media (max-width: 1100px) { .kpi-strip { grid-template-columns: repeat(3,1fr); } }
+  @media (max-width: 860px)  { .sidenav { display: none; } .main { margin-left: 0; } .main.panel-open { margin-right: 0; } .side-panel { width: 100%; } .kpi-strip { grid-template-columns: repeat(2,1fr); } .modal-grid { grid-template-columns: 1fr; } .c2 { grid-column: 1; } }
+  @keyframes fu { from { opacity:0; transform:translateY(12px); } to { opacity:1; transform:none; } }
+  .page > * { animation: fu 0.4s ease both; }
+  .page > *:nth-child(1){animation-delay:.04s} .page > *:nth-child(2){animation-delay:.08s} .page > *:nth-child(3){animation-delay:.12s} .page > *:nth-child(4){animation-delay:.16s}
+</style>
+</head>
+<body>
+<div class="shell">
+
+  <!-- SIDENAV -->
+  <nav class="sidenav">
+    <div class="sidenav-brand">
+      <div class="brand-badge">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2C8 2 5 6 5 10c0 5 7 12 7 12s7-7 7-12c0-4-3-8-7-8z"/><circle cx="12" cy="10" r="2.5"/></svg>
+      </div>
+      <div><div class="brand-name">Cantinho das Lavandas</div><div class="brand-sub">Pousada & Hospedagem</div></div>
+    </div>
+    <div class="sidenav-menu">
+      <div class="menu-label">Principal</div>
+      <a class="menu-item" href="#"><i class="ti ti-layout-dashboard"></i> Dashboard</a>
+      <a class="menu-item" href="#"><i class="ti ti-calendar"></i> Reservas <span class="badge">12</span></a>
+      <a class="menu-item" href="#"><i class="ti ti-door"></i> Quartos</a>
+      <a class="menu-item active" href="#"><i class="ti ti-users"></i> Hóspedes</a>
+      <div class="menu-label">Financeiro</div>
+      <a class="menu-item" href="#"><i class="ti ti-cash"></i> Pagamentos</a>
+      <a class="menu-item" href="#"><i class="ti ti-chart-bar"></i> Relatórios</a>
+      <div class="menu-label">Config</div>
+      <a class="menu-item" href="#"><i class="ti ti-settings"></i> Configurações</a>
+    </div>
+    <div class="sidenav-footer">
+      <div class="user-row">
+        <div class="user-av">AL</div>
+        <div><div class="user-name">Ana Lima</div><div class="user-role">Gerente</div></div>
+        <i class="ti ti-chevron-right"></i>
+      </div>
+    </div>
+  </nav>
+
+  <!-- MAIN -->
+  <div class="main" id="main">
+    <header class="topbar">
+      <div class="topbar-title">Hóspedes</div>
+      <div class="topbar-actions">
+        <button class="btn-icon" onclick="showToast('Exportando CSV…','ti-download')" title="Exportar"><i class="ti ti-download"></i></button>
+        <button class="btn-primary" onclick="openModal()"><i class="ti ti-user-plus"></i> Novo hóspede</button>
+      </div>
+    </header>
+
+    <div class="page">
+
+      <!-- KPIs -->
+      <div class="kpi-strip">
+        <div class="kpi"><div class="kpi-dot" style="background:var(--lav)"></div><div class="kpi-label">Cadastrados</div><div class="kpi-val" id="kT">—</div><div class="kpi-sub">total na base</div></div>
+        <div class="kpi"><div class="kpi-dot" style="background:var(--amber)"></div><div class="kpi-label">VIP</div><div class="kpi-val" id="kV">—</div><div class="kpi-sub">3+ estadias</div></div>
+        <div class="kpi"><div class="kpi-dot" style="background:var(--sage)"></div><div class="kpi-label">Novos</div><div class="kpi-val" id="kN">—</div><div class="kpi-sub">este mês</div></div>
+        <div class="kpi"><div class="kpi-dot" style="background:var(--rose)"></div><div class="kpi-label">Aniversários</div><div class="kpi-val" id="kB">—</div><div class="kpi-sub">próximos 7 dias</div></div>
+        <div class="kpi"><div class="kpi-dot" style="background:var(--lav-dark)"></div><div class="kpi-label">Receita total</div><div class="kpi-val" id="kR" style="font-size:18px">—</div><div class="kpi-sub">todos os hóspedes</div></div>
+      </div>
+
+      <!-- TOOLBAR -->
+      <div class="toolbar">
+        <div class="search-wrap">
+          <i class="ti ti-search"></i>
+          <input class="search-input" type="text" placeholder="Nome, e-mail, cidade, CPF…" oninput="doSearch(this.value)">
+        </div>
+        <select class="filter-select" onchange="doType(this.value)">
+          <option value="">Todos os tipos</option>
+          <option value="vip">VIP</option>
+          <option value="new">Novo</option>
+          <option value="regular">Regular</option>
+        </select>
+        <select class="filter-select" id="stF" onchange="doState(this.value)">
+          <option value="">Todos os estados</option>
+        </select>
+        <select class="filter-select" onchange="doPref(this.value)">
+          <option value="">Todas as prefs</option>
+          <option value="Sem glúten">Sem glúten</option>
+          <option value="Vegano">Vegano</option>
+          <option value="Pet">Pet</option>
+          <option value="Silêncio">Silêncio</option>
+          <option value="Vista">Vista p/ jardim</option>
+        </select>
+        <div class="toolbar-sep"></div>
+        <span class="results-count" id="rc"></span>
+        <div class="col-chips">
+          <span class="col-chips-label">Colunas:</span>
+          <span class="col-chip on" onclick="togCol('cpf',this)">CPF</span>
+          <span class="col-chip on" onclick="togCol('bday',this)">Aniversário</span>
+          <span class="col-chip on" onclick="togCol('room',this)">Ult. quarto</span>
+          <span class="col-chip on" onclick="togCol('prefs',this)">Preferências</span>
+          <span class="col-chip on" onclick="togCol('rating',this)">Avaliação</span>
+          <span class="col-chip on" onclick="togCol('origin',this)">Origem</span>
+        </div>
+      </div>
+
+      <!-- TABLE -->
+      <div class="table-wrap">
+        <div class="table-scroll">
+          <table>
+            <thead>
+              <tr>
+                <th onclick="srt('name')"       id="th-name">Hóspede <i class="ti ti-arrows-sort si"></i></th>
+                <th onclick="srt('phone')"      id="th-phone">Telefone <i class="ti ti-arrows-sort si"></i></th>
+                <th onclick="srt('city')"       id="th-city">Cidade <i class="ti ti-arrows-sort si"></i></th>
+                <th class="c-cpf"    onclick="srt('cpf')"        id="th-cpf">CPF <i class="ti ti-arrows-sort si"></i></th>
+                <th class="c-bday"   onclick="srt('bdaySort')"   id="th-bday">Aniversário <i class="ti ti-arrows-sort si"></i></th>
+                <th onclick="srt('stays')"      id="th-stays">Estadias <i class="ti ti-arrows-sort si"></i></th>
+                <th onclick="srt('totalSpent')" id="th-spent">Total gasto <i class="ti ti-arrows-sort si"></i></th>
+                <th onclick="srt('lastStay')"   id="th-last">Última estadia <i class="ti ti-arrows-sort si"></i></th>
+                <th class="c-room"   >Ult. quarto</th>
+                <th class="c-prefs"  >Preferências</th>
+                <th class="c-rating" onclick="srt('rating')" id="th-rating">Avaliação <i class="ti ti-arrows-sort si"></i></th>
+                <th>Tipo</th>
+                <th class="c-origin" >Origem</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody id="gb"></tbody>
+          </table>
+        </div>
+        <div class="empty-state" id="es">
+          <i class="ti ti-users-off"></i>
+          <strong>Nenhum hóspede encontrado</strong>
+          <p>Ajuste os filtros ou adicione um novo hóspede.</p>
+        </div>
+        <div class="pagination">
+          <div class="pag-info" id="pi"></div>
+          <div class="pag-btns">
+            <button class="pag-btn"><i class="ti ti-chevron-left"></i></button>
+            <button class="pag-btn active">1</button>
+            <button class="pag-btn">2</button>
+            <button class="pag-btn"><i class="ti ti-chevron-right"></i></button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PAINEL LATERAL -->
+  <aside class="side-panel" id="sp">
+    <div class="sp-header">
+      <div class="sp-av-row">
+        <div class="sp-av" id="sp-av"></div>
+        <div><div class="sp-name" id="sp-nm">—</div><div class="sp-email" id="sp-em">—</div></div>
+      </div>
+      <button class="sp-close" onclick="closePanel()"><i class="ti ti-x"></i></button>
+    </div>
+    <div class="sp-body">
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:10px">
+        <div id="sp-badge"></div>
+        <div id="sp-stars"></div>
+      </div>
+
+      <div><div class="sp-sec">Contato</div>
+        <div class="sp-contact">
+          <div class="sp-cr"><i class="ti ti-device-mobile"></i><span id="sp-ph"></span></div>
+          <div class="sp-cr"><i class="ti ti-mail"></i><span id="sp-ml"></span></div>
+          <div class="sp-cr"><i class="ti ti-map-pin"></i><span id="sp-ct"></span></div>
+        </div>
+      </div>
+
+      <div><div class="sp-sec">Dados pessoais</div>
+        <div class="sp-grid">
+          <div class="sp-cell"><div class="sp-cl">CPF</div><div class="sp-cv" id="sp-cpf"></div></div>
+          <div class="sp-cell"><div class="sp-cl">Aniversário</div><div class="sp-cv" id="sp-bd"></div></div>
+          <div class="sp-cell"><div class="sp-cl">Origem</div><div class="sp-cv" id="sp-or"></div></div>
+          <div class="sp-cell"><div class="sp-cl">Cadastro</div><div class="sp-cv" id="sp-si"></div></div>
+        </div>
+      </div>
+
+      <div><div class="sp-sec">Histórico</div>
+        <div class="sp-grid">
+          <div class="sp-cell"><div class="sp-cl">Estadias</div><div class="sp-cv big" id="sp-st"></div></div>
+          <div class="sp-cell"><div class="sp-cl">Total gasto</div><div class="sp-cv big" id="sp-sp"></div></div>
+          <div class="sp-cell"><div class="sp-cl">Última estadia</div><div class="sp-cv" id="sp-ls"></div></div>
+          <div class="sp-cell"><div class="sp-cl">Quarto favorito</div><div class="sp-cv" id="sp-lr"></div></div>
+        </div>
+      </div>
+
+      <div><div class="sp-sec">Preferências & restrições</div>
+        <div class="sp-prefs" id="sp-pf"></div>
+      </div>
+
+      <div><div class="sp-sec">Observações</div>
+        <div class="sp-notes" id="sp-nt"></div>
+      </div>
+    </div>
+    <div class="sp-footer">
+      <button class="sp-btn sp-edit"  onclick="showToast('Abrindo edição…','ti-pencil')"><i class="ti ti-pencil"></i> Editar</button>
+      <button class="sp-btn sp-res"   onclick="showToast('Nova reserva…','ti-calendar-plus')"><i class="ti ti-calendar-plus"></i> Reservar</button>
+      <button class="sp-btn sp-wa"    onclick="showToast('Abrindo WhatsApp…','ti-brand-whatsapp')"><i class="ti ti-brand-whatsapp"></i> WhatsApp</button>
+    </div>
+  </aside>
+</div>
+
+<!-- MODAL -->
+<div class="modal-overlay" id="mo" onclick="if(event.target===this)closeModal()">
+  <div class="modal">
+    <div class="modal-header">
+      <div><div class="modal-title">Novo hóspede</div><div class="modal-sub">Preencha os dados básicos</div></div>
+      <button class="modal-close" onclick="closeModal()"><i class="ti ti-x"></i></button>
+    </div>
+    <div class="modal-body">
+      <div class="msec">Identificação</div>
+      <div class="modal-grid">
+        <div class="mf c2"><div class="ml">Nome completo <span class="req">*</span></div><div class="iw"><i class="ti ti-user"></i><input class="fi" type="text" placeholder="Nome completo" id="mn" required></div></div>
+        <div class="mf"><div class="ml">CPF</div><div class="iw"><i class="ti ti-id-badge"></i><input class="fi" type="text" placeholder="000.000.000-00" id="mc" maxlength="14" oninput="mCPF(this)"></div></div>
+        <div class="mf"><div class="ml">Data de nascimento</div><div class="iw"><i class="ti ti-calendar"></i><input class="fi" type="date" id="mb"></div></div>
+      </div>
+      <div class="msec">Contato</div>
+      <div class="modal-grid">
+        <div class="mf"><div class="ml">E-mail</div><div class="iw"><i class="ti ti-mail"></i><input class="fi" type="email" placeholder="email@exemplo.com" id="me"></div></div>
+        <div class="mf"><div class="ml">Telefone / WhatsApp <span class="req">*</span></div><div class="iw"><i class="ti ti-device-mobile"></i><input class="fi" type="tel" placeholder="(00) 00000-0000" id="mp" maxlength="15" oninput="mFone(this)" required></div></div>
+        <div class="mf"><div class="ml">Cidade</div><div class="iw"><i class="ti ti-map-pin"></i><input class="fi" type="text" placeholder="Ex: Curitiba" id="mci"></div></div>
+        <div class="mf"><div class="ml">Estado</div><div class="iw ni"><select class="fs" id="mst" style="padding-left:14px"><option value="">Selecione</option><option>AC</option><option>AL</option><option>AM</option><option>BA</option><option>CE</option><option>DF</option><option>ES</option><option>GO</option><option>MA</option><option>MG</option><option>MS</option><option>MT</option><option>PA</option><option>PB</option><option>PE</option><option>PI</option><option>PR</option><option>RJ</option><option>RN</option><option>RO</option><option>RR</option><option>RS</option><option>SC</option><option selected>SP</option><option>SE</option><option>TO</option></select></div></div>
+      </div>
+      <div class="msec">Preferências</div>
+      <div class="modal-grid">
+        <div class="mf c2"><div class="ml">Preferências / restrições alimentares</div><div class="iw ni"><input class="fi" style="padding-left:14px" type="text" placeholder="Ex: Sem glúten, Vegano, Silêncio…" id="mpr"></div></div>
+        <div class="mf"><div class="ml">Viaja com pets?</div><div class="iw ni"><select class="fs" id="mpt" style="padding-left:14px"><option value="0">Não</option><option value="1">Sim</option></select></div></div>
+        <div class="mf"><div class="ml">Origem</div><div class="iw ni"><select class="fs" id="mog" style="padding-left:14px"><option>Direto</option><option>WhatsApp</option><option>Instagram</option><option>Booking</option><option>Airbnb</option><option>Indicação</option><option>Outros</option></select></div></div>
+      </div>
+      <div class="msec">Observações</div>
+      <div class="mf"><div class="iw ni"><textarea class="ft" id="mno" style="padding-left:14px" placeholder="Anotações internas sobre o hóspede…"></textarea></div></div>
+    </div>
+    <div class="modal-footer">
+      <button class="mc" onclick="closeModal()">Cancelar</button>
+      <button class="ms" onclick="saveGuest()"><i class="ti ti-user-plus"></i> Cadastrar</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"><i class="ti ti-check" id="tIcon"></i><span id="tMsg"></span></div>
+
+<script>
+const AC = ['#7C6B9E','#6B9470','#C08030','#A05070','#5C4E83','#4A7860','#8B6914','#7A3858','#3A6890','#5A7030'];
+const OI = {WhatsApp:'ti-brand-whatsapp',Booking:'ti-world',Airbnb:'ti-home-star',Instagram:'ti-brand-instagram',Direto:'ti-phone','Indicação':'ti-users',Outros:'ti-dots'};
+const PC = p => (p==='Sem glúten'||p==='Vegano')?'r':(p==='Pet'||p==='Viaja com pet')?'s':(p==='Silêncio')?'a':'';
+
+const GS = [
+  {id:1, name:'Maria Fernanda Costa',  email:'maria@gmail.com',    phone:'(11) 99234-5678', city:'São Paulo',      state:'SP', cpf:'123.456.789-00', bday:'1988-04-15', since:'2024-03-12', stays:4, totalSpent:4560, lastStay:'2025-05-14', lastRoom:'Suíte Lavanda',   prefs:['Vista p/ jardim','Sem ruído'], pets:false, origin:'WhatsApp',  rating:5, type:'vip',     newMonth:false, notes:'Prefere quarto com vista para o jardim. Solicita travesseiro extra.' },
+  {id:2, name:'João Pedro Almeida',    email:'joao@email.com',     phone:'(21) 98765-4321', city:'Rio de Janeiro', state:'RJ', cpf:'234.567.890-11', bday:'1991-09-22', since:'2024-07-20', stays:2, totalSpent:2700, lastStay:'2025-05-15', lastRoom:'Chalé Bergamota', prefs:['Pet'],                        pets:true,  origin:'Booking',    rating:4, type:'regular', newMonth:false, notes:'Viaja com cachorro de pequeno porte.' },
+  {id:3, name:'Beatriz Santos',        email:'beatriz@hotmail.com',phone:'(31) 97654-3210', city:'Belo Horizonte', state:'MG', cpf:'345.678.901-22', bday:'1985-12-03', since:'2023-11-05', stays:5, totalSpent:5800, lastStay:'2025-05-12', lastRoom:'Standard',         prefs:['Vegano','Silêncio'],          pets:false, origin:'Instagram',  rating:5, type:'vip',     newMonth:false, notes:'Vegana. Solicita silêncio após 22h.' },
+  {id:4, name:'Ricardo Mendes',        email:'ricardo@empresa.com',phone:'(48) 96543-2109', city:'Florianópolis',  state:'SC', cpf:'456.789.012-33', bday:'1979-06-18', since:'2025-01-18', stays:1, totalSpent:960,  lastStay:'2025-05-18', lastRoom:'Suíte Sálvia',    prefs:[],                             pets:false, origin:'Direto',     rating:4, type:'regular', newMonth:false, notes:'' },
+  {id:5, name:'Camila Rocha',          email:'camila@gmail.com',   phone:'(41) 95432-1098', city:'Curitiba',       state:'PR', cpf:'567.890.123-44', bday:'1995-03-27', since:'2025-05-03', stays:1, totalSpent:1900, lastStay:'2025-05-20', lastRoom:'Suíte Lavanda',   prefs:['Sem glúten','Pet'],           pets:true,  origin:'Indicação', rating:5, type:'new',     newMonth:true,  notes:'Intolerância a glúten. Viaja com gato.' },
+  {id:6, name:'Fernando Lima',         email:'fernando@lima.com',  phone:'(11) 94321-0987', city:'Campinas',       state:'SP', cpf:'678.901.234-55', bday:'1982-11-09', since:'2024-09-30', stays:3, totalSpent:2700, lastStay:'2025-05-22', lastRoom:'Chalé Bergamota', prefs:['Vista p/ jardim'],            pets:true,  origin:'Airbnb',     rating:4, type:'vip',     newMonth:false, notes:'Viaja com dois cachorros. Prefere o chalé.' },
+  {id:7, name:'Ana Paula Vieira',      email:'ana.p@vieira.com',   phone:'(85) 93210-9876', city:'Fortaleza',      state:'CE', cpf:'789.012.345-66', bday:'1993-07-14', since:'2025-05-14', stays:1, totalSpent:440,  lastStay:'2025-05-14', lastRoom:'Standard',         prefs:[],                             pets:false, origin:'Direto',     rating:5, type:'new',     newMonth:true,  notes:'' },
+  {id:8, name:'Lucas Carvalho',        email:'lucas@carvalho.net', phone:'(51) 92109-8765', city:'Porto Alegre',   state:'RS', cpf:'890.123.456-77', bday:'1989-02-28', since:'2024-12-01', stays:2, totalSpent:1920, lastStay:'2025-05-25', lastRoom:'Suíte Sálvia',    prefs:['Silêncio'],                  pets:false, origin:'WhatsApp',   rating:4, type:'regular', newMonth:false, notes:'Prefere quarto no andar térreo.' },
+  {id:9, name:'Isabela Teixeira',      email:'isa@teixeira.com',   phone:'(62) 91098-7654', city:'Goiânia',        state:'GO', cpf:'901.234.567-88', bday:'1986-05-17', since:'2023-06-22', stays:6, totalSpent:7200, lastStay:'2025-05-11', lastRoom:'Suíte Lavanda',   prefs:['Vista p/ jardim'],            pets:false, origin:'Booking',    rating:5, type:'vip',     newMonth:false, notes:'6 estadias. Sempre reserva o mesmo quarto.' },
+  {id:10,name:'Marcos Souza',          email:'marcos@souza.br',    phone:'(71) 90987-6543', city:'Salvador',       state:'BA', cpf:'012.345.678-99', bday:'1975-08-30', since:'2025-04-10', stays:1, totalSpent:2250, lastStay:'2025-05-28', lastRoom:'Chalé Bergamota', prefs:['Decoração especial'],         pets:false, origin:'Instagram',  rating:5, type:'regular', newMonth:false, notes:'Aniversário de casamento. Pediu decoração surpresa.' },
+  {id:11,name:'Patrícia Nunes',        email:'patricia@nunes.com', phone:'(92) 89876-5432', city:'Manaus',         state:'AM', cpf:'111.222.333-44', bday:'1998-01-05', since:'2025-05-20', stays:1, totalSpent:440,  lastStay:'2025-05-30', lastRoom:'Standard',         prefs:[],                             pets:false, origin:'Direto',     rating:0, type:'new',     newMonth:true,  notes:'' },
+  {id:12,name:'Rodrigo Pinto',         email:'rodrigo@pinto.io',   phone:'(61) 88765-4321', city:'Brasília',       state:'DF', cpf:'222.333.444-55', bday:'1990-10-12', since:'2024-08-14', stays:2, totalSpent:1280, lastStay:'2025-05-07', lastRoom:'Suíte Sálvia',    prefs:[],                             pets:false, origin:'Booking',    rating:3, type:'regular', newMonth:false, notes:'Reserva cancelada em maio por motivo de saúde.' },
+  {id:13,name:'Juliana Ferreira',      email:'ju@ferreira.me',     phone:'(27) 87654-3210', city:'Vitória',        state:'ES', cpf:'333.444.555-66', bday:'1983-04-02', since:'2023-02-28', stays:7, totalSpent:9100, lastStay:'2025-04-30', lastRoom:'Suíte Lavanda',   prefs:['Sem glúten','Vista p/ jardim'],pets:false,origin:'Indicação', rating:5, type:'vip',     newMonth:false, notes:'Melhor cliente da pousada. 7 estadias.' },
+  {id:14,name:'Diego Castro',          email:'diego@castro.dev',   phone:'(81) 86543-2109', city:'Recife',         state:'PE', cpf:'444.555.666-77', bday:'1997-05-17', since:'2025-05-08', stays:1, totalSpent:440,  lastStay:'2025-05-08', lastRoom:'Standard',         prefs:[],                             pets:false, origin:'Instagram',  rating:4, type:'new',     newMonth:true,  notes:'' },
+  {id:15,name:'Letícia Moraes',        email:'leticia@moraes.art', phone:'(67) 85432-1098', city:'Campo Grande',   state:'MS', cpf:'555.666.777-88', bday:'1992-09-08', since:'2024-11-19', stays:2, totalSpent:1600, lastStay:'2025-03-15', lastRoom:'Suíte Sálvia',    prefs:['Vegano'],                     pets:false, origin:'Direto',     rating:4, type:'regular', newMonth:false, notes:'Vegana. Chegou por indicação.' },
+];
+
+/* adiciona campo para ordenar aniversário */
+GS.forEach(g => {
+  const [,m,d] = g.bday.split('-');
+  g.bdaySort = m+d;
+});
+
+let SQ='', TQ='', StQ='', PQ='', SF='', SA=true, SEL=null;
+const MX = Math.max(...GS.map(g=>g.totalSpent));
+
+/* KPIs */
+function initKPIs() {
+  const today = new Date();
+  const in7 = GS.filter(g => { const d = bdDays(g.bday); return d>=0&&d<=7; }).length;
+  document.getElementById('kT').textContent = GS.length;
+  document.getElementById('kV').textContent = GS.filter(g=>g.type==='vip').length;
+  document.getElementById('kN').textContent = GS.filter(g=>g.newMonth).length;
+  document.getElementById('kB').textContent = in7||'—';
+  document.getElementById('kR').textContent = 'R$ '+GS.reduce((s,g)=>s+g.totalSpent,0).toLocaleString('pt-BR');
+}
+
+/* Estado filter */
+function initStates() {
+  [...new Set(GS.map(g=>g.state))].sort().forEach(s=>{ const o=document.createElement('option'); o.value=s; o.textContent=s; document.getElementById('stF').appendChild(o); });
+}
+
+/* helpers */
+function ini(n) { return n.split(' ').slice(0,2).map(x=>x[0]).join('').toUpperCase(); }
+function fd(d)  { if(!d)return'—'; const [y,m,day]=d.split('-'); return `${day}/${m}/${y}`; }
+function fbd(d) { if(!d)return'—'; const [,m,day]=d.split('-'); return `${day}/${m}`; }
+function bdDays(d) {
+  if(!d) return 999;
+  const t=new Date(); const b=new Date(t.getFullYear(),+d.slice(5,7)-1,+d.slice(8,10));
+  if(b<t) b.setFullYear(b.getFullYear()+1);
+  return Math.round((b-t)/86400000);
+}
+function starsH(r) {
+  if(!r) return '<span style="font-size:11px;color:var(--text-light)">—</span>';
+  return '<span style="display:flex;gap:1px">'+[1,2,3,4,5].map(i=>`<i class="ti ti-star${i<=r?'-filled':''} ${i>r?'off':''}" style="font-size:12px;color:${i<=r?'var(--amber)':'var(--border-mid)'}"></i>`).join('')+'</span>';
+}
+
+/* RENDER */
+function render(data) {
+  const tb=document.getElementById('gb'), es=document.getElementById('es');
+  tb.innerHTML='';
+  document.getElementById('rc').textContent=`${data.length} hóspede${data.length!==1?'s':''}`;
+  document.getElementById('pi').innerHTML=`Mostrando <strong>${data.length}</strong> de <strong>${GS.length}</strong>`;
+  if(!data.length){ es.style.display='flex'; return; }
+  es.style.display='none';
+  data.forEach(g=>{
+    const col=AC[g.id%AC.length];
+    const pct=Math.round(g.totalSpent/MX*100);
+    const dd=bdDays(g.bday);
+    const prTag=(p,extra='')=>`<span class="ptag ${PC(p)||extra}">${p}</span>`;
+    const pHTML=g.prefs.slice(0,2).map(p=>prTag(p)).join('')+(g.prefs.length>2?`<span class="ptag">+${g.prefs.length-2}</span>`:'')+( g.pets&&!g.prefs.includes('Pet')?prTag('Pet','s'):'');
+    const tb2=g.type==='vip'?`<span class="bvip"><i class="ti ti-star-filled"></i> VIP</span>`:g.type==='new'?`<span class="bnew">Novo</span>`:`<span class="breg">Regular</span>`;
+    const tr=document.createElement('tr');
+    tr.dataset.id=g.id;
+    if(SEL===g.id)tr.classList.add('selected');
+    tr.innerHTML=`
+      <td><div class="g-wrap"><div class="g-av" style="background:${col}">${ini(g.name)}</div><div><div class="g-name">${g.name}</div><div class="g-email">${g.email}</div></div></div></td>
+      <td style="color:var(--text-mid)"><i class="ti ti-device-mobile" style="font-size:12px;margin-right:4px;color:var(--text-light)"></i>${g.phone}</td>
+      <td style="color:var(--text-mid)">${g.city} — ${g.state}</td>
+      <td class="c-cpf" style="font-size:12px;color:var(--text-mid);font-family:monospace">${g.cpf}</td>
+      <td class="c-bday"><div class="bday-cell"><span style="font-size:12px;color:var(--text-mid)">${fbd(g.bday)}</span>${dd<=7?`<span class="bday-soon">🎂 ${dd===0?'hoje':'em '+dd+'d'}</span>`:dd<=30?`<span class="bday-soon">em ${dd}d</span>`:''}</div></td>
+      <td style="font-weight:500;text-align:center">${g.stays}</td>
+      <td><div class="spent-wrap"><div class="spent-val">R$ ${g.totalSpent.toLocaleString('pt-BR')}</div><div class="spent-bar"><div class="spent-fill" style="width:${pct}%"></div></div></div></td>
+      <td style="font-size:12px;color:var(--text-mid)">${fd(g.lastStay)}</td>
+      <td class="c-room" style="font-size:12px;color:var(--text-mid)">${g.lastRoom}</td>
+      <td class="c-prefs"><div class="ptags">${pHTML||'<span style="font-size:11px;color:var(--text-light)">—</span>'}</div></td>
+      <td class="c-rating">${starsH(g.rating)}</td>
+      <td>${tb2}</td>
+      <td class="c-origin" style="font-size:11px;color:var(--text-light)"><i class="ti ${OI[g.origin]||'ti-dots'}" style="margin-right:4px"></i>${g.origin}</td>
+      <td><div class="acts">
+        <button class="ab" title="Editar"      onclick="event.stopPropagation();showToast('Editando…','ti-pencil')"><i class="ti ti-pencil"></i></button>
+        <button class="ab" title="Nova reserva" onclick="event.stopPropagation();showToast('Nova reserva…','ti-calendar-plus')"><i class="ti ti-calendar-plus"></i></button>
+        <button class="ab wd" title="WhatsApp"  onclick="event.stopPropagation();showToast('Abrindo WhatsApp…','ti-brand-whatsapp')"><i class="ti ti-brand-whatsapp"></i></button>
+        <button class="ab del" title="Remover"  onclick="event.stopPropagation();showToast('${g.name.split(' ')[0]} removido','ti-trash')"><i class="ti ti-trash"></i></button>
+      </div></td>`;
+    tr.addEventListener('click',()=>openPanel(g.id));
+    tb.appendChild(tr);
+  });
+}
+
+/* FILTROS */
+function applyAll() {
+  let d=[...GS];
+  if(SQ){ const q=SQ.toLowerCase(); d=d.filter(g=>g.name.toLowerCase().includes(q)||g.email.toLowerCase().includes(q)||g.city.toLowerCase().includes(q)||g.cpf.includes(q)); }
+  if(TQ)  d=d.filter(g=>g.type===TQ);
+  if(StQ) d=d.filter(g=>g.state===StQ);
+  if(PQ)  d=d.filter(g=>g.prefs.some(p=>p.toLowerCase().includes(PQ.toLowerCase()))||(PQ==='Pet'&&g.pets));
+  if(SF)  d.sort((a,b)=>{ let va=a[SF],vb=b[SF]; if(typeof va==='string'){va=va.toLowerCase();vb=vb.toLowerCase();} return SA?(va>vb?1:-1):(va<vb?1:-1); });
+  render(d);
+}
+function doSearch(v){ SQ=v; applyAll(); }
+function doType(v)  { TQ=v; applyAll(); }
+function doState(v) { StQ=v; applyAll(); }
+function doPref(v)  { PQ=v; applyAll(); }
+
+/* SORT */
+function srt(f) {
+  if(SF===f) SA=!SA; else { SF=f; SA=true; }
+  document.querySelectorAll('thead th').forEach(t=>t.classList.remove('sorted'));
+  const map={name:'th-name',phone:'th-phone',city:'th-city',cpf:'th-cpf',bdaySort:'th-bday',stays:'th-stays',totalSpent:'th-spent',lastStay:'th-last',rating:'th-rating'};
+  document.getElementById(map[f])?.classList.add('sorted');
+  applyAll();
+}
+
+/* COL TOGGLE */
+const CM={cpf:'c-cpf',bday:'c-bday',room:'c-room',prefs:'c-prefs',rating:'c-rating',origin:'c-origin'};
+function togCol(k,el){
+  el.classList.toggle('on');
+  const show=el.classList.contains('on');
+  document.querySelectorAll('.'+CM[k]).forEach(x=>x.classList.toggle('hide',!show));
+}
+
+/* PAINEL */
+function openPanel(id) {
+  const g=GS.find(x=>x.id===id); if(!g) return;
+  SEL=id;
+  document.querySelectorAll('tbody tr').forEach(tr=>tr.classList.toggle('selected',+tr.dataset.id===id));
+  const col=AC[g.id%AC.length];
+  document.getElementById('sp-av').style.background=col;
+  document.getElementById('sp-av').textContent=ini(g.name);
+  document.getElementById('sp-nm').textContent=g.name;
+  document.getElementById('sp-em').textContent=g.email;
+  document.getElementById('sp-ph').textContent=g.phone;
+  document.getElementById('sp-ml').textContent=g.email;
+  document.getElementById('sp-ct').textContent=`${g.city} — ${g.state}`;
+  document.getElementById('sp-cpf').textContent=g.cpf;
+  const dd=bdDays(g.bday);
+  document.getElementById('sp-bd').textContent=fd(g.bday)+(dd<=30?` 🎂 em ${dd}d`:'');
+  document.getElementById('sp-or').textContent=g.origin;
+  document.getElementById('sp-si').textContent=fd(g.since);
+  document.getElementById('sp-st').textContent=g.stays;
+  document.getElementById('sp-sp').textContent=`R$ ${g.totalSpent.toLocaleString('pt-BR')}`;
+  document.getElementById('sp-ls').textContent=fd(g.lastStay);
+  document.getElementById('sp-lr').textContent=g.lastRoom;
+  document.getElementById('sp-stars').innerHTML=starsH(g.rating);
+  document.getElementById('sp-nt').textContent=g.notes||'(sem observações)';
+  document.getElementById('sp-nt').className='sp-notes'+(g.notes?'':' emp');
+  const badge=g.type==='vip'?`<span class="bvip"><i class="ti ti-star-filled"></i> VIP</span>`:g.type==='new'?`<span class="bnew">Novo</span>`:`<span class="breg">Regular</span>`;
+  document.getElementById('sp-badge').innerHTML=badge;
+  const ap=[...g.prefs,...(g.pets&&!g.prefs.includes('Pet')?['Pet']:[])];
+  document.getElementById('sp-pf').innerHTML=ap.length?ap.map(p=>`<span class="sp-pref ${PC(p)}">${p}</span>`).join(''):'<span style="font-size:12px;color:var(--text-light)">Nenhuma registrada</span>';
+  document.getElementById('sp').classList.add('open');
+  document.getElementById('main').classList.add('panel-open');
+}
+function closePanel() {
+  document.getElementById('sp').classList.remove('open');
+  document.getElementById('main').classList.remove('panel-open');
+  SEL=null;
+  document.querySelectorAll('tbody tr').forEach(tr=>tr.classList.remove('selected'));
+}
+
+/* MODAL */
+function openModal()  { document.getElementById('mo').classList.add('open'); document.getElementById('mn').focus(); }
+function closeModal() { document.getElementById('mo').classList.remove('open'); }
+function saveGuest()  {
+  const n=document.getElementById('mn').value.trim(), p=document.getElementById('mp').value.trim();
+  if(!n||!p){ showToast('Preencha nome e telefone!','ti-alert-circle'); return; }
+  closeModal(); showToast(`${n} cadastrado!`,'ti-user-check');
+  ['mn','mc','mb','me','mp','mci','mpr','mno'].forEach(id=>{ document.getElementById(id).value=''; });
+}
+
+/* MASCARAS */
+function mCPF(el)  { let v=el.value.replace(/\D/g,'').substring(0,11); v=v.replace(/(\d{3})(\d)/,'$1.$2').replace(/(\d{3})(\d)/,'$1.$2').replace(/(\d{3})(\d{1,2})$/,'$1-$2'); el.value=v; }
+function mFone(el) { let v=el.value.replace(/\D/g,'').substring(0,11); v=v.length<=10?v.replace(/(\d{2})(\d)/,'($1) $2').replace(/(\d{4})(\d)/,'$1-$2'):v.replace(/(\d{2})(\d)/,'($1) $2').replace(/(\d{5})(\d)/,'$1-$2'); el.value=v; }
+
+/* TOAST */
+function showToast(msg,icon='ti-check'){ const t=document.getElementById('toast'); document.getElementById('tMsg').textContent=msg; document.getElementById('tIcon').className=`ti ${icon}`; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),3000); }
+
+document.addEventListener('keydown',e=>{ if(e.key==='Escape'){ closeModal(); closePanel(); } });
+initKPIs(); initStates(); render(GS);
+</script>
+</body>
+</html>

@@ -1,5 +1,6 @@
 package com.househost.guest.controller;
 
+import com.househost.guest.dto.GuestRegisterRequestDTO;
 import com.househost.guest.dto.GuestRequestDTO;
 import com.househost.guest.service.GuestService;
 import com.househost.shared.dto.ResponseDTO;
@@ -27,6 +28,11 @@ public class GuestController {
     @PostMapping
     public ResponseDTO create(@RequestBody GuestRequestDTO request) {
         return guestService.create(request);
+    }
+
+    @PostMapping("/register")
+    public ResponseDTO guestRegister(@RequestBody GuestRegisterRequestDTO request) {
+        return guestService.guestRegister(request);
     }
 
     @GetMapping

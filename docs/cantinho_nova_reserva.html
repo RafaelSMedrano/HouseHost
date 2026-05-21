@@ -1,0 +1,1147 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cantinho das Lavandas — Nova Reserva</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,600&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --lav:        #7C6B9E;
+    --lav-light:  #C4B5DC;
+    --lav-pale:   #F0EBF8;
+    --lav-dark:   #4A3D6B;
+    --lav-mid:    #5C4E83;
+    --sage:       #6B9470;
+    --sage-light: #B8D4BA;
+    --sage-pale:  #EBF4EC;
+    --cream:      #F7F4EF;
+    --warm:       #FDFBF8;
+    --text:       #2C2438;
+    --text-mid:   #6B5F7A;
+    --text-light: #9B90A8;
+    --border:     #E4DDEF;
+    --border-mid: #CEC4E0;
+    --amber:      #C08030;
+    --amber-pale: #FDF0DC;
+    --rose:       #A05070;
+    --rose-pale:  #F8ECF0;
+  }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--cream);
+    color: var(--text);
+    min-height: 100vh;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* ── TOPBAR ── */
+  .topbar {
+    position: sticky; top: 0; z-index: 50;
+    background: rgba(253,251,248,0.92);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--border);
+    padding: 0 32px;
+    height: 60px;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+
+  .topbar-left {
+    display: flex; align-items: center; gap: 20px;
+  }
+
+  .topbar-back {
+    display: flex; align-items: center; gap: 7px;
+    font-size: 13px; color: var(--text-mid);
+    text-decoration: none;
+    transition: color 0.2s;
+    padding: 6px 0;
+  }
+  .topbar-back:hover { color: var(--lav-dark); }
+  .topbar-back i { font-size: 16px; }
+
+  .topbar-sep {
+    width: 1px; height: 20px;
+    background: var(--border-mid);
+  }
+
+  .topbar-brand {
+    display: flex; align-items: center; gap: 10px;
+  }
+  .topbar-badge {
+    width: 30px; height: 30px; border-radius: 8px;
+    background: var(--lav-dark);
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+  }
+  .topbar-badge svg { opacity: 0.9; }
+  .topbar-name {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 16px; font-weight: 600;
+    color: var(--text);
+  }
+
+  .topbar-right {
+    display: flex; align-items: center; gap: 10px;
+  }
+
+  .topbar-status {
+    display: flex; align-items: center; gap: 6px;
+    font-size: 12px; color: var(--text-light);
+    background: var(--cream);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 5px 12px;
+  }
+  .topbar-status .dot {
+    width: 6px; height: 6px; border-radius: 50%;
+    background: var(--sage);
+  }
+
+  /* ── PAGE LAYOUT ── */
+  .page {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 40px 32px 80px;
+  }
+
+  /* ── PAGE HEADER ── */
+  .page-header {
+    margin-bottom: 36px;
+    display: flex; align-items: flex-start; justify-content: space-between;
+    gap: 24px; flex-wrap: wrap;
+  }
+
+  .page-eyebrow {
+    font-size: 10px; letter-spacing: 0.14em;
+    text-transform: uppercase; color: var(--text-light);
+    margin-bottom: 8px;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .page-eyebrow::before {
+    content: '';
+    display: inline-block;
+    width: 20px; height: 1px;
+    background: var(--border-mid);
+  }
+
+  .page-title {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 36px; font-weight: 600;
+    line-height: 1.1; letter-spacing: -0.01em;
+    color: var(--text);
+  }
+  .page-title em { font-style: italic; color: var(--text-mid); }
+
+  .page-sub {
+    font-size: 13px; color: var(--text-light);
+    font-weight: 300; margin-top: 6px;
+  }
+
+  /* Resumo dinâmico no topo direito */
+  .booking-preview {
+    background: var(--lav-dark);
+    border-radius: 14px;
+    padding: 18px 22px;
+    min-width: 220px;
+    position: relative;
+    overflow: hidden;
+    flex-shrink: 0;
+  }
+  .booking-preview::before {
+    content: '';
+    position: absolute;
+    width: 160px; height: 160px;
+    border-radius: 50%;
+    border: 1px solid rgba(255,255,255,0.07);
+    top: -50px; right: -50px;
+  }
+  .bp-label {
+    font-size: 10px; letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: rgba(255,255,255,0.4);
+    margin-bottom: 12px;
+  }
+  .bp-nights {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 36px; font-weight: 600;
+    color: #fff; line-height: 1;
+    margin-bottom: 2px;
+  }
+  .bp-nights span {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13px; font-weight: 300;
+    color: rgba(255,255,255,0.5);
+    margin-left: 4px;
+  }
+  .bp-total {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 22px; font-weight: 600;
+    color: var(--lav-light);
+    margin-top: 10px;
+  }
+  .bp-total-label {
+    font-size: 10px; color: rgba(255,255,255,0.35);
+    letter-spacing: 0.08em; text-transform: uppercase;
+    margin-top: 2px;
+  }
+
+  /* ── SECTIONS ── */
+  .form-section {
+    background: var(--warm);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    overflow: hidden;
+    margin-bottom: 20px;
+  }
+
+  .section-head {
+    padding: 20px 28px;
+    border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; gap: 14px;
+    cursor: pointer;
+    user-select: none;
+  }
+  .section-head:hover { background: var(--lav-pale); }
+
+  .section-icon {
+    width: 36px; height: 36px; border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+    font-size: 18px;
+  }
+  .icon-lav  { background: var(--lav-pale);  color: var(--lav-dark); }
+  .icon-sage { background: var(--sage-pale); color: var(--sage); }
+  .icon-amb  { background: var(--amber-pale); color: var(--amber); }
+  .icon-rose { background: var(--rose-pale); color: var(--rose); }
+
+  .section-info { flex: 1; }
+  .section-title {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 18px; font-weight: 600;
+    color: var(--text); line-height: 1.2;
+  }
+  .section-desc {
+    font-size: 12px; color: var(--text-light);
+    font-weight: 300; margin-top: 2px;
+  }
+
+  .section-chevron {
+    font-size: 18px; color: var(--text-light);
+    transition: transform 0.25s;
+  }
+  .form-section.open .section-chevron { transform: rotate(180deg); }
+
+  .section-body {
+    padding: 28px;
+    display: none;
+  }
+  .form-section.open .section-body { display: block; }
+
+  /* ── GRID DE CAMPOS ── */
+  .fields-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 18px 24px;
+  }
+  .col-full  { grid-column: 1 / -1; }
+  .col-third { grid-column: span 1; }
+
+  .fields-grid-3 {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 18px 24px;
+  }
+
+  /* ── CAMPO ── */
+  .field { display: flex; flex-direction: column; gap: 7px; }
+
+  .field-label {
+    font-size: 11px; font-weight: 500;
+    letter-spacing: 0.07em; text-transform: uppercase;
+    color: var(--text-mid);
+    display: flex; align-items: center; gap: 6px;
+  }
+  .field-label .required {
+    color: var(--rose); font-size: 13px; line-height: 1;
+  }
+
+  .input-wrap { position: relative; }
+  .input-wrap > i {
+    position: absolute;
+    left: 13px; top: 50%; transform: translateY(-50%);
+    font-size: 16px; color: var(--text-light);
+    pointer-events: none; transition: color 0.2s;
+  }
+
+  .field-input,
+  .field-select,
+  .field-textarea {
+    width: 100%;
+    background: var(--cream);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 11px 14px 11px 40px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px; font-weight: 400;
+    color: var(--text);
+    outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s, background 0.2s;
+    -webkit-appearance: none;
+  }
+  .field-input::placeholder,
+  .field-textarea::placeholder { color: var(--text-light); font-weight: 300; }
+
+  .field-input:focus,
+  .field-select:focus,
+  .field-textarea:focus {
+    border-color: var(--lav);
+    background: #fff;
+    box-shadow: 0 0 0 3px rgba(124,107,158,0.10);
+  }
+  .field-input:focus ~ i,
+  .input-wrap:has(:focus) > i { color: var(--lav); }
+
+  .field-select {
+    cursor: pointer;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%239B90A8' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+    padding-right: 36px;
+  }
+
+  .field-textarea {
+    resize: vertical;
+    min-height: 90px;
+    line-height: 1.6;
+  }
+
+  /* sem ícone à esquerda */
+  .no-icon .field-input,
+  .no-icon .field-select,
+  .no-icon .field-textarea { padding-left: 14px; }
+
+  .field-hint {
+    font-size: 11px; color: var(--text-light);
+    font-weight: 300; line-height: 1.5;
+  }
+
+  /* ── RADIO CARDS ── */
+  .radio-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    gap: 10px;
+  }
+  .radio-card input { display: none; }
+  .radio-card label {
+    display: flex; flex-direction: column; align-items: center;
+    gap: 8px;
+    padding: 14px 10px;
+    border: 1.5px solid var(--border);
+    border-radius: 12px;
+    cursor: pointer;
+    transition: all 0.2s;
+    text-align: center;
+    background: var(--cream);
+  }
+  .radio-card label:hover { border-color: var(--lav-light); background: var(--lav-pale); }
+  .radio-card input:checked + label {
+    border-color: var(--lav);
+    background: var(--lav-pale);
+    box-shadow: 0 0 0 3px rgba(124,107,158,0.1);
+  }
+  .radio-card-icon {
+    width: 36px; height: 36px; border-radius: 10px;
+    background: var(--border);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px; color: var(--text-mid);
+    transition: background 0.2s, color 0.2s;
+  }
+  .radio-card input:checked + label .radio-card-icon {
+    background: var(--lav-dark); color: #fff;
+  }
+  .radio-card-name {
+    font-size: 12px; font-weight: 500; color: var(--text);
+    line-height: 1.3;
+  }
+  .radio-card-detail {
+    font-size: 11px; color: var(--text-light); font-weight: 300;
+  }
+
+  /* ── STATUS PILLS ── */
+  .status-pills {
+    display: flex; flex-wrap: wrap; gap: 8px;
+  }
+  .status-pill input { display: none; }
+  .status-pill label {
+    display: flex; align-items: center; gap: 7px;
+    padding: 8px 16px;
+    border: 1.5px solid var(--border);
+    border-radius: 20px;
+    cursor: pointer;
+    font-size: 13px; font-weight: 400;
+    color: var(--text-mid);
+    transition: all 0.2s;
+    background: var(--cream);
+  }
+  .status-pill label:hover { border-color: var(--lav-light); }
+  .status-pill .pill-dot {
+    width: 8px; height: 8px; border-radius: 50%;
+    transition: background 0.2s;
+  }
+
+  .status-pill.s-confirmed input:checked + label { border-color: var(--sage); background: var(--sage-pale); color: var(--sage); }
+  .status-pill.s-confirmed .pill-dot           { background: var(--sage); }
+  .status-pill.s-pending   input:checked + label { border-color: var(--amber); background: var(--amber-pale); color: var(--amber); }
+  .status-pill.s-pending   .pill-dot            { background: var(--amber); }
+  .status-pill.s-cancelled input:checked + label { border-color: var(--rose); background: var(--rose-pale); color: var(--rose); }
+  .status-pill.s-cancelled .pill-dot            { background: var(--rose); }
+  .status-pill.s-checkedin input:checked + label { border-color: var(--lav); background: var(--lav-pale); color: var(--lav-dark); }
+  .status-pill.s-checkedin .pill-dot            { background: var(--lav); }
+
+  /* ── COUNTER ── */
+  .counter-wrap {
+    display: flex; align-items: center; gap: 0;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    overflow: hidden;
+    width: fit-content;
+  }
+  .counter-btn {
+    width: 40px; height: 42px;
+    background: var(--cream);
+    border: none;
+    font-size: 20px; color: var(--text-mid);
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    transition: background 0.2s, color 0.2s;
+    flex-shrink: 0;
+  }
+  .counter-btn:hover { background: var(--lav-pale); color: var(--lav-dark); }
+  .counter-val {
+    width: 56px; height: 42px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 16px; font-weight: 500;
+    color: var(--text);
+    border-left: 1px solid var(--border);
+    border-right: 1px solid var(--border);
+    background: #fff;
+  }
+
+  /* ── ORIGEM TAGS ── */
+  .origem-tags {
+    display: flex; flex-wrap: wrap; gap: 8px;
+  }
+  .origem-tag input { display: none; }
+  .origem-tag label {
+    display: flex; align-items: center; gap: 6px;
+    padding: 7px 14px;
+    border: 1.5px solid var(--border);
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 13px; color: var(--text-mid);
+    transition: all 0.2s;
+    background: var(--cream);
+  }
+  .origem-tag label:hover { border-color: var(--lav-light); background: var(--lav-pale); }
+  .origem-tag input:checked + label {
+    border-color: var(--lav-mid);
+    background: var(--lav-pale);
+    color: var(--lav-dark);
+    font-weight: 500;
+  }
+  .origem-tag label i { font-size: 15px; }
+
+  /* ── SEPARADOR INTERNO ── */
+  .inner-sep {
+    height: 1px;
+    background: var(--border);
+    margin: 24px 0;
+  }
+
+  /* ── ALERTA DATAS ── */
+  .date-alert {
+    display: flex; align-items: flex-start; gap: 10px;
+    background: var(--amber-pale);
+    border: 1px solid #E8C87A;
+    border-radius: 10px;
+    padding: 12px 14px;
+    font-size: 13px; color: #7A5010;
+    line-height: 1.5;
+    margin-top: 14px;
+  }
+  .date-alert.hidden { display: none; }
+  .date-alert i { font-size: 16px; flex-shrink: 0; margin-top: 1px; }
+
+  /* ── FOOTER DE AÇÃO ── */
+  .form-footer {
+    position: sticky; bottom: 0;
+    background: rgba(253,251,248,0.96);
+    backdrop-filter: blur(12px);
+    border-top: 1px solid var(--border);
+    padding: 16px 32px;
+    display: flex; align-items: center; justify-content: space-between;
+    gap: 16px; flex-wrap: wrap;
+    z-index: 40;
+  }
+
+  .footer-info {
+    display: flex; flex-direction: column; gap: 2px;
+  }
+  .footer-info-label {
+    font-size: 11px; color: var(--text-light);
+    letter-spacing: 0.06em; text-transform: uppercase;
+  }
+  .footer-info-val {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 22px; font-weight: 600;
+    color: var(--text);
+  }
+
+  .footer-actions { display: flex; align-items: center; gap: 10px; }
+
+  .btn-cancel {
+    display: inline-flex; align-items: center; gap: 7px;
+    padding: 11px 20px;
+    border: 1.5px solid var(--border-mid);
+    border-radius: 10px;
+    background: transparent;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13px; font-weight: 500;
+    color: var(--text-mid);
+    cursor: pointer;
+    transition: all 0.2s;
+    text-decoration: none;
+  }
+  .btn-cancel:hover { border-color: var(--rose); color: var(--rose); background: var(--rose-pale); }
+
+  .btn-draft {
+    display: inline-flex; align-items: center; gap: 7px;
+    padding: 11px 20px;
+    border: 1.5px solid var(--lav-light);
+    border-radius: 10px;
+    background: var(--lav-pale);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13px; font-weight: 500;
+    color: var(--lav-dark);
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .btn-draft:hover { background: var(--lav-light); }
+
+  .btn-save {
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 12px 26px;
+    border: none;
+    border-radius: 10px;
+    background: var(--lav-dark);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13px; font-weight: 500;
+    color: #fff;
+    cursor: pointer;
+    transition: all 0.2s;
+    box-shadow: 0 4px 14px rgba(74,61,107,0.25);
+  }
+  .btn-save:hover { background: var(--lav-mid); transform: translateY(-1px); box-shadow: 0 6px 18px rgba(74,61,107,0.3); }
+  .btn-save:active { transform: none; }
+  .btn-save i { font-size: 17px; }
+
+  /* ── TOAST ── */
+  .toast {
+    position: fixed; bottom: 90px; left: 50%;
+    transform: translateX(-50%) translateY(20px);
+    background: var(--text);
+    color: #fff;
+    padding: 13px 22px;
+    border-radius: 10px;
+    font-size: 13px; font-weight: 400;
+    display: flex; align-items: center; gap: 10px;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.18);
+    opacity: 0; pointer-events: none;
+    transition: all 0.35s cubic-bezier(0.34,1.56,0.64,1);
+    z-index: 100; white-space: nowrap;
+  }
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+  .toast i { font-size: 18px; color: var(--sage-light); }
+
+  /* ── RESPONSIVE ── */
+  @media (max-width: 720px) {
+    .topbar { padding: 0 20px; }
+    .topbar-name { display: none; }
+    .booking-preview { display: none; }
+    .page { padding: 24px 20px 100px; }
+    .page-header { flex-direction: column; }
+    .fields-grid, .fields-grid-3 { grid-template-columns: 1fr; }
+    .col-full { grid-column: 1; }
+    .section-body { padding: 20px; }
+    .form-footer { padding: 14px 20px; }
+    .btn-draft { display: none; }
+    .page-title { font-size: 28px; }
+  }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(16px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  .form-section {
+    animation: fadeUp 0.4s ease both;
+  }
+  .form-section:nth-child(1) { animation-delay: 0.05s; }
+  .form-section:nth-child(2) { animation-delay: 0.10s; }
+  .form-section:nth-child(3) { animation-delay: 0.15s; }
+  .form-section:nth-child(4) { animation-delay: 0.20s; }
+  .form-section:nth-child(5) { animation-delay: 0.25s; }
+
+  @keyframes spin { to { transform: rotate(360deg); } }
+</style>
+</head>
+<body>
+
+<!-- ── TOPBAR ── -->
+<header class="topbar">
+  <div class="topbar-left">
+    <a href="#" class="topbar-back">
+      <i class="ti ti-arrow-left"></i>
+      Voltar
+    </a>
+    <div class="topbar-sep"></div>
+    <div class="topbar-brand">
+      <div class="topbar-badge">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 2C8 2 5 6 5 10c0 5 7 12 7 12s7-7 7-12c0-4-3-8-7-8z"/>
+          <circle cx="12" cy="10" r="2.5"/>
+        </svg>
+      </div>
+      <span class="topbar-name">Cantinho das Lavandas</span>
+    </div>
+  </div>
+  <div class="topbar-right">
+    <div class="topbar-status">
+      <span class="dot"></span>
+      Reservas abertas
+    </div>
+  </div>
+</header>
+
+<!-- ── PAGE ── -->
+<main class="page">
+
+  <!-- Header -->
+  <div class="page-header">
+    <div>
+      <div class="page-eyebrow">Reservas</div>
+      <h1 class="page-title">Nova <em>reserva</em></h1>
+      <p class="page-sub">Preencha os dados abaixo para registrar uma nova hospedagem.</p>
+    </div>
+    <div class="booking-preview">
+      <div class="bp-label">Resumo da reserva</div>
+      <div class="bp-nights" id="previewNights">—<span>noites</span></div>
+      <div class="bp-total" id="previewTotal">R$ —</div>
+      <div class="bp-total-label">Total estimado</div>
+    </div>
+  </div>
+
+  <form id="reservaForm" onsubmit="handleSave(event)">
+
+    <!-- ══ 1. HÓSPEDE ══ -->
+    <div class="form-section open">
+      <div class="section-head" onclick="toggleSection(this)">
+        <div class="section-icon icon-lav"><i class="ti ti-user"></i></div>
+        <div class="section-info">
+          <div class="section-title">Dados do hóspede</div>
+          <div class="section-desc">Informações pessoais e de contato</div>
+        </div>
+        <i class="ti ti-chevron-down section-chevron"></i>
+      </div>
+      <div class="section-body">
+        <div class="fields-grid">
+
+          <div class="field">
+            <label class="field-label">Nome completo <span class="required">*</span></label>
+            <div class="input-wrap">
+              <i class="ti ti-user"></i>
+              <input class="field-input" type="text" placeholder="Ex: Maria Oliveira" required>
+            </div>
+          </div>
+
+          <div class="field">
+            <label class="field-label">CPF</label>
+            <div class="input-wrap">
+              <i class="ti ti-id-badge"></i>
+              <input class="field-input" type="text" placeholder="000.000.000-00" maxlength="14" oninput="maskCPF(this)">
+            </div>
+          </div>
+
+          <div class="field">
+            <label class="field-label">E-mail</label>
+            <div class="input-wrap">
+              <i class="ti ti-mail"></i>
+              <input class="field-input" type="email" placeholder="hospede@email.com">
+            </div>
+          </div>
+
+          <div class="field">
+            <label class="field-label">Telefone / WhatsApp <span class="required">*</span></label>
+            <div class="input-wrap">
+              <i class="ti ti-device-mobile"></i>
+              <input class="field-input" type="tel" placeholder="(00) 00000-0000" maxlength="15" oninput="maskPhone(this)" required>
+            </div>
+          </div>
+
+          <div class="field">
+            <label class="field-label">Cidade de origem</label>
+            <div class="input-wrap">
+              <i class="ti ti-map-pin"></i>
+              <input class="field-input" type="text" placeholder="Ex: São Paulo - SP">
+            </div>
+          </div>
+
+          <div class="field">
+            <label class="field-label">Data de nascimento</label>
+            <div class="input-wrap">
+              <i class="ti ti-calendar"></i>
+              <input class="field-input" type="date">
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ 2. QUARTO & DATAS ══ -->
+    <div class="form-section open">
+      <div class="section-head" onclick="toggleSection(this)">
+        <div class="section-icon icon-sage"><i class="ti ti-door"></i></div>
+        <div class="section-info">
+          <div class="section-title">Quarto & Período</div>
+          <div class="section-desc">Acomodação e datas de hospedagem</div>
+        </div>
+        <i class="ti ti-chevron-down section-chevron"></i>
+      </div>
+      <div class="section-body">
+
+        <!-- Seleção de quarto -->
+        <div class="field" style="margin-bottom: 24px;">
+          <label class="field-label">Quarto <span class="required">*</span></label>
+          <div class="radio-cards">
+            <div class="radio-card">
+              <input type="radio" name="quarto" id="q1" value="suitelavanda" onchange="updatePreview()">
+              <label for="q1">
+                <div class="radio-card-icon"><i class="ti ti-home"></i></div>
+                <div class="radio-card-name">Suíte Lavanda</div>
+                <div class="radio-card-detail">R$ 380/noite</div>
+              </label>
+            </div>
+            <div class="radio-card">
+              <input type="radio" name="quarto" id="q2" value="suitesalvia" onchange="updatePreview()">
+              <label for="q2">
+                <div class="radio-card-icon"><i class="ti ti-home"></i></div>
+                <div class="radio-card-name">Suíte Sálvia</div>
+                <div class="radio-card-detail">R$ 320/noite</div>
+              </label>
+            </div>
+            <div class="radio-card">
+              <input type="radio" name="quarto" id="q3" value="chale" onchange="updatePreview()">
+              <label for="q3">
+                <div class="radio-card-icon"><i class="ti ti-building-cottage"></i></div>
+                <div class="radio-card-name">Chalé Bergamota</div>
+                <div class="radio-card-detail">R$ 450/noite</div>
+              </label>
+            </div>
+            <div class="radio-card">
+              <input type="radio" name="quarto" id="q4" value="standard" onchange="updatePreview()">
+              <label for="q4">
+                <div class="radio-card-icon"><i class="ti ti-bed"></i></div>
+                <div class="radio-card-name">Standard</div>
+                <div class="radio-card-detail">R$ 220/noite</div>
+              </label>
+            </div>
+          </div>
+        </div>
+
+        <div class="fields-grid">
+
+          <div class="field">
+            <label class="field-label">Check-in <span class="required">*</span></label>
+            <div class="input-wrap">
+              <i class="ti ti-calendar-event"></i>
+              <input class="field-input" type="date" id="checkin" onchange="updatePreview(); checkDates()" required>
+            </div>
+          </div>
+
+          <div class="field">
+            <label class="field-label">Check-out <span class="required">*</span></label>
+            <div class="input-wrap">
+              <i class="ti ti-calendar-event"></i>
+              <input class="field-input" type="date" id="checkout" onchange="updatePreview(); checkDates()" required>
+            </div>
+          </div>
+
+        </div>
+
+        <div class="date-alert hidden" id="dateAlert">
+          <i class="ti ti-alert-triangle"></i>
+          <span>A data de check-out deve ser posterior ao check-in. Por favor, revise as datas.</span>
+        </div>
+
+        <div class="inner-sep"></div>
+
+        <!-- Número de pessoas -->
+        <div class="fields-grid">
+          <div class="field">
+            <label class="field-label">Adultos</label>
+            <div class="counter-wrap">
+              <button type="button" class="counter-btn" onclick="changeCount('adultos',-1)">−</button>
+              <div class="counter-val" id="adultos">2</div>
+              <button type="button" class="counter-btn" onclick="changeCount('adultos',1)">+</button>
+            </div>
+          </div>
+          <div class="field">
+            <label class="field-label">Crianças</label>
+            <div class="counter-wrap">
+              <button type="button" class="counter-btn" onclick="changeCount('criancas',-1)">−</button>
+              <div class="counter-val" id="criancas">0</div>
+              <button type="button" class="counter-btn" onclick="changeCount('criancas',1)">+</button>
+            </div>
+          </div>
+          <div class="field">
+            <label class="field-label">Pets</label>
+            <div class="counter-wrap">
+              <button type="button" class="counter-btn" onclick="changeCount('pets',-1)">−</button>
+              <div class="counter-val" id="pets">0</div>
+              <button type="button" class="counter-btn" onclick="changeCount('pets',1)">+</button>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ══ 3. PAGAMENTO ══ -->
+    <div class="form-section open">
+      <div class="section-head" onclick="toggleSection(this)">
+        <div class="section-icon icon-amb"><i class="ti ti-credit-card"></i></div>
+        <div class="section-info">
+          <div class="section-title">Pagamento</div>
+          <div class="section-desc">Forma de pagamento e valores</div>
+        </div>
+        <i class="ti ti-chevron-down section-chevron"></i>
+      </div>
+      <div class="section-body">
+        <div class="fields-grid">
+
+          <div class="field">
+            <label class="field-label">Forma de pagamento <span class="required">*</span></label>
+            <div class="input-wrap no-icon">
+              <select class="field-select" required style="padding-left:14px">
+                <option value="" disabled selected>Selecione</option>
+                <option>Pix</option>
+                <option>Cartão de crédito</option>
+                <option>Cartão de débito</option>
+                <option>Dinheiro</option>
+                <option>Transferência bancária</option>
+                <option>Booking (plataforma)</option>
+                <option>Airbnb (plataforma)</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="field">
+            <label class="field-label">Parcelas</label>
+            <div class="input-wrap no-icon">
+              <select class="field-select" style="padding-left:14px">
+                <option>À vista</option>
+                <option>2x</option>
+                <option>3x</option>
+                <option>Entrada + saldo no check-in</option>
+                <option>50% entrada + 50% check-out</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="field">
+            <label class="field-label">Valor da diária (R$)</label>
+            <div class="input-wrap">
+              <i class="ti ti-currency-real"></i>
+              <input class="field-input" type="number" id="valorDiaria" placeholder="0,00" min="0" step="0.01" oninput="updatePreview()">
+            </div>
+          </div>
+
+          <div class="field">
+            <label class="field-label">Desconto (R$)</label>
+            <div class="input-wrap">
+              <i class="ti ti-discount"></i>
+              <input class="field-input" type="number" id="desconto" placeholder="0,00" min="0" step="0.01" oninput="updatePreview()">
+            </div>
+          </div>
+
+          <div class="field">
+            <label class="field-label">Valor pago / sinal (R$)</label>
+            <div class="input-wrap">
+              <i class="ti ti-cash"></i>
+              <input class="field-input" type="number" placeholder="0,00" min="0" step="0.01">
+            </div>
+          </div>
+
+          <div class="field">
+            <label class="field-label">Data do pagamento</label>
+            <div class="input-wrap">
+              <i class="ti ti-calendar-check"></i>
+              <input class="field-input" type="date">
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ 4. ORIGEM & STATUS ══ -->
+    <div class="form-section open">
+      <div class="section-head" onclick="toggleSection(this)">
+        <div class="section-icon icon-rose"><i class="ti ti-antenna"></i></div>
+        <div class="section-info">
+          <div class="section-title">Origem & Status</div>
+          <div class="section-desc">De onde veio a reserva e situação atual</div>
+        </div>
+        <i class="ti ti-chevron-down section-chevron"></i>
+      </div>
+      <div class="section-body">
+
+        <div class="field" style="margin-bottom: 24px;">
+          <label class="field-label">Origem da reserva</label>
+          <div class="origem-tags">
+            <div class="origem-tag">
+              <input type="radio" name="origem" id="or-direct" value="direto" checked>
+              <label for="or-direct"><i class="ti ti-phone"></i> Direto / Telefone</label>
+            </div>
+            <div class="origem-tag">
+              <input type="radio" name="origem" id="or-whats" value="whatsapp">
+              <label for="or-whats"><i class="ti ti-brand-whatsapp"></i> WhatsApp</label>
+            </div>
+            <div class="origem-tag">
+              <input type="radio" name="origem" id="or-insta" value="instagram">
+              <label for="or-insta"><i class="ti ti-brand-instagram"></i> Instagram</label>
+            </div>
+            <div class="origem-tag">
+              <input type="radio" name="origem" id="or-booking" value="booking">
+              <label for="or-booking"><i class="ti ti-world"></i> Booking</label>
+            </div>
+            <div class="origem-tag">
+              <input type="radio" name="origem" id="or-airbnb" value="airbnb">
+              <label for="or-airbnb"><i class="ti ti-home-star"></i> Airbnb</label>
+            </div>
+            <div class="origem-tag">
+              <input type="radio" name="origem" id="or-indicacao" value="indicacao">
+              <label for="or-indicacao"><i class="ti ti-users"></i> Indicação</label>
+            </div>
+            <div class="origem-tag">
+              <input type="radio" name="origem" id="or-outros" value="outros">
+              <label for="or-outros"><i class="ti ti-dots"></i> Outros</label>
+            </div>
+          </div>
+        </div>
+
+        <div class="inner-sep"></div>
+
+        <div class="field">
+          <label class="field-label">Status da reserva <span class="required">*</span></label>
+          <div class="status-pills">
+            <div class="status-pill s-confirmed">
+              <input type="radio" name="status" id="st-conf" value="confirmada" checked>
+              <label for="st-conf"><span class="pill-dot"></span> Confirmada</label>
+            </div>
+            <div class="status-pill s-pending">
+              <input type="radio" name="status" id="st-pend" value="pendente">
+              <label for="st-pend"><span class="pill-dot"></span> Pendente</label>
+            </div>
+            <div class="status-pill s-checkedin">
+              <input type="radio" name="status" id="st-in" value="checkin">
+              <label for="st-in"><span class="pill-dot"></span> Check-in feito</label>
+            </div>
+            <div class="status-pill s-cancelled">
+              <input type="radio" name="status" id="st-canc" value="cancelada">
+              <label for="st-canc"><span class="pill-dot"></span> Cancelada</label>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ══ 5. OBSERVAÇÕES ══ -->
+    <div class="form-section open">
+      <div class="section-head" onclick="toggleSection(this)">
+        <div class="section-icon icon-lav"><i class="ti ti-notes"></i></div>
+        <div class="section-info">
+          <div class="section-title">Observações</div>
+          <div class="section-desc">Pedidos especiais, restrições e anotações internas</div>
+        </div>
+        <i class="ti ti-chevron-down section-chevron"></i>
+      </div>
+      <div class="section-body">
+        <div class="fields-grid">
+
+          <div class="field col-full">
+            <label class="field-label">Pedidos especiais do hóspede</label>
+            <div class="input-wrap no-icon">
+              <textarea class="field-textarea" placeholder="Ex: quarto no andar térreo, berço para bebê, intolerância alimentar..."></textarea>
+            </div>
+          </div>
+
+          <div class="field col-full">
+            <label class="field-label">Anotações internas</label>
+            <div class="input-wrap no-icon">
+              <textarea class="field-textarea" placeholder="Ex: hóspede VIP, segunda visita, promoção aplicada..."></textarea>
+            </div>
+            <span class="field-hint">Visível apenas para a equipe. Não aparece para o hóspede.</span>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+  </form>
+
+</main>
+
+<!-- ── FOOTER DE AÇÃO ── -->
+<footer class="form-footer">
+  <div class="footer-info">
+    <div class="footer-info-label">Total estimado</div>
+    <div class="footer-info-val" id="footerTotal">R$ —</div>
+  </div>
+  <div class="footer-actions">
+    <button type="button" class="btn-cancel" onclick="confirmCancel()">
+      <i class="ti ti-x"></i> Cancelar
+    </button>
+    <button type="button" class="btn-draft" onclick="showToast('Rascunho salvo!','ti-device-floppy')">
+      <i class="ti ti-device-floppy"></i> Salvar rascunho
+    </button>
+    <button type="submit" form="reservaForm" class="btn-save" id="saveBtn">
+      <i class="ti ti-check"></i> Confirmar reserva
+    </button>
+  </div>
+</footer>
+
+<!-- Toast -->
+<div class="toast" id="toast">
+  <i class="ti ti-check" id="toastIcon"></i>
+  <span id="toastMsg">Reserva salva com sucesso!</span>
+</div>
+
+<script>
+  /* ── Toggle seções ── */
+  function toggleSection(head) {
+    head.closest('.form-section').classList.toggle('open');
+  }
+
+  /* ── Counters ── */
+  const counts = { adultos: 2, criancas: 0, pets: 0 };
+  const mins   = { adultos: 1, criancas: 0, pets: 0 };
+  function changeCount(key, delta) {
+    counts[key] = Math.max(mins[key], counts[key] + delta);
+    document.getElementById(key).textContent = counts[key];
+  }
+
+  /* ── Preço por quarto ── */
+  const prices = { suitelavanda: 380, suitesalvia: 320, chale: 450, standard: 220 };
+
+  /* ── Preview dinâmico ── */
+  function updatePreview() {
+    const ci = document.getElementById('checkin').value;
+    const co = document.getElementById('checkout').value;
+    const quartoEl = document.querySelector('input[name="quarto"]:checked');
+    const diaria   = parseFloat(document.getElementById('valorDiaria').value) || 0;
+    const desconto = parseFloat(document.getElementById('desconto').value) || 0;
+
+    let nights = 0;
+    if (ci && co) {
+      const d1 = new Date(ci), d2 = new Date(co);
+      nights = Math.max(0, Math.round((d2 - d1) / 86400000));
+    }
+
+    let rate = diaria;
+    if (!rate && quartoEl) rate = prices[quartoEl.value] || 0;
+
+    const total = Math.max(0, (nights * rate) - desconto);
+
+    document.getElementById('previewNights').innerHTML =
+      nights > 0 ? `${nights}<span>noite${nights > 1 ? 's' : ''}</span>` : `—<span>noites</span>`;
+
+    const fmt = v => v > 0 ? `R$ ${v.toLocaleString('pt-BR',{minimumFractionDigits:2})}` : 'R$ —';
+    document.getElementById('previewTotal').textContent = fmt(total);
+    document.getElementById('footerTotal').textContent  = fmt(total);
+  }
+
+  /* Preenche campo valor ao escolher quarto */
+  document.querySelectorAll('input[name="quarto"]').forEach(r => {
+    r.addEventListener('change', () => {
+      const p = prices[r.value];
+      if (p) document.getElementById('valorDiaria').value = p;
+      updatePreview();
+    });
+  });
+
+  /* ── Validação datas ── */
+  function checkDates() {
+    const ci = document.getElementById('checkin').value;
+    const co = document.getElementById('checkout').value;
+    const alert = document.getElementById('dateAlert');
+    if (ci && co && new Date(co) <= new Date(ci)) {
+      alert.classList.remove('hidden');
+    } else {
+      alert.classList.add('hidden');
+    }
+  }
+
+  /* ── Máscaras ── */
+  function maskCPF(el) {
+    let v = el.value.replace(/\D/g,'').substring(0,11);
+    v = v.replace(/(\d{3})(\d)/,'$1.$2')
+         .replace(/(\d{3})(\d)/,'$1.$2')
+         .replace(/(\d{3})(\d{1,2})$/,'$1-$2');
+    el.value = v;
+  }
+  function maskPhone(el) {
+    let v = el.value.replace(/\D/g,'').substring(0,11);
+    if (v.length <= 10) v = v.replace(/(\d{2})(\d)/,'($1) $2').replace(/(\d{4})(\d)/,'$1-$2');
+    else v = v.replace(/(\d{2})(\d)/,'($1) $2').replace(/(\d{5})(\d)/,'$1-$2');
+    el.value = v;
+  }
+
+  /* ── Salvar ── */
+  function handleSave(e) {
+    e.preventDefault();
+    const btn = document.getElementById('saveBtn');
+    btn.innerHTML = '<i class="ti ti-loader-2" style="animation:spin .7s linear infinite"></i> Salvando...';
+    btn.disabled = true;
+    setTimeout(() => {
+      btn.innerHTML = '<i class="ti ti-check"></i> Confirmar reserva';
+      btn.disabled = false;
+      showToast('Reserva confirmada com sucesso!', 'ti-calendar-check');
+    }, 1400);
+  }
+
+  /* ── Cancelar ── */
+  function confirmCancel() {
+    if (confirm('Deseja descartar as alterações e voltar?')) history.back();
+  }
+
+  /* ── Toast ── */
+  function showToast(msg, icon = 'ti-check') {
+    const t = document.getElementById('toast');
+    document.getElementById('toastMsg').textContent = msg;
+    document.getElementById('toastIcon').className = `ti ${icon}`;
+    t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), 3200);
+  }
+</script>
+</body>
+</html>

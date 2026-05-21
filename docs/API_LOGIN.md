@@ -278,7 +278,7 @@ Codigo:
 
 ```java
 public class LoginRequestDTO {
-    public String username;
+    public String email;
     public String password;
 }
 ```
@@ -287,7 +287,7 @@ Corpo esperado pela API:
 
 ```json
 {
-  "username": "admin",
+  "email": "admin@cantinho.com",
   "password": "senha"
 }
 ```
@@ -421,7 +421,7 @@ Codigo:
 
 ```java
 public interface UserRepository extends JpaRepository<User, Long> {
-    Optional<User> findByUsername(String username);
+    Optional<User> findByEmail(String email);
 }
 ```
 
@@ -430,10 +430,10 @@ Esse repository permite buscar usuario no banco.
 O Spring Data JPA entende automaticamente o metodo:
 
 ```java
-findByUsername
+findByEmail
 ```
 
-E monta a query com base no nome do campo `username`.
+E monta a query com base no nome do campo `email`.
 
 Foi usado `Optional<User>` em vez de retornar `User` direto porque deixa explicito que o usuario pode nao existir.
 
@@ -460,18 +460,18 @@ Fluxo:
 public ResponseDTO login(LoginRequestDTO request) {
 ```
 
-Primeiro valida se veio request, username e password:
+Primeiro valida se veio request, email e password:
 
 ```java
-if (request == null || request.username == null || request.password == null) {
+if (request == null || isBlank(request.email) || isBlank(request.password)) {
     throw new InvalidLoginException();
 }
 ```
 
-Depois busca o usuario:
+Depois busca o usuario pelo email:
 
 ```java
-User user = userRepository.findByUsername(request.username)
+User user = userRepository.findByEmail(request.email.trim())
         .orElseThrow(InvalidLoginException::new);
 ```
 
@@ -524,7 +524,7 @@ Request:
 
 ```json
 {
-  "username": "admin",
+  "email": "admin@cantinho.com",
   "password": "senha"
 }
 ```

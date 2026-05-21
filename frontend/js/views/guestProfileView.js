@@ -1,0 +1,412 @@
+import { deleteFinancialTransaction, findAllBookings, findAllFinancialTransactions, findAllStays, findGuestById, settleFinancialTransaction } from "../api.js?v=2026-05-19-delete-payment";
+
+export function renderGuestProfileView(containerId, options = {}) {
+    const container = document.getElementById(containerId);
+
+    if (!container) {
+        return;
+    }
+
+    container.innerHTML = `
+<div class="main guests-main">
+  <div class="content guest-profile-page">
+    <div class="reservation-profile-loading">Carregando hospede...</div>
+  </div>
+  <div id="guest-profile-toast" class="booking-toast"><i class="ti ti-alert-circle"></i><span></span></div>
+</div>`;
+
+    loadGuestProfile(container, options);
+}
+
+async function loadGuestProfile(container, options) {
+    try {
+        const [guestResponse, bookingsResponse, staysResponse, transactionsResponse] = await Promise.all([
+            findGuestById(options.guestId),
+            findAllBookings(),
+            findAllStays(),
+            findAllFinancialTransactions(),
+        ]);
+
+        renderProfile(
+            container,
+            guestResponse.data,
+            bookingsResponse.data || [],
+            staysResponse.data || [],
+            transactionsResponse.data || [],
+            options
+        );
+    } catch (error) {
+        container.querySelector(".guest-profile-page").innerHTML = `
+          <div class="rooms-empty rooms-error">${escapeHtml(error.message || "Nao foi possivel carregar o hospede.")}</div>
+        `;
+        showToast(container, error.message || "Nao foi possivel carregar o hospede.");
+    }
+}
+
+function renderProfile(container, guest, bookings, stays, transactions, options) {
+    const guestBookings = bookings.filter((booking) => Number(booking.guestId) === Number(guest.id));
+    const guestStays = stays.filter((stay) => Number(stay.guestId) === Number(guest.id));
+    const guestTransactions = transactions.filter((transaction) => Number(transaction.guestId) === Number(guest.id));
+    const pendingTransactions = getPayableTransactions(guestTransactions);
+    const activeBookings = guestBookings.filter((booking) => ["PENDING", "CONFIRMED"].includes(normalizeStatus(booking.status)));
+    const activeStays = guestStays.filter((stay) => normalizeStatus(stay.status) === "ACTIVE");
+    const status = activeStays.length > 0 ? "IN_STAY" : activeBookings.length > 0 ? "IN_BOOKING" : normalizeGuestStatus(guest.status);
+    const hasPaymentAction = ["WAITING_PAYMENT", "DEBTOR"].includes(String(guest.financialStatus || "").toUpperCase()) && pendingTransactions.length > 0;
+
+    container.querySelector(".guest-profile-page").innerHTML = `
+      <div class="reservation-profile-header">
+        <button class="dashboard-back-btn reservation-profile-back" type="button"><i class="ti ti-arrow-left"></i> Voltar</button>
+        <div class="guest-profile-title-block">
+          <span class="guest-profile-avatar">${initialsFor(guest.fullName)}</span>
+          <div class="reservation-profile-title">
+            <span>Hospede #${escapeHtml(guest.id)}</span>
+            <strong>${escapeHtml(guest.fullName || "-")}</strong>
+          </div>
+        </div>
+        ${guestStatusBadge(status)}
+      </div>
+
+      <div class="guest-profile-grid">
+        <section class="reservation-profile-panel hero">
+          <div class="profile-panel-label">Resumo</div>
+          <div class="guest-profile-stats">
+            <div><span>Estadias</span><strong>${escapeHtml(guest.stayCount ?? guestStays.length ?? 0)}</strong></div>
+            <div><span>Total gasto</span><strong>${formatMoney(guest.totalSpent)}</strong></div>
+            <div><span>Avaliacao</span><strong>${formatRating(guest.rating)}</strong></div>
+          </div>
+          <div class="guest-profile-badges">
+            ${guestTypeBadge(guest.guestType)}
+            ${financialStatusBadge(guest.financialStatus)}
+            ${guest.travelsWithPets ? '<span class="guest-type-badge new">Pet</span>' : ""}
+            ${guest.needsAccessibility ? '<span class="guest-type-badge regular">Acessibilidade</span>' : ""}
+          </div>
+          ${hasPaymentAction ? '<button class="guest-payment-cta" type="button" data-go-payments><i class="ti ti-cash"></i> Efetuar pagamento</button>' : ""}
+        </section>
+
+        <section class="reservation-profile-panel">
+          <div class="profile-panel-label">Contato</div>
+          ${infoRow("Telefone", guest.phone)}
+          ${infoRow("Email", guest.email)}
+          ${infoRow("Cidade", [guest.city, guest.state].filter(Boolean).join(" - ") || "-")}
+          ${infoRow("Endereco", guest.address)}
+        </section>
+
+        <section class="reservation-profile-panel">
+          <div class="profile-panel-label">Identificacao</div>
+          ${infoRow("CPF", guest.documentNumber)}
+          ${infoRow("Nascimento", formatDate(guest.birthDate))}
+          ${infoRow("Genero", guest.gender)}
+          ${infoRow("Quarto favorito", guest.favoriteRoom)}
+        </section>
+
+        <section class="reservation-profile-panel">
+          <div class="profile-panel-label">Historico</div>
+          ${infoRow("Status financeiro", financialStatusText(guest.financialStatus))}
+          ${infoRow("Reservas ativas", activeBookings.length)}
+          ${infoRow("Estadias ativas", activeStays.length)}
+          ${infoRow("Transacoes", guestTransactions.length)}
+          ${infoRow("Ultima estadia", formatDate(guest.lastStayDate))}
+          ${infoRow("Origem", guest.originChannel)}
+          ${infoRow("Indicacao", guest.referredBy)}
+        </section>
+
+        ${hasPaymentAction ? `
+          <section id="guest-payment-transactions" class="reservation-profile-panel wide">
+            <div class="guest-payment-header">
+              <div>
+                <div class="profile-panel-label">Pagamentos pendentes</div>
+                <p>Transacoes em espera ou em debito vinculadas a este hospede.</p>
+              </div>
+              <span>${pendingTransactions.length} pendencia${pendingTransactions.length === 1 ? "" : "s"}</span>
+            </div>
+            <div class="guest-payment-list">
+              ${pendingTransactions.map(renderPaymentTransaction).join("")}
+            </div>
+          </section>
+        ` : ""}
+
+        <section class="reservation-profile-panel wide">
+          <div class="profile-panel-label">Preferencias</div>
+          ${preferencesList(guest.preferences)}
+        </section>
+
+        <section class="reservation-profile-panel wide">
+          <div class="profile-panel-label">Observacoes</div>
+          <div class="profile-notes">
+            <div>
+              <span>Anotacoes internas</span>
+              <p>${escapeHtml(guest.notes || "Nenhuma anotacao registrada.")}</p>
+            </div>
+            <div>
+              <span>Dados especiais</span>
+              <p>${escapeHtml(buildSpecialNotes(guest))}</p>
+            </div>
+          </div>
+        </section>
+
+        <section class="reservation-profile-panel wide muted">
+          ${infoRow("Criado em", formatDateTime(guest.createdAt))}
+          ${infoRow("Atualizado em", formatDateTime(guest.updatedAt))}
+        </section>
+      </div>
+
+      <div class="guest-profile-actions">
+        <button class="btn btn-primary" type="button" data-edit-profile><i class="ti ti-pencil"></i> Editar hospede</button>
+        <button class="dashboard-back-btn reservation-profile-back" type="button" data-new-reservation><i class="ti ti-calendar-plus"></i> Nova reserva</button>
+      </div>
+    `;
+
+    container.querySelector(".reservation-profile-back").addEventListener("click", () => options.onBack?.());
+    container.querySelector("[data-edit-profile]").addEventListener("click", () => options.onEditGuest?.(guest.id));
+    container.querySelector("[data-new-reservation]").addEventListener("click", () => options.onNewReservation?.(guest.id));
+    container.querySelector("[data-go-payments]")?.addEventListener("click", () => {
+        container.querySelector("#guest-payment-transactions")?.scrollIntoView({ behavior: "smooth", block: "start" });
+    });
+    container.querySelectorAll("[data-settle-transaction]").forEach((button) => {
+        button.addEventListener("click", () => handleSettleTransaction(container, button, options));
+    });
+    container.querySelectorAll("[data-delete-transaction]").forEach((button) => {
+        button.addEventListener("click", () => handleDeleteTransaction(container, button, options));
+    });
+}
+
+async function handleSettleTransaction(container, button, options) {
+    const transactionId = Number(button.dataset.settleTransaction);
+    if (!transactionId) {
+        return;
+    }
+
+    button.disabled = true;
+    button.innerHTML = '<i class="ti ti-loader-2"></i> Liquidando';
+
+    try {
+        await settleFinancialTransaction(transactionId);
+        showToast(container, "Transacao liquidada com sucesso.");
+        await loadGuestProfile(container, options);
+    } catch (error) {
+        showToast(container, error.message || "Nao foi possivel liquidar a transacao.");
+        button.disabled = false;
+        button.innerHTML = '<i class="ti ti-check"></i> Liquidar';
+    }
+}
+
+async function handleDeleteTransaction(container, button, options) {
+    const transactionId = Number(button.dataset.deleteTransaction);
+    if (!transactionId) {
+        return;
+    }
+
+    const confirmed = globalThis.confirm("Excluir este pagamento pendente permanentemente?");
+    if (!confirmed) {
+        return;
+    }
+
+    button.disabled = true;
+    button.innerHTML = '<i class="ti ti-loader-2"></i> Excluindo';
+
+    try {
+        await deleteFinancialTransaction(transactionId);
+        showToast(container, "Pagamento excluido com sucesso.", "ti-trash");
+        await loadGuestProfile(container, options);
+    } catch (error) {
+        showToast(container, error.message || "Nao foi possivel excluir o pagamento.");
+        button.disabled = false;
+        button.innerHTML = '<i class="ti ti-trash"></i> Excluir';
+    }
+}
+
+function infoRow(label, value) {
+    return `
+      <div class="reservation-info-row">
+        <span>${escapeHtml(label)}</span>
+        <strong>${escapeHtml(value ?? "-")}</strong>
+      </div>
+    `;
+}
+
+function preferencesList(preferences = []) {
+    if (!preferences.length) {
+        return `<div class="guest-profile-empty">Nenhuma preferencia registrada.</div>`;
+    }
+
+    return `
+      <div class="guest-profile-preferences">
+        ${preferences.map((preference) => `<span>${escapeHtml(preference)}</span>`).join("")}
+      </div>
+    `;
+}
+
+function getPayableTransactions(transactions) {
+    return transactions
+        .filter((transaction) => {
+            const status = normalizeStatus(transaction.status);
+            if (["SETTLED", "PAID"].includes(status)) {
+                return false;
+            }
+
+            return isTransactionOverdue(transaction) || ["WAITING", "ON_TIME", "PARTIALLY_REALIZED", "LATE", "NOT_REALIZED"].includes(status);
+        })
+        .sort((a, b) => {
+            const dateComparison = String(a.transactionDate || "").localeCompare(String(b.transactionDate || ""));
+            return dateComparison || Number(b.id || 0) - Number(a.id || 0);
+        });
+}
+
+function renderPaymentTransaction(transaction) {
+    const overdue = isTransactionOverdue(transaction);
+    return `
+      <div class="guest-payment-row">
+        <div class="guest-payment-main">
+          <strong>${escapeHtml(transaction.description || `Transacao #${transaction.id}`)}</strong>
+          <span>${escapeHtml(formatDate(transaction.transactionDate))} · ${escapeHtml(transactionStatusText(transaction.status, overdue))}</span>
+        </div>
+        <div class="guest-payment-value">${formatMoney(transaction.amount)}</div>
+        <div class="guest-payment-actions">
+          <button class="guest-payment-settle" type="button" data-settle-transaction="${escapeHtml(transaction.id)}">
+            <i class="ti ti-check"></i> Liquidar
+          </button>
+          <button class="guest-payment-delete" type="button" data-delete-transaction="${escapeHtml(transaction.id)}">
+            <i class="ti ti-trash"></i> Excluir
+          </button>
+        </div>
+      </div>
+    `;
+}
+
+function buildSpecialNotes(guest) {
+    const notes = [];
+    if (guest.travelsWithPets) {
+        notes.push(`Viaja com pet${guest.petType ? `: ${guest.petType}` : ""}`);
+    }
+    if (guest.needsAccessibility) {
+        notes.push("Precisa de acessibilidade");
+    }
+
+    return notes.join(". ") || "Nenhum dado especial registrado.";
+}
+
+function guestTypeBadge(type) {
+    const label = type === "vip" ? "VIP" : type === "new" ? "Novo" : "Regular";
+    const css = type === "vip" ? "vip" : type === "new" ? "new" : "regular";
+    return `<span class="guest-type-badge ${css}">${label}</span>`;
+}
+
+function guestStatusBadge(status) {
+    const normalized = normalizeGuestStatus(status);
+    const css = normalized === "IN_STAY" ? "regular" : normalized === "GOT_CHECKOUT" ? "vip" : "new";
+    return `<span class="guest-type-badge ${css}">${escapeHtml(guestStatusText(normalized))}</span>`;
+}
+
+function guestStatusText(status) {
+    return {
+        IN_BOOKING: "Com reserva",
+        IN_STAY: "Em estadia",
+        GOT_CHECKOUT: "Com check out",
+    }[normalizeGuestStatus(status)] || status;
+}
+
+function financialStatusText(status) {
+    return {
+        WAITING_PAYMENT: "Pagamento em espera",
+        PAYMENT_SETTLED: "Pagamento liquidado",
+        DEBTOR: "Devedor",
+    }[String(status || "").toUpperCase()] || "-";
+}
+
+function financialStatusBadge(status) {
+    const normalized = String(status || "").toUpperCase();
+    const css = normalized === "DEBTOR" ? "vip" : normalized === "WAITING_PAYMENT" ? "new" : "regular";
+    return `<span class="guest-type-badge ${css}">${escapeHtml(financialStatusText(normalized))}</span>`;
+}
+
+function transactionStatusText(status, overdue = false) {
+    if (overdue) {
+        return "Em debito";
+    }
+
+    return {
+        WAITING: "Em espera",
+        ON_TIME: "No prazo",
+        PARTIALLY_REALIZED: "Parcial",
+        LATE: "Atrasada",
+        NOT_REALIZED: "Nao realizada",
+        CANCELED: "Cancelada",
+    }[normalizeStatus(status)] || status || "-";
+}
+
+function isTransactionOverdue(transaction) {
+    if (!transaction.transactionDate || ["SETTLED", "PAID"].includes(normalizeStatus(transaction.status))) {
+        return false;
+    }
+
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    const transactionDate = new Date(`${transaction.transactionDate}T00:00:00`);
+    return !Number.isNaN(transactionDate.getTime()) && transactionDate < today;
+}
+
+function normalizeGuestStatus(status) {
+    const normalized = String(status || "IN_BOOKING").toUpperCase();
+    return {
+        COM_RESERVA: "IN_BOOKING",
+        EM_ESTADIA: "IN_STAY",
+        COM_CHECK_OUT: "GOT_CHECKOUT",
+    }[normalized] || normalized;
+}
+
+function normalizeStatus(status) {
+    return String(status || "").toUpperCase();
+}
+
+function formatRating(value) {
+    const rating = Number(value) || 0;
+    return rating > 0 ? `${rating}/5` : "-";
+}
+
+function formatDate(value) {
+    if (!value) {
+        return "-";
+    }
+
+    const [year, month, day] = String(value).split("-");
+    return year && month && day ? `${day}/${month}/${year}` : value;
+}
+
+function formatDateTime(value) {
+    if (!value) {
+        return "-";
+    }
+
+    const date = new Date(value);
+    return Number.isNaN(date.getTime()) ? value : date.toLocaleString("pt-BR", { dateStyle: "short", timeStyle: "short" });
+}
+
+function formatMoney(value) {
+    return `R$ ${(Number(value) || 0).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}`;
+}
+
+function initialsFor(name) {
+    return String(name || "?")
+        .split(/\s+/)
+        .filter(Boolean)
+        .slice(0, 2)
+        .map((part) => part[0].toUpperCase())
+        .join("") || "?";
+}
+
+function showToast(container, message) {
+    const toast = container.querySelector("#guest-profile-toast");
+    toast.querySelector("span").textContent = message;
+    toast.classList.add("show");
+    setTimeout(() => toast.classList.remove("show"), 2600);
+}
+
+function escapeHtml(value) {
+    return String(value ?? "")
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
+}

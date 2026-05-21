@@ -3,5 +3,6 @@ package com.househost.booking.model;
 public enum BookingStatus {
     PENDING,
     CONFIRMED,
-    CANCELLED
+    CANCELLED,
+    GOT_CHECKIN
 }

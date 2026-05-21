@@ -38,4 +38,16 @@ public class GlobalExceptionHandler {
         ResponseDTO response = new ResponseDTO("error", exception.getMessage(), null);
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
     }
+
+    @ExceptionHandler(StayException.class)
+    public ResponseEntity<ResponseDTO> handleStay(StayException exception) {
+        ResponseDTO response = new ResponseDTO("error", exception.getMessage(), null);
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+    }
+
+    @ExceptionHandler(FinanceException.class)
+    public ResponseEntity<ResponseDTO> handleFinance(FinanceException exception) {
+        ResponseDTO response = new ResponseDTO("error", exception.getMessage(), null);
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+    }
 }

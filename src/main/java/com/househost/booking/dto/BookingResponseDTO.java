@@ -17,6 +17,20 @@ public class BookingResponseDTO {
     private LocalDate checkOutDate;
     private String status;
     private BigDecimal totalAmount;
+    private String origin;
+    private Integer adults;
+    private Integer children;
+    private Integer pets;
+    private String paymentMethod;
+    private String installments;
+    private BigDecimal dailyRate;
+    private BigDecimal discount;
+    private BigDecimal paidAmount;
+    private LocalDate paymentDate;
+    private String paymentStatus;
+    private String paymentStatusLabel;
+    private String specialRequests;
+    private String internalNotes;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 
@@ -30,6 +44,20 @@ public class BookingResponseDTO {
         this.checkOutDate = booking.getCheckOutDate();
         this.status = booking.getStatus().name();
         this.totalAmount = booking.getTotalAmount();
+        this.origin = booking.getOrigin().getLabel();
+        this.adults = booking.getAdults();
+        this.children = booking.getChildren();
+        this.pets = booking.getPets();
+        this.paymentMethod = booking.getPaymentMethod();
+        this.installments = booking.getInstallments();
+        this.dailyRate = booking.getDailyRate();
+        this.discount = booking.getDiscount();
+        this.paidAmount = booking.getPaidAmount();
+        this.paymentDate = booking.getPaymentDate();
+        this.paymentStatus = booking.getPaymentStatus().name();
+        this.paymentStatusLabel = paymentStatusLabel(this.paymentStatus);
+        this.specialRequests = booking.getSpecialRequests();
+        this.internalNotes = booking.getInternalNotes();
         this.createdAt = booking.getCreatedAt();
         this.updatedAt = booking.getUpdatedAt();
     }
@@ -70,11 +98,75 @@ public class BookingResponseDTO {
         return totalAmount;
     }
 
+    public String getOrigin() {
+        return origin;
+    }
+
+    public Integer getAdults() {
+        return adults;
+    }
+
+    public Integer getChildren() {
+        return children;
+    }
+
+    public Integer getPets() {
+        return pets;
+    }
+
+    public String getPaymentMethod() {
+        return paymentMethod;
+    }
+
+    public String getInstallments() {
+        return installments;
+    }
+
+    public BigDecimal getDailyRate() {
+        return dailyRate;
+    }
+
+    public BigDecimal getDiscount() {
+        return discount;
+    }
+
+    public BigDecimal getPaidAmount() {
+        return paidAmount;
+    }
+
+    public LocalDate getPaymentDate() {
+        return paymentDate;
+    }
+
+    public String getPaymentStatus() {
+        return paymentStatus;
+    }
+
+    public String getPaymentStatusLabel() {
+        return paymentStatusLabel;
+    }
+
+    public String getSpecialRequests() {
+        return specialRequests;
+    }
+
+    public String getInternalNotes() {
+        return internalNotes;
+    }
+
     public LocalDateTime getCreatedAt() {
         return createdAt;
     }
 
     public LocalDateTime getUpdatedAt() {
         return updatedAt;
+    }
+
+    private String paymentStatusLabel(String paymentStatus) {
+        return switch (paymentStatus) {
+            case "PAID" -> "Pago";
+            case "PARTIAL" -> "Parcial";
+            default -> "Em espera";
+        };
     }
 }
