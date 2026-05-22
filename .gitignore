@@ -4,3 +4,4 @@ target/
 .env
 frontend/.DS_Store
 *.pem
+docs/

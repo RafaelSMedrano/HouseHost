@@ -20,11 +20,29 @@
     min-width: 0;
 }
 
+.hh-logo-fallback {
+    display: none;
+    place-items: center;
+    color: var(--lav-dark);
+    background: #f5f1e8;
+    border: 2px solid rgba(255, 255, 255, 0.28);
+    font-weight: 700;
+}
+
+.hh-logo--fallback .hh-logo-fallback {
+    display: grid;
+}
+
+.hh-logo--fallback .hh-logo-image {
+    display: none;
+}
+
 .hh-logo--sidebar {
     justify-content: center;
     width: 100%;
 }
 
+.hh-logo--sidebar .hh-logo-fallback,
 .hh-logo--sidebar .hh-logo-image {
     display: block;
     width: 116px;
@@ -32,6 +50,15 @@
     border-radius: 50%;
     object-fit: cover;
     box-shadow: 0 12px 28px rgba(0, 0, 0, 0.22);
+}
+
+.hh-logo--sidebar .hh-logo-fallback {
+    display: none;
+    font-size: 34px;
+}
+
+.hh-logo--sidebar.hh-logo--fallback .hh-logo-fallback {
+    display: grid;
 }
 
 .dashboard-home nav {
