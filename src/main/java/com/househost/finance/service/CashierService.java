@@ -13,7 +13,6 @@ import com.househost.finance.repository.CashierEntryRepository;
 import com.househost.finance.repository.CashierExpenseRepository;
 import com.househost.finance.repository.CashierRepository;
 import com.househost.finance.repository.FinancialTransactionRepository;
-import com.househost.shared.dto.ResponseDTO;
 import com.househost.shared.exception.FinanceException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -37,7 +36,7 @@ public class CashierService {
         this.financialTransactionRepository = financialTransactionRepository;
     }
 
-    public ResponseDTO create(CashierRequestDTO request) {
+    public CashierResponseDTO create(CashierRequestDTO request) {
         validateRequest(request);
 
         String name = normalizeRequired(request.name);
@@ -56,24 +55,22 @@ public class CashierService {
         );
 
         Cashier savedCashier = cashierRepository.save(cashier);
-        return new ResponseDTO("success", "Caixa cadastrado com sucesso", new CashierResponseDTO(savedCashier));
+        return new CashierResponseDTO(savedCashier);
     }
 
-    public ResponseDTO findAll() {
-        List<CashierResponseDTO> cashiers = cashierRepository.findAll()
+    public List<CashierResponseDTO> findAll() {
+        return cashierRepository.findAll()
                 .stream()
                 .map(CashierResponseDTO::new)
                 .toList();
-
-        return new ResponseDTO("success", "Caixas encontrados com sucesso", cashiers);
     }
 
-    public ResponseDTO findById(Long id) {
+    public CashierResponseDTO findById(Long id) {
         Cashier cashier = findCashierById(id);
-        return new ResponseDTO("success", "Caixa encontrado com sucesso", new CashierResponseDTO(cashier));
+        return new CashierResponseDTO(cashier);
     }
 
-    public ResponseDTO update(Long id, CashierRequestDTO request) {
+    public CashierResponseDTO update(Long id, CashierRequestDTO request) {
         validateRequest(request);
 
         Cashier cashier = findCashierById(id);
@@ -93,13 +90,12 @@ public class CashierService {
         );
 
         Cashier savedCashier = cashierRepository.save(cashier);
-        return new ResponseDTO("success", "Caixa atualizado com sucesso", new CashierResponseDTO(savedCashier));
+        return new CashierResponseDTO(savedCashier);
     }
 
-    public ResponseDTO delete(Long id) {
+    public void delete(Long id) {
         Cashier cashier = findCashierById(id);
         cashierRepository.delete(cashier);
-        return new ResponseDTO("success", "Caixa removido com sucesso", null);
     }
 
     public Cashier findCashierById(Long id) {

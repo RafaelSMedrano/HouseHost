@@ -9,7 +9,7 @@ import com.househost.auth.dto.UserProfileUpdateRequestDTO;
 import com.househost.auth.model.User;
 import com.househost.auth.model.UserRole;
 import com.househost.auth.repository.UserRepository;
-import com.househost.shared.dto.ResponseDTO;
+import com.househost.security.JwtService;
 import com.househost.shared.exception.InvalidLoginException;
 import com.househost.shared.exception.RegistrationException;
 import java.util.List;
@@ -22,13 +22,15 @@ public class AuthService {
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
+    private final JwtService jwtService;
 
-    public AuthService(UserRepository userRepository, PasswordEncoder passwordEncoder) {
+    public AuthService(UserRepository userRepository, PasswordEncoder passwordEncoder, JwtService jwtService) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
+        this.jwtService = jwtService;
     }
 
-    public ResponseDTO login(LoginRequestDTO request) {
+    public LoginResponseDTO login(LoginRequestDTO request) {
         if (request == null || isBlank(request.email) || isBlank(request.password)) {
             throw new InvalidLoginException();
         }
@@ -40,12 +42,11 @@ public class AuthService {
             throw new InvalidLoginException();
         }
 
-        LoginResponseDTO loginData = toLoginResponse(user);
-
-        return new ResponseDTO("success", "Login realizado com sucesso", loginData);
+        String token = jwtService.generateToken(user.getEmail());
+        return toLoginResponse(user, token);
     }
 
-    public ResponseDTO registration(RegistrationRequestDTO request) {
+    public RegistrationResponseDTO registration(RegistrationRequestDTO request) {
         if (request == null || isBlank(request.username) || isBlank(request.email) || isBlank(request.password)) {
             throw new RegistrationException("Preencha todos os campos.");
         }
@@ -67,7 +68,7 @@ public class AuthService {
 
         userRepository.save(user);
 
-        RegistrationResponseDTO registrationData = new RegistrationResponseDTO(
+        return new RegistrationResponseDTO(
                 user.getId(),
                 user.getUsername(),
                 user.getEmail(),
@@ -75,20 +76,16 @@ public class AuthService {
                 role.name(),
                 user.getPhotoUrl()
         );
-
-        return new ResponseDTO("success", "Usuario registrado com sucesso", registrationData);
     }
 
-    public ResponseDTO quickAccessUsers() {
-        List<LoginResponseDTO> users = userRepository.findAll(Sort.by(Sort.Direction.ASC, "id")).stream()
+    public List<LoginResponseDTO> quickAccessUsers() {
+        return userRepository.findAll(Sort.by(Sort.Direction.ASC, "id")).stream()
                 .limit(3)
                 .map(this::toLoginResponse)
                 .toList();
-
-        return new ResponseDTO("success", "Usuarios encontrados com sucesso", users);
     }
 
-    public ResponseDTO updateUserPhoto(Long id, UserPhotoRequestDTO request) {
+    public LoginResponseDTO updateUserPhoto(Long id, UserPhotoRequestDTO request) {
         if (id == null) {
             throw new RegistrationException("Usuario invalido.");
         }
@@ -100,12 +97,10 @@ public class AuthService {
         user.setPhotoUrl(photoUrl);
         userRepository.save(user);
 
-        LoginResponseDTO response = toLoginResponse(user);
-
-        return new ResponseDTO("success", "Foto atualizada com sucesso", response);
+        return toLoginResponse(user);
     }
 
-    public ResponseDTO updateUserProfile(Long id, UserProfileUpdateRequestDTO request) {
+    public LoginResponseDTO updateUserProfile(Long id, UserProfileUpdateRequestDTO request) {
         if (id == null || request == null) {
             throw new RegistrationException("Usuario invalido.");
         }
@@ -143,12 +138,14 @@ public class AuthService {
 
         userRepository.save(user);
 
-        LoginResponseDTO response = toLoginResponse(user);
-
-        return new ResponseDTO("success", "Perfil atualizado com sucesso", response);
+        return toLoginResponse(user);
     }
 
     private LoginResponseDTO toLoginResponse(User user) {
+        return toLoginResponse(user, null);
+    }
+
+    private LoginResponseDTO toLoginResponse(User user, String token) {
         UserRole role = user.getRole() == null ? UserRole.RECEPTION : user.getRole();
         return new LoginResponseDTO(
                 user.getId(),
@@ -156,7 +153,9 @@ public class AuthService {
                 user.getEmail(),
                 user.getPhone(),
                 role.name(),
-                user.getPhotoUrl()
+                user.getPhotoUrl(),
+                token,
+                token == null ? null : jwtService.getExpirationSeconds()
         );
     }
 

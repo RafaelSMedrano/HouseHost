@@ -2,8 +2,10 @@ package com.househost.booking.controller;
 
 import com.househost.booking.dto.BookingFormCreateRequestDTO;
 import com.househost.booking.dto.BookingRequestDTO;
+import com.househost.booking.dto.BookingResponseDTO;
 import com.househost.booking.service.BookingService;
 import com.househost.shared.dto.ResponseDTO;
+import java.util.List;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -27,41 +29,49 @@ public class BookingController {
 
     @PostMapping
     public ResponseDTO create(@RequestBody BookingRequestDTO request) {
-        return bookingService.create(request);
+        BookingResponseDTO data = bookingService.create(request);
+        return new ResponseDTO("success", "Reserva cadastrada com sucesso", data);
     }
 
     @PostMapping("/form")
     public ResponseDTO createFromForm(@RequestBody BookingFormCreateRequestDTO request) {
-        return bookingService.createFromForm(request);
+        BookingResponseDTO data = bookingService.createFromForm(request);
+        return new ResponseDTO("success", "Reserva cadastrada com sucesso", data);
     }
 
     @GetMapping
     public ResponseDTO findAll() {
-        return bookingService.findAll();
+        List<BookingResponseDTO> data = bookingService.findAll();
+        return new ResponseDTO("success", "Reservas encontradas com sucesso", data);
     }
 
     @GetMapping("/{id}")
     public ResponseDTO findById(@PathVariable Long id) {
-        return bookingService.findById(id);
+        BookingResponseDTO data = bookingService.findById(id);
+        return new ResponseDTO("success", "Reserva encontrada com sucesso", data);
     }
 
     @GetMapping("/guest/{guestId}")
     public ResponseDTO findByGuestId(@PathVariable Long guestId) {
-        return bookingService.findByGuestId(guestId);
+        List<BookingResponseDTO> data = bookingService.findByGuestId(guestId);
+        return new ResponseDTO("success", "Reservas do hospede encontradas com sucesso", data);
     }
 
     @GetMapping("/room/{roomId}")
     public ResponseDTO findByRoomId(@PathVariable Long roomId) {
-        return bookingService.findByRoomId(roomId);
+        List<BookingResponseDTO> data = bookingService.findByRoomId(roomId);
+        return new ResponseDTO("success", "Reservas do quarto encontradas com sucesso", data);
     }
 
     @PutMapping("/{id}")
     public ResponseDTO update(@PathVariable Long id, @RequestBody BookingRequestDTO request) {
-        return bookingService.update(id, request);
+        BookingResponseDTO data = bookingService.update(id, request);
+        return new ResponseDTO("success", "Reserva atualizada com sucesso", data);
     }
 
     @DeleteMapping("/{id}")
     public ResponseDTO delete(@PathVariable Long id) {
-        return bookingService.delete(id);
+        bookingService.delete(id);
+        return new ResponseDTO("success", "Reserva removida com sucesso", null);
     }
 }

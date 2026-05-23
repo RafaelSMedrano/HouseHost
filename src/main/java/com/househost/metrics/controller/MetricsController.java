@@ -1,5 +1,6 @@
 package com.househost.metrics.controller;
 
+import com.househost.metrics.dto.MetricsSummaryDTO;
 import com.househost.metrics.service.MetricsService;
 import com.househost.shared.dto.ResponseDTO;
 import org.springframework.web.bind.annotation.CrossOrigin;
@@ -20,6 +21,7 @@ public class MetricsController {
 
     @GetMapping("/summary")
     public ResponseDTO summary() {
-        return metricsService.summary();
+        MetricsSummaryDTO data = metricsService.summary();
+        return new ResponseDTO("success", "Metricas encontradas com sucesso", data);
     }
 }

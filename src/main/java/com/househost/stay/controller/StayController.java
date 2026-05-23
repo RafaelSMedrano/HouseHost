@@ -2,7 +2,9 @@ package com.househost.stay.controller;
 
 import com.househost.shared.dto.ResponseDTO;
 import com.househost.stay.dto.StayRequestDTO;
+import com.househost.stay.dto.StayResponseDTO;
 import com.househost.stay.service.StayService;
+import java.util.List;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -26,41 +28,49 @@ public class StayController {
 
     @PostMapping
     public ResponseDTO create(@RequestBody StayRequestDTO request) {
-        return stayService.create(request);
+        StayResponseDTO data = stayService.create(request);
+        return new ResponseDTO("success", "Estadia cadastrada com sucesso", data);
     }
 
     @GetMapping
     public ResponseDTO findAll() {
-        return stayService.findAll();
+        List<StayResponseDTO> data = stayService.findAll();
+        return new ResponseDTO("success", "Estadias encontradas com sucesso", data);
     }
 
     @GetMapping("/{id}")
     public ResponseDTO findById(@PathVariable Long id) {
-        return stayService.findById(id);
+        StayResponseDTO data = stayService.findById(id);
+        return new ResponseDTO("success", "Estadia encontrada com sucesso", data);
     }
 
     @GetMapping("/guest/{guestId}")
     public ResponseDTO findByGuestId(@PathVariable Long guestId) {
-        return stayService.findByGuestId(guestId);
+        List<StayResponseDTO> data = stayService.findByGuestId(guestId);
+        return new ResponseDTO("success", "Estadias do hospede encontradas com sucesso", data);
     }
 
     @GetMapping("/room/{roomId}")
     public ResponseDTO findByRoomId(@PathVariable Long roomId) {
-        return stayService.findByRoomId(roomId);
+        List<StayResponseDTO> data = stayService.findByRoomId(roomId);
+        return new ResponseDTO("success", "Estadias do quarto encontradas com sucesso", data);
     }
 
     @GetMapping("/booking/{bookingId}")
     public ResponseDTO findByBookingId(@PathVariable Long bookingId) {
-        return stayService.findByBookingId(bookingId);
+        List<StayResponseDTO> data = stayService.findByBookingId(bookingId);
+        return new ResponseDTO("success", "Estadias da reserva encontradas com sucesso", data);
     }
 
     @PutMapping("/{id}")
     public ResponseDTO update(@PathVariable Long id, @RequestBody StayRequestDTO request) {
-        return stayService.update(id, request);
+        StayResponseDTO data = stayService.update(id, request);
+        return new ResponseDTO("success", "Estadia atualizada com sucesso", data);
     }
 
     @DeleteMapping("/{id}")
     public ResponseDTO delete(@PathVariable Long id) {
-        return stayService.delete(id);
+        stayService.delete(id);
+        return new ResponseDTO("success", "Estadia removida com sucesso", null);
     }
 }

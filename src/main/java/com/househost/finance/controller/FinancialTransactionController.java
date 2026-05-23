@@ -1,8 +1,10 @@
 package com.househost.finance.controller;
 
+import com.househost.finance.dto.FinancialTransactionResponseDTO;
 import com.househost.finance.dto.FinancialTransactionRequestDTO;
 import com.househost.finance.service.FinancialTransactionService;
 import com.househost.shared.dto.ResponseDTO;
+import java.util.List;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -26,31 +28,37 @@ public class FinancialTransactionController {
 
     @PostMapping
     public ResponseDTO create(@RequestBody FinancialTransactionRequestDTO request) {
-        return financialTransactionService.create(request);
+        FinancialTransactionResponseDTO data = financialTransactionService.create(request);
+        return new ResponseDTO("success", "Transacao financeira cadastrada com sucesso", data);
     }
 
     @GetMapping
     public ResponseDTO findAll() {
-        return financialTransactionService.findAll();
+        List<FinancialTransactionResponseDTO> data = financialTransactionService.findAll();
+        return new ResponseDTO("success", "Transacoes financeiras encontradas com sucesso", data);
     }
 
     @GetMapping("/{id}")
     public ResponseDTO findById(@PathVariable Long id) {
-        return financialTransactionService.findById(id);
+        FinancialTransactionResponseDTO data = financialTransactionService.findById(id);
+        return new ResponseDTO("success", "Transacao financeira encontrada com sucesso", data);
     }
 
     @PutMapping("/{id}")
     public ResponseDTO update(@PathVariable Long id, @RequestBody FinancialTransactionRequestDTO request) {
-        return financialTransactionService.update(id, request);
+        FinancialTransactionResponseDTO data = financialTransactionService.update(id, request);
+        return new ResponseDTO("success", "Transacao financeira atualizada com sucesso", data);
     }
 
     @PutMapping("/{id}/settle")
     public ResponseDTO toSettle(@PathVariable Long id) {
-        return financialTransactionService.toSettle(id);
+        FinancialTransactionResponseDTO data = financialTransactionService.toSettle(id);
+        return new ResponseDTO("success", "Transacao financeira liquidada com sucesso", data);
     }
 
     @DeleteMapping("/{id}")
     public ResponseDTO delete(@PathVariable Long id) {
-        return financialTransactionService.delete(id);
+        financialTransactionService.delete(id);
+        return new ResponseDTO("success", "Transacao financeira removida com sucesso", null);
     }
 }

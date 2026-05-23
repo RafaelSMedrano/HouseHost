@@ -16,7 +16,6 @@ import com.househost.finance.model.InstallmentTransactionStatus;
 import com.househost.finance.repository.FinancialTransactionRepository;
 import com.househost.guest.model.Guest;
 import com.househost.guest.service.GuestService;
-import com.househost.shared.dto.ResponseDTO;
 import com.househost.shared.exception.FinanceException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -40,7 +39,7 @@ public class FinancialTransactionService {
         this.guestService = guestService;
     }
 
-    public ResponseDTO create(FinancialTransactionRequestDTO request) {
+    public FinancialTransactionResponseDTO create(FinancialTransactionRequestDTO request) {
         validateRequest(request);
 
         FinancialPartyType senderType = parsePartyType(request.senderType, "Tipo do pagante e obrigatorio.");
@@ -67,24 +66,22 @@ public class FinancialTransactionService {
 
         FinancialTransaction savedTransaction = financialTransactionRepository.save(transaction);
         guestService.refreshFinancialStatus(savedTransaction.getGuest());
-        return new ResponseDTO("success", "Transacao financeira cadastrada com sucesso", new FinancialTransactionResponseDTO(savedTransaction));
+        return new FinancialTransactionResponseDTO(savedTransaction);
     }
 
-    public ResponseDTO findAll() {
-        List<FinancialTransactionResponseDTO> transactions = financialTransactionRepository.findAll()
+    public List<FinancialTransactionResponseDTO> findAll() {
+        return financialTransactionRepository.findAll()
                 .stream()
                 .map(FinancialTransactionResponseDTO::new)
                 .toList();
-
-        return new ResponseDTO("success", "Transacoes financeiras encontradas com sucesso", transactions);
     }
 
-    public ResponseDTO findById(Long id) {
+    public FinancialTransactionResponseDTO findById(Long id) {
         FinancialTransaction transaction = findTransactionById(id);
-        return new ResponseDTO("success", "Transacao financeira encontrada com sucesso", new FinancialTransactionResponseDTO(transaction));
+        return new FinancialTransactionResponseDTO(transaction);
     }
 
-    public ResponseDTO update(Long id, FinancialTransactionRequestDTO request) {
+    public FinancialTransactionResponseDTO update(Long id, FinancialTransactionRequestDTO request) {
         validateRequest(request);
 
         FinancialTransaction transaction = findTransactionById(id);
@@ -127,11 +124,11 @@ public class FinancialTransactionService {
 
         FinancialTransaction savedTransaction = financialTransactionRepository.save(transaction);
         guestService.refreshFinancialStatus(savedTransaction.getGuest());
-        return new ResponseDTO("success", "Transacao financeira atualizada com sucesso", new FinancialTransactionResponseDTO(savedTransaction));
+        return new FinancialTransactionResponseDTO(savedTransaction);
     }
 
     @Transactional
-    public ResponseDTO toSettle(Long id) {
+    public FinancialTransactionResponseDTO toSettle(Long id) {
         FinancialTransaction transaction = findTransactionById(id);
 
         if (transaction.getStatus() == FinancialTransactionStatus.SETTLED) {
@@ -158,10 +155,10 @@ public class FinancialTransactionService {
         FinancialTransaction savedTransaction = financialTransactionRepository.save(transaction);
         guestService.refreshFinancialStatus(savedTransaction.getGuest());
 
-        return new ResponseDTO("success", "Transacao financeira liquidada com sucesso", new FinancialTransactionResponseDTO(savedTransaction));
+        return new FinancialTransactionResponseDTO(savedTransaction);
     }
 
-    public ResponseDTO delete(Long id) {
+    public void delete(Long id) {
         FinancialTransaction transaction = findTransactionById(id);
         Guest guest = transaction.getGuest();
         cashierService.removeMovementsForTransaction(transaction.getId());
@@ -170,7 +167,6 @@ public class FinancialTransactionService {
         }
         financialTransactionRepository.delete(transaction);
         guestService.refreshFinancialStatus(guest);
-        return new ResponseDTO("success", "Transacao financeira removida com sucesso", null);
     }
 
     private FinancialTransaction findTransactionById(Long id) {

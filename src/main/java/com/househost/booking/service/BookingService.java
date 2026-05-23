@@ -22,7 +22,6 @@ import com.househost.guest.model.Guest;
 import com.househost.guest.repository.GuestRepository;
 import com.househost.room.model.Room;
 import com.househost.room.repository.RoomRepository;
-import com.househost.shared.dto.ResponseDTO;
 import com.househost.shared.exception.BookingException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -68,7 +67,7 @@ public class BookingService {
     }
 
     @Transactional
-    public ResponseDTO create(BookingRequestDTO request) {
+    public BookingResponseDTO create(BookingRequestDTO request) {
         validateRequest(request);
 
         Guest guest = findGuestById(request.guestId);
@@ -100,11 +99,11 @@ public class BookingService {
 
         Booking savedBooking = bookingRepository.save(booking);
         createPaymentTransactionIfPresent(savedBooking, request.paymentDate, request.paymentMethod, request.paidAmount, request.installments, request.paymentCompleted);
-        return new ResponseDTO("success", "Reserva cadastrada com sucesso", new BookingResponseDTO(savedBooking));
+        return new BookingResponseDTO(savedBooking);
     }
 
     @Transactional
-    public ResponseDTO createFromForm(BookingFormCreateRequestDTO request) {
+    public BookingResponseDTO createFromForm(BookingFormCreateRequestDTO request) {
         validateFormRequest(request);
 
         Guest guest = findGuestFromForm(request.guest);
@@ -143,46 +142,40 @@ public class BookingService {
                 request.payment.paymentCompleted
         );
 
-        return new ResponseDTO("success", "Reserva cadastrada com sucesso", new BookingResponseDTO(savedBooking));
+        return new BookingResponseDTO(savedBooking);
     }
 
-    public ResponseDTO findAll() {
-        List<BookingResponseDTO> bookings = bookingRepository.findAll()
+    public List<BookingResponseDTO> findAll() {
+        return bookingRepository.findAll()
                 .stream()
                 .map(BookingResponseDTO::new)
                 .toList();
-
-        return new ResponseDTO("success", "Reservas encontradas com sucesso", bookings);
     }
 
-    public ResponseDTO findById(Long id) {
+    public BookingResponseDTO findById(Long id) {
         Booking booking = findBookingById(id);
-        return new ResponseDTO("success", "Reserva encontrada com sucesso", new BookingResponseDTO(booking));
+        return new BookingResponseDTO(booking);
     }
 
-    public ResponseDTO findByGuestId(Long guestId) {
+    public List<BookingResponseDTO> findByGuestId(Long guestId) {
         findGuestById(guestId);
 
-        List<BookingResponseDTO> bookings = bookingRepository.findByGuestId(guestId)
+        return bookingRepository.findByGuestId(guestId)
                 .stream()
                 .map(BookingResponseDTO::new)
                 .toList();
-
-        return new ResponseDTO("success", "Reservas do hospede encontradas com sucesso", bookings);
     }
 
-    public ResponseDTO findByRoomId(Long roomId) {
+    public List<BookingResponseDTO> findByRoomId(Long roomId) {
         findRoomById(roomId);
 
-        List<BookingResponseDTO> bookings = bookingRepository.findByRoomId(roomId)
+        return bookingRepository.findByRoomId(roomId)
                 .stream()
                 .map(BookingResponseDTO::new)
                 .toList();
-
-        return new ResponseDTO("success", "Reservas do quarto encontradas com sucesso", bookings);
     }
 
-    public ResponseDTO update(Long id, BookingRequestDTO request) {
+    public BookingResponseDTO update(Long id, BookingRequestDTO request) {
         validateRequest(request);
 
         Booking booking = findBookingById(id);
@@ -214,13 +207,12 @@ public class BookingService {
         );
 
         Booking savedBooking = bookingRepository.save(booking);
-        return new ResponseDTO("success", "Reserva atualizada com sucesso", new BookingResponseDTO(savedBooking));
+        return new BookingResponseDTO(savedBooking);
     }
 
-    public ResponseDTO delete(Long id) {
+    public void delete(Long id) {
         Booking booking = findBookingById(id);
         bookingRepository.delete(booking);
-        return new ResponseDTO("success", "Reserva removida com sucesso", null);
     }
 
     private Booking findBookingById(Long id) {

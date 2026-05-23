@@ -8,7 +8,6 @@ import com.househost.finance.model.FinancialTransaction;
 import com.househost.finance.model.FinancialTransactionStatus;
 import com.househost.finance.repository.CashierEntryRepository;
 import com.househost.finance.repository.FinancialTransactionRepository;
-import com.househost.shared.dto.ResponseDTO;
 import com.househost.shared.exception.FinanceException;
 import org.springframework.stereotype.Service;
 
@@ -29,7 +28,7 @@ public class CashierEntryService {
         this.financialTransactionRepository = financialTransactionRepository;
     }
 
-    public ResponseDTO create(CashierEntryRequestDTO request) {
+    public CashierEntryResponseDTO create(CashierEntryRequestDTO request) {
         validateRequest(request);
 
         Cashier cashier = cashierService.findCashierById(request.cashierId);
@@ -47,35 +46,31 @@ public class CashierEntryService {
 
         CashierEntry savedEntry = cashierEntryRepository.save(entry);
 
-        return new ResponseDTO("success", "Entrada cadastrada com sucesso", new CashierEntryResponseDTO(savedEntry));
+        return new CashierEntryResponseDTO(savedEntry);
     }
 
-    public ResponseDTO findAll() {
-        List<CashierEntryResponseDTO> entries = cashierEntryRepository.findAll()
+    public List<CashierEntryResponseDTO> findAll() {
+        return cashierEntryRepository.findAll()
                 .stream()
                 .map(CashierEntryResponseDTO::new)
                 .toList();
-
-        return new ResponseDTO("success", "Entradas encontradas com sucesso", entries);
     }
 
-    public ResponseDTO findByCashierId(Long cashierId) {
+    public List<CashierEntryResponseDTO> findByCashierId(Long cashierId) {
         cashierService.findCashierById(cashierId);
 
-        List<CashierEntryResponseDTO> entries = cashierEntryRepository.findByCashierId(cashierId)
+        return cashierEntryRepository.findByCashierId(cashierId)
                 .stream()
                 .map(CashierEntryResponseDTO::new)
                 .toList();
-
-        return new ResponseDTO("success", "Entradas do caixa encontradas com sucesso", entries);
     }
 
-    public ResponseDTO findById(Long id) {
+    public CashierEntryResponseDTO findById(Long id) {
         CashierEntry entry = findEntryById(id);
-        return new ResponseDTO("success", "Entrada encontrada com sucesso", new CashierEntryResponseDTO(entry));
+        return new CashierEntryResponseDTO(entry);
     }
 
-    public ResponseDTO update(Long id, CashierEntryRequestDTO request) {
+    public CashierEntryResponseDTO update(Long id, CashierEntryRequestDTO request) {
         validateRequest(request);
 
         CashierEntry entry = findEntryById(id);
@@ -92,13 +87,12 @@ public class CashierEntryService {
         );
 
         CashierEntry savedEntry = cashierEntryRepository.save(entry);
-        return new ResponseDTO("success", "Entrada atualizada com sucesso", new CashierEntryResponseDTO(savedEntry));
+        return new CashierEntryResponseDTO(savedEntry);
     }
 
-    public ResponseDTO delete(Long id) {
+    public void delete(Long id) {
         CashierEntry entry = findEntryById(id);
         cashierEntryRepository.delete(entry);
-        return new ResponseDTO("success", "Entrada removida com sucesso", null);
     }
 
     public CashierEntry findEntryById(Long id) {

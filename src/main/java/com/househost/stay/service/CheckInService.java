@@ -8,7 +8,6 @@ import com.househost.guest.model.GuestStatus;
 import com.househost.guest.repository.GuestRepository;
 import com.househost.room.model.Room;
 import com.househost.room.repository.RoomRepository;
-import com.househost.shared.dto.ResponseDTO;
 import com.househost.shared.exception.StayException;
 import com.househost.stay.dto.CheckInRequestDTO;
 import com.househost.stay.dto.CheckInResponseDTO;
@@ -42,7 +41,7 @@ public class CheckInService {
         this.roomRepository = roomRepository;
     }
 
-    public ResponseDTO create(CheckInRequestDTO request) {
+    public CheckInResponseDTO create(CheckInRequestDTO request) {
         validateRequest(request);
         Booking booking = findBookingById(request.bookingId);
         Stay stay = resolveStay(request, booking);
@@ -92,22 +91,21 @@ public class CheckInService {
         }
 
         CheckIn savedCheckIn = checkInRepository.save(checkIn);
-        return new ResponseDTO("success", "Check-in cadastrado com sucesso", new CheckInResponseDTO(savedCheckIn));
+        return new CheckInResponseDTO(savedCheckIn);
     }
 
-    public ResponseDTO findAll() {
-        List<CheckInResponseDTO> checkIns = checkInRepository.findAll()
+    public List<CheckInResponseDTO> findAll() {
+        return checkInRepository.findAll()
                 .stream()
                 .map(CheckInResponseDTO::new)
                 .toList();
-        return new ResponseDTO("success", "Check-ins encontrados com sucesso", checkIns);
     }
 
-    public ResponseDTO findById(Long id) {
-        return new ResponseDTO("success", "Check-in encontrado com sucesso", new CheckInResponseDTO(findCheckInById(id)));
+    public CheckInResponseDTO findById(Long id) {
+        return new CheckInResponseDTO(findCheckInById(id));
     }
 
-    public ResponseDTO update(Long id, CheckInRequestDTO request) {
+    public CheckInResponseDTO update(Long id, CheckInRequestDTO request) {
         validateRequest(request);
         CheckIn checkIn = findCheckInById(id);
         Booking booking = findBookingById(request.bookingId);
@@ -148,13 +146,12 @@ public class CheckInService {
         }
 
         CheckIn savedCheckIn = checkInRepository.save(checkIn);
-        return new ResponseDTO("success", "Check-in atualizado com sucesso", new CheckInResponseDTO(savedCheckIn));
+        return new CheckInResponseDTO(savedCheckIn);
     }
 
-    public ResponseDTO delete(Long id) {
+    public void delete(Long id) {
         CheckIn checkIn = findCheckInById(id);
         checkInRepository.delete(checkIn);
-        return new ResponseDTO("success", "Check-in removido com sucesso", null);
     }
 
     private CheckIn findCheckInById(Long id) {

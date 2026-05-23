@@ -1,5 +1,6 @@
 const API_BASE_URL = globalThis.HOUSEHOST_API_BASE_URL || resolveApiBaseUrl();
-
+const AUTH_TOKEN_KEY = "househost_token";
+const AUTH_USER_KEY = "househost_user";
 
 function resolveApiBaseUrl() {
     const { protocol, hostname, port } = globalThis.location || {};
@@ -16,321 +17,281 @@ function apiUrl(path) {
     return `${API_BASE_URL}${path}`;
 }
 
-export async function login(email, password) {
-    const response = await fetch(apiUrl("/auth/login"), {
-        method: "POST",
-        headers: {
-            "Content-Type": "application/json"
-        },
-        body: JSON.stringify({
-            email: email,
-            password: password
-        })
+async function apiRequest(path, options = {}, requestOptions = {}) {
+    const { auth = true } = requestOptions;
+    const token = getAuthToken();
+    const body = options.body;
+    const headers = {
+        ...(body && !(body instanceof FormData) ? { "Content-Type": "application/json" } : {}),
+        ...(auth && token ? { Authorization: `Bearer ${token}` } : {}),
+        ...options.headers,
+    };
+
+    const response = await fetch(apiUrl(path), {
+        ...options,
+        headers,
     });
 
-    const text = await response.text();
-    return JSON.parse(text);
+    return parseJsonResponse(response);
+}
+
+export function saveAuthSession(session) {
+    if (!session?.token) {
+        clearAuthSession();
+        return;
+    }
+
+    localStorage.setItem(AUTH_TOKEN_KEY, session.token);
+    localStorage.setItem(AUTH_USER_KEY, JSON.stringify(stripTokenData(session)));
+}
+
+export function clearAuthSession() {
+    localStorage.removeItem(AUTH_TOKEN_KEY);
+    localStorage.removeItem(AUTH_USER_KEY);
+}
+
+export function getAuthToken() {
+    return localStorage.getItem(AUTH_TOKEN_KEY);
+}
+
+export function getStoredUser() {
+    const rawUser = localStorage.getItem(AUTH_USER_KEY);
+    if (!rawUser) {
+        return null;
+    }
+
+    try {
+        return JSON.parse(rawUser);
+    } catch (error) {
+        clearAuthSession();
+        return null;
+    }
+}
+
+function stripTokenData(session) {
+    const { token, tokenType, expiresIn, ...user } = session;
+    return user;
+}
+
+export async function login(email, password) {
+    return apiRequest("/auth/login", {
+        method: "POST",
+        body: JSON.stringify({
+            email: email,
+            password: password,
+        }),
+    }, { auth: false });
 }
 
 export async function registration(username, password, email, role, photoUrl) {
-    const response = await fetch(apiUrl("/auth/registration"), {
+    return apiRequest("/auth/registration", {
         method: "POST",
-        headers: {
-            "Content-Type": "application/json"
-        },
         body: JSON.stringify({
             username: username,
             password: password,
             email: email,
             role: role,
-            photoUrl: photoUrl
-        })
-    });
-
-    const text = await response.text();
-    return JSON.parse(text);
+            photoUrl: photoUrl,
+        }),
+    }, { auth: false });
 }
 
-export async function updateUserPhoto(id, photoUrl) {
-    const response = await fetch(apiUrl(`/auth/users/${id}/photo`), {
+export function updateUserPhoto(id, photoUrl) {
+    return apiRequest(`/auth/users/${id}/photo`, {
         method: "PUT",
-        headers: {
-            "Content-Type": "application/json"
-        },
         body: JSON.stringify({
-            photoUrl: photoUrl
-        })
+            photoUrl: photoUrl,
+        }),
     });
-
-    return parseJsonResponse(response);
 }
 
-export async function updateUserProfile(id, profile) {
-    const response = await fetch(apiUrl(`/auth/users/${id}`), {
+export function updateUserProfile(id, profile) {
+    return apiRequest(`/auth/users/${id}`, {
         method: "PUT",
-        headers: {
-            "Content-Type": "application/json"
-        },
-        body: JSON.stringify(profile)
+        body: JSON.stringify(profile),
     });
-
-    return parseJsonResponse(response);
 }
 
-export async function findQuickAccessUsers() {
-    const response = await fetch(apiUrl("/auth/users/quick-access"));
-    return parseJsonResponse(response);
+export function findQuickAccessUsers() {
+    return apiRequest("/auth/users/quick-access", {}, { auth: false });
 }
 
-export async function createGuest(guest) {
-    const response = await fetch(apiUrl("/guests"), {
+export function createGuest(guest) {
+    return apiRequest("/guests", {
         method: "POST",
-        headers: {
-            "Content-Type": "application/json"
-        },
-        body: JSON.stringify(guest)
+        body: JSON.stringify(guest),
     });
-
-    return parseJsonResponse(response);
 }
 
-export async function updateGuest(id, guest) {
-    const response = await fetch(apiUrl(`/guests/${id}`), {
+export function updateGuest(id, guest) {
+    return apiRequest(`/guests/${id}`, {
         method: "PUT",
-        headers: {
-            "Content-Type": "application/json"
-        },
-        body: JSON.stringify(guest)
+        body: JSON.stringify(guest),
     });
-
-    return parseJsonResponse(response);
 }
 
-export async function findGuestById(id) {
-    const response = await fetch(apiUrl(`/guests/${id}`));
-    return parseJsonResponse(response);
+export function findGuestById(id) {
+    return apiRequest(`/guests/${id}`);
 }
 
-export async function findAllGuests() {
-    const response = await fetch(apiUrl("/guests"));
-    return parseJsonResponse(response);
+export function findAllGuests() {
+    return apiRequest("/guests");
 }
 
-export async function deleteGuest(id) {
-    const response = await fetch(apiUrl(`/guests/${id}`), {
-        method: "DELETE"
+export function deleteGuest(id) {
+    return apiRequest(`/guests/${id}`, {
+        method: "DELETE",
     });
-
-    return parseJsonResponse(response);
 }
 
-export async function createBookingFromForm(booking) {
-    const response = await fetch(apiUrl("/bookings/form"), {
+export function createBookingFromForm(booking) {
+    return apiRequest("/bookings/form", {
         method: "POST",
-        headers: {
-            "Content-Type": "application/json"
-        },
-        body: JSON.stringify(booking)
+        body: JSON.stringify(booking),
     });
-
-    return parseJsonResponse(response);
 }
 
-export async function findAllBookings() {
-    const response = await fetch(apiUrl("/bookings"));
-    return parseJsonResponse(response);
+export function findAllBookings() {
+    return apiRequest("/bookings");
 }
 
-export async function findBookingById(id) {
-    const response = await fetch(apiUrl(`/bookings/${id}`));
-    return parseJsonResponse(response);
+export function findBookingById(id) {
+    return apiRequest(`/bookings/${id}`);
 }
 
-export async function updateBooking(id, booking) {
-    const response = await fetch(apiUrl(`/bookings/${id}`), {
+export function updateBooking(id, booking) {
+    return apiRequest(`/bookings/${id}`, {
         method: "PUT",
-        headers: {
-            "Content-Type": "application/json"
-        },
-        body: JSON.stringify(booking)
+        body: JSON.stringify(booking),
     });
-
-    return parseJsonResponse(response);
 }
 
-export async function deleteBooking(id) {
-    const response = await fetch(apiUrl(`/bookings/${id}`), {
-        method: "DELETE"
+export function deleteBooking(id) {
+    return apiRequest(`/bookings/${id}`, {
+        method: "DELETE",
     });
-
-    return parseJsonResponse(response);
 }
 
-export async function findMetricsSummary() {
-    const response = await fetch(apiUrl("/metrics/summary"));
-    return parseJsonResponse(response);
+export function findMetricsSummary() {
+    return apiRequest("/metrics/summary");
 }
 
-export async function findAllFinancialTransactions() {
-    const response = await fetch(apiUrl("/financial-transactions"));
-    return parseJsonResponse(response);
+export function findAllFinancialTransactions() {
+    return apiRequest("/financial-transactions");
 }
 
-export async function settleFinancialTransaction(id) {
-    const response = await fetch(apiUrl(`/financial-transactions/${id}/settle`), {
-        method: "PUT"
+export function settleFinancialTransaction(id) {
+    return apiRequest(`/financial-transactions/${id}/settle`, {
+        method: "PUT",
     });
-
-    return parseJsonResponse(response);
 }
 
-export async function deleteFinancialTransaction(id) {
-    const response = await fetch(apiUrl(`/financial-transactions/${id}`), {
-        method: "DELETE"
+export function deleteFinancialTransaction(id) {
+    return apiRequest(`/financial-transactions/${id}`, {
+        method: "DELETE",
     });
-
-    return parseJsonResponse(response);
 }
 
-export async function findAllCashiers() {
-    const response = await fetch(apiUrl("/cashiers"));
-    return parseJsonResponse(response);
+export function findAllCashiers() {
+    return apiRequest("/cashiers");
 }
 
-export async function findCashierEntriesByCashierId(cashierId) {
-    const response = await fetch(apiUrl(`/cashier-entries/cashier/${cashierId}`));
-    return parseJsonResponse(response);
+export function findCashierEntriesByCashierId(cashierId) {
+    return apiRequest(`/cashier-entries/cashier/${cashierId}`);
 }
 
-export async function findCashierExpensesByCashierId(cashierId) {
-    const response = await fetch(apiUrl(`/cashier-expenses/cashier/${cashierId}`));
-    return parseJsonResponse(response);
+export function findCashierExpensesByCashierId(cashierId) {
+    return apiRequest(`/cashier-expenses/cashier/${cashierId}`);
 }
 
-export async function findAllStays() {
-    const response = await fetch(apiUrl("/stays"));
-    return parseJsonResponse(response);
+export function findAllStays() {
+    return apiRequest("/stays");
 }
 
-export async function findAllRooms() {
-    const response = await fetch(apiUrl("/rooms"));
-    return parseJsonResponse(response);
+export function findAllRooms() {
+    return apiRequest("/rooms");
 }
 
-export async function findRoomById(id) {
-    const response = await fetch(apiUrl(`/rooms/${id}`));
-    return parseJsonResponse(response);
+export function findRoomById(id) {
+    return apiRequest(`/rooms/${id}`);
 }
 
-export async function createRoom(room) {
-    const response = await fetch(apiUrl("/rooms"), {
+export function createRoom(room) {
+    return apiRequest("/rooms", {
         method: "POST",
-        headers: {
-            "Content-Type": "application/json"
-        },
-        body: JSON.stringify(room)
+        body: JSON.stringify(room),
     });
-
-    return parseJsonResponse(response);
 }
 
-export async function updateRoom(id, room) {
-    const response = await fetch(apiUrl(`/rooms/${id}`), {
+export function updateRoom(id, room) {
+    return apiRequest(`/rooms/${id}`, {
         method: "PUT",
-        headers: {
-            "Content-Type": "application/json"
-        },
-        body: JSON.stringify(room)
+        body: JSON.stringify(room),
     });
-
-    return parseJsonResponse(response);
 }
 
-export async function deleteRoom(id) {
-    const response = await fetch(apiUrl(`/rooms/${id}`), {
-        method: "DELETE"
+export function deleteRoom(id) {
+    return apiRequest(`/rooms/${id}`, {
+        method: "DELETE",
     });
-
-    return parseJsonResponse(response);
 }
 
-export async function findAllCheckIns() {
-    const response = await fetch(apiUrl("/check-ins"));
-    return parseJsonResponse(response);
+export function findAllCheckIns() {
+    return apiRequest("/check-ins");
 }
 
-export async function createCheckIn(checkIn) {
-    const response = await fetch(apiUrl("/check-ins"), {
+export function createCheckIn(checkIn) {
+    return apiRequest("/check-ins", {
         method: "POST",
-        headers: {
-            "Content-Type": "application/json"
-        },
-        body: JSON.stringify(checkIn)
+        body: JSON.stringify(checkIn),
     });
-
-    return parseJsonResponse(response);
 }
 
-export async function updateCheckIn(id, checkIn) {
-    const response = await fetch(apiUrl(`/check-ins/${id}`), {
+export function updateCheckIn(id, checkIn) {
+    return apiRequest(`/check-ins/${id}`, {
         method: "PUT",
-        headers: {
-            "Content-Type": "application/json"
-        },
-        body: JSON.stringify(checkIn)
+        body: JSON.stringify(checkIn),
     });
-
-    return parseJsonResponse(response);
 }
 
-export async function deleteCheckIn(id) {
-    const response = await fetch(apiUrl(`/check-ins/${id}`), {
-        method: "DELETE"
+export function deleteCheckIn(id) {
+    return apiRequest(`/check-ins/${id}`, {
+        method: "DELETE",
     });
-
-    return parseJsonResponse(response);
 }
 
-export async function findAllCheckOuts() {
-    const response = await fetch(apiUrl("/check-outs"));
-    return parseJsonResponse(response);
+export function findAllCheckOuts() {
+    return apiRequest("/check-outs");
 }
 
-export async function createCheckOut(checkOut) {
-    const response = await fetch(apiUrl("/check-outs"), {
+export function createCheckOut(checkOut) {
+    return apiRequest("/check-outs", {
         method: "POST",
-        headers: {
-            "Content-Type": "application/json"
-        },
-        body: JSON.stringify(checkOut)
+        body: JSON.stringify(checkOut),
     });
-
-    return parseJsonResponse(response);
 }
 
-export async function updateCheckOut(id, checkOut) {
-    const response = await fetch(apiUrl(`/check-outs/${id}`), {
+export function updateCheckOut(id, checkOut) {
+    return apiRequest(`/check-outs/${id}`, {
         method: "PUT",
-        headers: {
-            "Content-Type": "application/json"
-        },
-        body: JSON.stringify(checkOut)
+        body: JSON.stringify(checkOut),
     });
-
-    return parseJsonResponse(response);
 }
 
-export async function deleteCheckOut(id) {
-    const response = await fetch(apiUrl(`/check-outs/${id}`), {
-        method: "DELETE"
+export function deleteCheckOut(id) {
+    return apiRequest(`/check-outs/${id}`, {
+        method: "DELETE",
     });
-
-    return parseJsonResponse(response);
 }
 
 async function parseJsonResponse(response) {
     const text = await response.text();
     const payload = text ? JSON.parse(text) : null;
+
+    if (response.status === 401) {
+        clearAuthSession();
+        throw new Error(payload?.message || "Sessao expirada. Faca login novamente.");
+    }
 
     if (!response.ok) {
         throw new Error(payload?.message || "Erro ao comunicar com o servidor.");

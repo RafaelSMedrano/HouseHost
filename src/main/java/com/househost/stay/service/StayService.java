@@ -7,7 +7,6 @@ import com.househost.guest.model.GuestStatus;
 import com.househost.guest.repository.GuestRepository;
 import com.househost.room.model.Room;
 import com.househost.room.repository.RoomRepository;
-import com.househost.shared.dto.ResponseDTO;
 import com.househost.shared.exception.StayException;
 import com.househost.stay.dto.StayRequestDTO;
 import com.househost.stay.dto.StayResponseDTO;
@@ -38,7 +37,7 @@ public class StayService {
         this.roomRepository = roomRepository;
     }
 
-    public ResponseDTO create(StayRequestDTO request) {
+    public StayResponseDTO create(StayRequestDTO request) {
         validateRequest(request);
 
         Booking booking = findBookingById(request.bookingId);
@@ -66,57 +65,49 @@ public class StayService {
 
         Stay savedStay = stayRepository.save(stay);
         syncGuestStatus(guest, status);
-        return new ResponseDTO("success", "Estadia cadastrada com sucesso", new StayResponseDTO(savedStay));
+        return new StayResponseDTO(savedStay);
     }
 
-    public ResponseDTO findAll() {
-        List<StayResponseDTO> stays = stayRepository.findAll()
+    public List<StayResponseDTO> findAll() {
+        return stayRepository.findAll()
                 .stream()
                 .map(StayResponseDTO::new)
                 .toList();
-
-        return new ResponseDTO("success", "Estadias encontradas com sucesso", stays);
     }
 
-    public ResponseDTO findById(Long id) {
+    public StayResponseDTO findById(Long id) {
         Stay stay = findStayById(id);
-        return new ResponseDTO("success", "Estadia encontrada com sucesso", new StayResponseDTO(stay));
+        return new StayResponseDTO(stay);
     }
 
-    public ResponseDTO findByGuestId(Long guestId) {
+    public List<StayResponseDTO> findByGuestId(Long guestId) {
         findGuestById(guestId);
 
-        List<StayResponseDTO> stays = stayRepository.findByGuestId(guestId)
+        return stayRepository.findByGuestId(guestId)
                 .stream()
                 .map(StayResponseDTO::new)
                 .toList();
-
-        return new ResponseDTO("success", "Estadias do hospede encontradas com sucesso", stays);
     }
 
-    public ResponseDTO findByRoomId(Long roomId) {
+    public List<StayResponseDTO> findByRoomId(Long roomId) {
         findRoomById(roomId);
 
-        List<StayResponseDTO> stays = stayRepository.findByRoomId(roomId)
+        return stayRepository.findByRoomId(roomId)
                 .stream()
                 .map(StayResponseDTO::new)
                 .toList();
-
-        return new ResponseDTO("success", "Estadias do quarto encontradas com sucesso", stays);
     }
 
-    public ResponseDTO findByBookingId(Long bookingId) {
+    public List<StayResponseDTO> findByBookingId(Long bookingId) {
         findBookingByIdRequired(bookingId);
 
-        List<StayResponseDTO> stays = stayRepository.findByBookingId(bookingId)
+        return stayRepository.findByBookingId(bookingId)
                 .stream()
                 .map(StayResponseDTO::new)
                 .toList();
-
-        return new ResponseDTO("success", "Estadias da reserva encontradas com sucesso", stays);
     }
 
-    public ResponseDTO update(Long id, StayRequestDTO request) {
+    public StayResponseDTO update(Long id, StayRequestDTO request) {
         validateRequest(request);
 
         Stay stay = findStayById(id);
@@ -145,13 +136,12 @@ public class StayService {
 
         Stay savedStay = stayRepository.save(stay);
         syncGuestStatus(guest, status);
-        return new ResponseDTO("success", "Estadia atualizada com sucesso", new StayResponseDTO(savedStay));
+        return new StayResponseDTO(savedStay);
     }
 
-    public ResponseDTO delete(Long id) {
+    public void delete(Long id) {
         Stay stay = findStayById(id);
         stayRepository.delete(stay);
-        return new ResponseDTO("success", "Estadia removida com sucesso", null);
     }
 
     private Stay findStayById(Long id) {

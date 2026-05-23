@@ -15,7 +15,6 @@ import com.househost.metrics.dto.MetricsSummaryDTO;
 import com.househost.room.model.Room;
 import com.househost.room.model.RoomStatus;
 import com.househost.room.repository.RoomRepository;
-import com.househost.shared.dto.ResponseDTO;
 import com.househost.stay.model.CheckIn;
 import com.househost.stay.model.CheckInStatus;
 import com.househost.stay.model.CheckOut;
@@ -62,7 +61,7 @@ public class MetricsService {
     }
 
     @Transactional(readOnly = true)
-    public ResponseDTO summary() {
+    public MetricsSummaryDTO summary() {
         LocalDate today = LocalDate.now();
         LocalDate weekStart = today.minusDays(today.getDayOfWeek().getValue() - DayOfWeek.MONDAY.getValue());
         LocalDate weekEnd = weekStart.plusDays(6);
@@ -173,7 +172,7 @@ public class MetricsService {
                 .reduce(BigDecimal.ZERO, this::sum);
         BigDecimal monthlyCashierBalance = monthlyCashierEntries.subtract(monthlyCashierExpenses);
 
-        MetricsSummaryDTO summary = new MetricsSummaryDTO(
+        return new MetricsSummaryDTO(
                 bookings.size(),
                 pendingBookings,
                 confirmedBookings,
@@ -219,8 +218,6 @@ public class MetricsService {
                 staysLeavingThisMonth,
                 checkOuts.stream().filter(checkOut -> checkOut.getStatus() == CheckOutStatus.COMPLETED).count()
         );
-
-        return new ResponseDTO("success", "Metricas encontradas com sucesso", summary);
     }
 
     private long countBookingsByStatus(List<Booking> bookings, BookingStatus status) {

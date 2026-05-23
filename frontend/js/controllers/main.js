@@ -1,4 +1,5 @@
-import { renderLoginWidget } from "../widgets/loginWidget.js?v=2026-05-20-login-real-data";
+import { getStoredUser } from "../api.js?v=2026-05-22-jwt-wrapper";
+import { renderLoginWidget } from "../widgets/loginWidget.js?v=2026-05-22-jwt-wrapper";
 import { renderMetricsResumeWidget } from "../widgets/metricsResumeWidget.js?v=2026-05-20-logo-jpeg";
 import { renderRegistrationWidget } from "../widgets/registrationWidget.js?v=2026-05-20-exec-role-labels";
 import { startUIController } from "./UICOntroller.js?v=2026-05-20-logo-jpeg";
@@ -8,8 +9,13 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const mainContainer = document.getElementById("main-container");
 
-    renderAuthLayout();
-    renderLoginPanel();
+    const storedUser = getStoredUser();
+    if (storedUser) {
+        startUIController("main-container", storedUser);
+    } else {
+        renderAuthLayout();
+        renderLoginPanel();
+    }
 
     function renderAuthLayout() {
         mainContainer.className = "login-screen";

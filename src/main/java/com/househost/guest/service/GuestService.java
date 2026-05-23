@@ -8,7 +8,6 @@ import com.househost.guest.model.Guest;
 import com.househost.guest.model.GuestStatus;
 import com.househost.guest.model.GuestType;
 import com.househost.guest.repository.GuestRepository;
-import com.househost.shared.dto.ResponseDTO;
 import com.househost.shared.exception.GuestException;
 import org.springframework.stereotype.Service;
 
@@ -25,7 +24,7 @@ public class GuestService {
         this.guestRepository = guestRepository;
     }
 
-    public ResponseDTO create(GuestRequestDTO request) {
+    public GuestResponseDTO create(GuestRequestDTO request) {
         validateRequest(request);
         validateUniqueEmail(request.email);
         validateUniqueDocumentNumber(request.documentNumber);
@@ -34,10 +33,10 @@ public class GuestService {
         applyProfile(guest, request);
 
         Guest savedGuest = guestRepository.save(guest);
-        return new ResponseDTO("success", "Hospede cadastrado com sucesso", new GuestResponseDTO(savedGuest));
+        return new GuestResponseDTO(savedGuest);
     }
 
-    public ResponseDTO guestRegister(GuestRegisterRequestDTO request) {
+    public GuestRegisterResponseDTO guestRegister(GuestRegisterRequestDTO request) {
         validateGuestRegisterRequest(request);
         validateUniqueEmail(request.email);
         validateUniqueDocumentNumber(request.documentNumber);
@@ -46,24 +45,22 @@ public class GuestService {
         applyProfile(guest, request);
 
         Guest savedGuest = guestRepository.save(guest);
-        return new ResponseDTO("success", "Hospede registrado com sucesso", new GuestRegisterResponseDTO(savedGuest));
+        return new GuestRegisterResponseDTO(savedGuest);
     }
 
-    public ResponseDTO findAll() {
-        List<GuestResponseDTO> guests = guestRepository.findAll()
+    public List<GuestResponseDTO> findAll() {
+        return guestRepository.findAll()
                 .stream()
                 .map(GuestResponseDTO::new)
                 .toList();
-
-        return new ResponseDTO("success", "Hospedes encontrados com sucesso", guests);
     }
 
-    public ResponseDTO findById(Long id) {
+    public GuestResponseDTO findById(Long id) {
         Guest guest = findGuestById(id);
-        return new ResponseDTO("success", "Hospede encontrado com sucesso", new GuestResponseDTO(guest));
+        return new GuestResponseDTO(guest);
     }
 
-    public ResponseDTO update(Long id, GuestRequestDTO request) {
+    public GuestResponseDTO update(Long id, GuestRequestDTO request) {
         validateRequest(request);
 
         Guest guest = findGuestById(id);
@@ -73,13 +70,12 @@ public class GuestService {
         applyProfile(guest, request);
 
         Guest savedGuest = guestRepository.save(guest);
-        return new ResponseDTO("success", "Hospede atualizado com sucesso", new GuestResponseDTO(savedGuest));
+        return new GuestResponseDTO(savedGuest);
     }
 
-    public ResponseDTO delete(Long id) {
+    public void delete(Long id) {
         Guest guest = findGuestById(id);
         guestRepository.delete(guest);
-        return new ResponseDTO("success", "Hospede removido com sucesso", null);
     }
 
     public Guest findGuestById(Long id) {

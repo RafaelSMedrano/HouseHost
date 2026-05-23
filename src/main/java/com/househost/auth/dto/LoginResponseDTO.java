@@ -8,17 +8,27 @@ public class LoginResponseDTO {
     private String phone;
     private String role;
     private String photoUrl;
+    private String token;
+    private String tokenType;
+    private Long expiresIn;
 
     public LoginResponseDTO() {
     }
 
     public LoginResponseDTO(Long id, String username, String email, String phone, String role, String photoUrl) {
+        this(id, username, email, phone, role, photoUrl, null, null);
+    }
+
+    public LoginResponseDTO(Long id, String username, String email, String phone, String role, String photoUrl, String token, Long expiresIn) {
         this.id = id;
         this.username = username;
         this.email = email;
         this.phone = phone;
         this.role = role;
         this.photoUrl = photoUrl;
+        this.token = token;
+        this.tokenType = token == null ? null : "Bearer";
+        this.expiresIn = expiresIn;
     }
 
     public Long getId() {
@@ -43,5 +53,17 @@ public class LoginResponseDTO {
 
     public String getPhotoUrl() {
         return photoUrl;
+    }
+
+    public String getToken() {
+        return token;
+    }
+
+    public String getTokenType() {
+        return tokenType;
+    }
+
+    public Long getExpiresIn() {
+        return expiresIn;
     }
 }

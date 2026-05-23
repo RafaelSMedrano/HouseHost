@@ -8,7 +8,6 @@ import com.househost.finance.model.FinancialTransaction;
 import com.househost.finance.model.FinancialTransactionStatus;
 import com.househost.finance.repository.CashierExpenseRepository;
 import com.househost.finance.repository.FinancialTransactionRepository;
-import com.househost.shared.dto.ResponseDTO;
 import com.househost.shared.exception.FinanceException;
 import org.springframework.stereotype.Service;
 
@@ -29,7 +28,7 @@ public class CashierExpenseService {
         this.financialTransactionRepository = financialTransactionRepository;
     }
 
-    public ResponseDTO create(CashierExpenseRequestDTO request) {
+    public CashierExpenseResponseDTO create(CashierExpenseRequestDTO request) {
         validateRequest(request);
 
         Cashier cashier = cashierService.findCashierById(request.cashierId);
@@ -47,35 +46,31 @@ public class CashierExpenseService {
 
         CashierExpense savedExpense = cashierExpenseRepository.save(expense);
 
-        return new ResponseDTO("success", "Saida cadastrada com sucesso", new CashierExpenseResponseDTO(savedExpense));
+        return new CashierExpenseResponseDTO(savedExpense);
     }
 
-    public ResponseDTO findAll() {
-        List<CashierExpenseResponseDTO> expenses = cashierExpenseRepository.findAll()
+    public List<CashierExpenseResponseDTO> findAll() {
+        return cashierExpenseRepository.findAll()
                 .stream()
                 .map(CashierExpenseResponseDTO::new)
                 .toList();
-
-        return new ResponseDTO("success", "Saidas encontradas com sucesso", expenses);
     }
 
-    public ResponseDTO findByCashierId(Long cashierId) {
+    public List<CashierExpenseResponseDTO> findByCashierId(Long cashierId) {
         cashierService.findCashierById(cashierId);
 
-        List<CashierExpenseResponseDTO> expenses = cashierExpenseRepository.findByCashierId(cashierId)
+        return cashierExpenseRepository.findByCashierId(cashierId)
                 .stream()
                 .map(CashierExpenseResponseDTO::new)
                 .toList();
-
-        return new ResponseDTO("success", "Saidas do caixa encontradas com sucesso", expenses);
     }
 
-    public ResponseDTO findById(Long id) {
+    public CashierExpenseResponseDTO findById(Long id) {
         CashierExpense expense = findExpenseById(id);
-        return new ResponseDTO("success", "Saida encontrada com sucesso", new CashierExpenseResponseDTO(expense));
+        return new CashierExpenseResponseDTO(expense);
     }
 
-    public ResponseDTO update(Long id, CashierExpenseRequestDTO request) {
+    public CashierExpenseResponseDTO update(Long id, CashierExpenseRequestDTO request) {
         validateRequest(request);
 
         CashierExpense expense = findExpenseById(id);
@@ -92,13 +87,12 @@ public class CashierExpenseService {
         );
 
         CashierExpense savedExpense = cashierExpenseRepository.save(expense);
-        return new ResponseDTO("success", "Saida atualizada com sucesso", new CashierExpenseResponseDTO(savedExpense));
+        return new CashierExpenseResponseDTO(savedExpense);
     }
 
-    public ResponseDTO delete(Long id) {
+    public void delete(Long id) {
         CashierExpense expense = findExpenseById(id);
         cashierExpenseRepository.delete(expense);
-        return new ResponseDTO("success", "Saida removida com sucesso", null);
     }
 
     public CashierExpense findExpenseById(Long id) {

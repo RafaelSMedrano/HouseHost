@@ -3,7 +3,6 @@ package com.househost.stay.service;
 import com.househost.guest.model.Guest;
 import com.househost.guest.model.GuestStatus;
 import com.househost.guest.repository.GuestRepository;
-import com.househost.shared.dto.ResponseDTO;
 import com.househost.shared.exception.StayException;
 import com.househost.stay.dto.CheckOutRequestDTO;
 import com.househost.stay.dto.CheckOutResponseDTO;
@@ -32,7 +31,7 @@ public class CheckOutService {
         this.guestRepository = guestRepository;
     }
 
-    public ResponseDTO create(CheckOutRequestDTO request) {
+    public CheckOutResponseDTO create(CheckOutRequestDTO request) {
         validateRequest(request);
         Stay stay = findStayById(request.stayId);
         validateUnique(stay.getId());
@@ -60,22 +59,21 @@ public class CheckOutService {
         }
 
         CheckOut savedCheckOut = checkOutRepository.save(checkOut);
-        return new ResponseDTO("success", "Check-out cadastrado com sucesso", new CheckOutResponseDTO(savedCheckOut));
+        return new CheckOutResponseDTO(savedCheckOut);
     }
 
-    public ResponseDTO findAll() {
-        List<CheckOutResponseDTO> checkOuts = checkOutRepository.findAll()
+    public List<CheckOutResponseDTO> findAll() {
+        return checkOutRepository.findAll()
                 .stream()
                 .map(CheckOutResponseDTO::new)
                 .toList();
-        return new ResponseDTO("success", "Check-outs encontrados com sucesso", checkOuts);
     }
 
-    public ResponseDTO findById(Long id) {
-        return new ResponseDTO("success", "Check-out encontrado com sucesso", new CheckOutResponseDTO(findCheckOutById(id)));
+    public CheckOutResponseDTO findById(Long id) {
+        return new CheckOutResponseDTO(findCheckOutById(id));
     }
 
-    public ResponseDTO update(Long id, CheckOutRequestDTO request) {
+    public CheckOutResponseDTO update(Long id, CheckOutRequestDTO request) {
         validateRequest(request);
         CheckOut checkOut = findCheckOutById(id);
         Stay stay = findStayById(request.stayId);
@@ -104,13 +102,12 @@ public class CheckOutService {
         }
 
         CheckOut savedCheckOut = checkOutRepository.save(checkOut);
-        return new ResponseDTO("success", "Check-out atualizado com sucesso", new CheckOutResponseDTO(savedCheckOut));
+        return new CheckOutResponseDTO(savedCheckOut);
     }
 
-    public ResponseDTO delete(Long id) {
+    public void delete(Long id) {
         CheckOut checkOut = findCheckOutById(id);
         checkOutRepository.delete(checkOut);
-        return new ResponseDTO("success", "Check-out removido com sucesso", null);
     }
 
     private CheckOut findCheckOutById(Long id) {

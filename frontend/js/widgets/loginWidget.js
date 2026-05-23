@@ -1,4 +1,4 @@
-import { findQuickAccessUsers, login } from "../api.js?v=2026-05-20-login-real-data"; /*  O usuário pode estar na casa dele com o navegador guardando um arquivo antigo em cache por horas, dias ou até mais, dependendo das regras de cache do servidor/
+import { findQuickAccessUsers, login, saveAuthSession } from "../api.js?v=2026-05-22-jwt-wrapper"; /*  O usuário pode estar na casa dele com o navegador guardando um arquivo antigo em cache por horas, dias ou até mais, dependendo das regras de cache do servidor/
                                                        navegador.
 
                                                        Então, se ele já tinha baixado:
@@ -147,6 +147,7 @@ export function renderLoginWidget(containerId, options = {}) {
 
             if (response.status === "success") {
                 loginButton.innerHTML = `<i class="ti ti-check"></i> Acesso liberado!`;
+                saveAuthSession(response.data);
                 onLoginSuccess(response.data);
             } else {
                 loginButton.disabled = false;

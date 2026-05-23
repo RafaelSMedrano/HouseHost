@@ -1,8 +1,10 @@
 package com.househost.finance.controller;
 
 import com.househost.finance.dto.CashierRequestDTO;
+import com.househost.finance.dto.CashierResponseDTO;
 import com.househost.finance.service.CashierService;
 import com.househost.shared.dto.ResponseDTO;
+import java.util.List;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -26,26 +28,31 @@ public class CashierController {
 
     @PostMapping
     public ResponseDTO create(@RequestBody CashierRequestDTO request) {
-        return cashierService.create(request);
+        CashierResponseDTO data = cashierService.create(request);
+        return new ResponseDTO("success", "Caixa cadastrado com sucesso", data);
     }
 
     @GetMapping
     public ResponseDTO findAll() {
-        return cashierService.findAll();
+        List<CashierResponseDTO> data = cashierService.findAll();
+        return new ResponseDTO("success", "Caixas encontrados com sucesso", data);
     }
 
     @GetMapping("/{id}")
     public ResponseDTO findById(@PathVariable Long id) {
-        return cashierService.findById(id);
+        CashierResponseDTO data = cashierService.findById(id);
+        return new ResponseDTO("success", "Caixa encontrado com sucesso", data);
     }
 
     @PutMapping("/{id}")
     public ResponseDTO update(@PathVariable Long id, @RequestBody CashierRequestDTO request) {
-        return cashierService.update(id, request);
+        CashierResponseDTO data = cashierService.update(id, request);
+        return new ResponseDTO("success", "Caixa atualizado com sucesso", data);
     }
 
     @DeleteMapping("/{id}")
     public ResponseDTO delete(@PathVariable Long id) {
-        return cashierService.delete(id);
+        cashierService.delete(id);
+        return new ResponseDTO("success", "Caixa removido com sucesso", null);
     }
 }

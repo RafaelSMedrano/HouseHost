@@ -2,7 +2,9 @@ package com.househost.stay.controller;
 
 import com.househost.shared.dto.ResponseDTO;
 import com.househost.stay.dto.CheckInRequestDTO;
+import com.househost.stay.dto.CheckInResponseDTO;
 import com.househost.stay.service.CheckInService;
+import java.util.List;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -26,26 +28,31 @@ public class CheckInController {
 
     @PostMapping
     public ResponseDTO create(@RequestBody CheckInRequestDTO request) {
-        return checkInService.create(request);
+        CheckInResponseDTO data = checkInService.create(request);
+        return new ResponseDTO("success", "Check-in cadastrado com sucesso", data);
     }
 
     @GetMapping
     public ResponseDTO findAll() {
-        return checkInService.findAll();
+        List<CheckInResponseDTO> data = checkInService.findAll();
+        return new ResponseDTO("success", "Check-ins encontrados com sucesso", data);
     }
 
     @GetMapping("/{id}")
     public ResponseDTO findById(@PathVariable Long id) {
-        return checkInService.findById(id);
+        CheckInResponseDTO data = checkInService.findById(id);
+        return new ResponseDTO("success", "Check-in encontrado com sucesso", data);
     }
 
     @PutMapping("/{id}")
     public ResponseDTO update(@PathVariable Long id, @RequestBody CheckInRequestDTO request) {
-        return checkInService.update(id, request);
+        CheckInResponseDTO data = checkInService.update(id, request);
+        return new ResponseDTO("success", "Check-in atualizado com sucesso", data);
     }
 
     @DeleteMapping("/{id}")
     public ResponseDTO delete(@PathVariable Long id) {
-        return checkInService.delete(id);
+        checkInService.delete(id);
+        return new ResponseDTO("success", "Check-in removido com sucesso", null);
     }
 }

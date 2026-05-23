@@ -6,7 +6,6 @@ import com.househost.room.model.Room;
 import com.househost.room.model.RoomStatus;
 import com.househost.room.model.RoomType;
 import com.househost.room.repository.RoomRepository;
-import com.househost.shared.dto.ResponseDTO;
 import com.househost.shared.exception.RoomException;
 import org.springframework.stereotype.Service;
 
@@ -22,7 +21,7 @@ public class RoomService {
         this.roomRepository = roomRepository;
     }
 
-    public ResponseDTO create(RoomRequestDTO request) {
+    public RoomResponseDTO create(RoomRequestDTO request) {
         validateRequest(request);
 
         String roomNumber = normalizeRequired(request.roomNumber);
@@ -37,24 +36,22 @@ public class RoomService {
         );
 
         Room savedRoom = roomRepository.save(room);
-        return new ResponseDTO("success", "Quarto cadastrado com sucesso", new RoomResponseDTO(savedRoom));
+        return new RoomResponseDTO(savedRoom);
     }
 
-    public ResponseDTO findAll() {
-        List<RoomResponseDTO> rooms = roomRepository.findAll()
+    public List<RoomResponseDTO> findAll() {
+        return roomRepository.findAll()
                 .stream()
                 .map(RoomResponseDTO::new)
                 .toList();
-
-        return new ResponseDTO("success", "Quartos encontrados com sucesso", rooms);
     }
 
-    public ResponseDTO findById(Long id) {
+    public RoomResponseDTO findById(Long id) {
         Room room = findRoomById(id);
-        return new ResponseDTO("success", "Quarto encontrado com sucesso", new RoomResponseDTO(room));
+        return new RoomResponseDTO(room);
     }
 
-    public ResponseDTO update(Long id, RoomRequestDTO request) {
+    public RoomResponseDTO update(Long id, RoomRequestDTO request) {
         validateRequest(request);
 
         Room room = findRoomById(id);
@@ -70,13 +67,12 @@ public class RoomService {
         );
 
         Room savedRoom = roomRepository.save(room);
-        return new ResponseDTO("success", "Quarto atualizado com sucesso", new RoomResponseDTO(savedRoom));
+        return new RoomResponseDTO(savedRoom);
     }
 
-    public ResponseDTO delete(Long id) {
+    public void delete(Long id) {
         Room room = findRoomById(id);
         roomRepository.delete(room);
-        return new ResponseDTO("success", "Quarto removido com sucesso", null);
     }
 
     private Room findRoomById(Long id) {
