@@ -1,5 +1,5 @@
 import { findMetricsSummary } from "../api.js?v=2026-05-20-login-real-data";
-import { renderBrandLogoMarkup } from "./brandLogoWidget.js?v=2026-05-20-logo-jpeg";
+import { renderBrandLogoMarkup } from "./brandLogoWidget.js?v=2026-05-24-generic-logo";
 
 export function renderMetricsResumeWidget(containerId) {
     const container = document.getElementById(containerId);
@@ -39,7 +39,7 @@ export function renderMetricsResumeWidget(containerId) {
                 </div>
                 <h2 class="left-headline">Bem-vindo<br>de <em>volta.</em></h2>
                 <p class="left-desc">
-                    Gerencie reservas, quartos e hóspedes do Cantinho das Lavandas em um só lugar. Tudo que você precisa, ao alcance de um clique.
+                    Gerencie reservas, quartos e hóspedes em um só lugar. Tudo que você precisa, ao alcance de um clique.
                 </p>
 
                 <div class="left-stats">
@@ -59,7 +59,7 @@ export function renderMetricsResumeWidget(containerId) {
             </div>
 
             <div class="left-footer">
-                © 2025 Cantinho das Lavandas · Todos os direitos reservados
+                © 2025 HouseHost · Sistema de gestão para hospedagens
             </div>
         </div>
     `;

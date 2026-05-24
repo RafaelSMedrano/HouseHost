@@ -1,4 +1,4 @@
-import { renderBrandLogoMarkup } from "./brandLogoWidget.js?v=2026-05-20-logo-jpeg";
+import { renderBrandLogoMarkup } from "./brandLogoWidget.js?v=2026-05-24-generic-logo";
 
 export function renderSidebarWidget(containerId, user = {}) {
     const container = document.getElementById(containerId);

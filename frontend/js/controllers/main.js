@@ -1,8 +1,8 @@
 import { getStoredUser } from "../api.js?v=2026-05-22-jwt-wrapper";
 import { renderLoginWidget } from "../widgets/loginWidget.js?v=2026-05-22-jwt-wrapper";
-import { renderMetricsResumeWidget } from "../widgets/metricsResumeWidget.js?v=2026-05-20-logo-jpeg";
+import { renderMetricsResumeWidget } from "../widgets/metricsResumeWidget.js?v=2026-05-24-generic-logo";
 import { renderRegistrationWidget } from "../widgets/registrationWidget.js?v=2026-05-20-exec-role-labels";
-import { startUIController } from "./UICOntroller.js?v=2026-05-20-logo-jpeg";
+import { startUIController } from "./UICOntroller.js?v=2026-05-24-generic-logo";
 
 document.addEventListener("DOMContentLoaded", () => {
     console.log("HouseHost iniciado.");

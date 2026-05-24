@@ -14,7 +14,7 @@ import { renderFinanceView } from "../views/financeView.js?v=2026-05-20-cashier-
 import { renderRoomTimelineView } from "../views/roomTimelineView.js?v=2026-05-18-timeline";
 import { renderUserProfileView } from "../views/userProfileView.js?v=2026-05-20-profile-crud";
 import { renderDashboardTopbarWidget } from "../widgets/dashboardTopbarWidget.js?v=2026-05-18-timeline";
-import { renderSidebarWidget } from "../widgets/sidebarWidget.js?v=2026-05-20-logo-jpeg";
+import { renderSidebarWidget } from "../widgets/sidebarWidget.js?v=2026-05-24-generic-logo";
 
 export function startUIController(containerId, user = {}) {
     const container = document.getElementById(containerId);
