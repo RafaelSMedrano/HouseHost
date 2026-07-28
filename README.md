@@ -1,219 +1,434 @@
-# HouseHost, gestão operacional e financeira para hospedagens
+# HouseHost — gestão operacional, financeira e de privacidade para hospedagens
 
-![Java](https://img.shields.io/badge/Java-ED8B00?logo=openjdk&logoColor=white) ![Spring Boot](https://img.shields.io/badge/Spring_Boot-6DB33F?logo=springboot&logoColor=white) ![Spring Security](https://img.shields.io/badge/Spring_Security-6DB33F?logo=springsecurity&logoColor=white) ![JWT](https://img.shields.io/badge/JWT-000000?logo=jsonwebtokens&logoColor=white) ![REST API](https://img.shields.io/badge/REST_API-02569B?logo=fastapi&logoColor=white) ![MySQL](https://img.shields.io/badge/MySQL-00000F?logo=mysql&logoColor=white) ![AWS](https://img.shields.io/badge/AWS-232F3E?logo=amazonaws&logoColor=white) ![Nginx](https://img.shields.io/badge/Nginx-009639?logo=nginx&logoColor=white) ![JavaScript](https://img.shields.io/badge/JavaScript-F7DF1E?logo=javascript&logoColor=black) ![HTML5](https://img.shields.io/badge/HTML5-E34F26?logo=html5&logoColor=white) ![CSS3](https://img.shields.io/badge/CSS3-1572B6?logo=css3&logoColor=white)
+![Java](https://img.shields.io/badge/Java_21-ED8B00?logo=openjdk&logoColor=white) ![Spring Boot](https://img.shields.io/badge/Spring_Boot_3.2-6DB33F?logo=springboot&logoColor=white) ![Spring Security](https://img.shields.io/badge/Spring_Security-6DB33F?logo=springsecurity&logoColor=white) ![JWT](https://img.shields.io/badge/JWT-000000?logo=jsonwebtokens&logoColor=white) ![REST API](https://img.shields.io/badge/REST_API-02569B?logo=fastapi&logoColor=white) ![MySQL](https://img.shields.io/badge/MySQL-00000F?logo=mysql&logoColor=white) ![JavaScript](https://img.shields.io/badge/JavaScript-F7DF1E?logo=javascript&logoColor=black) ![HTML5](https://img.shields.io/badge/HTML5-E34F26?logo=html5&logoColor=white) ![CSS3](https://img.shields.io/badge/CSS3-1572B6?logo=css3&logoColor=white)
 
 ## Resumo
 
-O HouseHost é um sistema fullstack para gestão operacional e financeira de pousadas, hotéis pequenos e hospedagens independentes. A aplicação centraliza reservas, hóspedes, quartos, check-ins, check-outs, estadias, caixa, transações financeiras, métricas de negócio e usuários administrativos em uma interface web estática e responsiva consumindo uma API REST em Spring Boot.
+O HouseHost é um sistema para gestão operacional, financeira e de privacidade de pousadas, casas de temporada, pequenos hotéis e hospedagens independentes. A aplicação centraliza hóspedes, acomodações, reservas, check-in, check-out, caixa, transações financeiras, parcelamentos, métricas, usuários, fornecedores, auditoria e governança LGPD em uma API REST construída com Java e Spring Boot.
 
-O projeto também foi usado como base para o Refúgio Cantinho das Lavandas, pousada em Monte Verde - MG. Nesse exemplo real de uso, eu implementei uma arquitetura de deploy em nuvem com AWS EC2, MySQL na instância, backend Spring Boot empacotado em `.jar`, serviço Linux com `systemd`, frontend estático servido pelo Nginx e proxy reverso para a API na porta interna `8080`.
+O backend segue arquitetura hexagonal dentro de um monólito modular. Cada contexto separa domínio, casos de uso, portas e adaptadores. Regras de negócio não ficam presas a controllers, JPA, JWT ou ao frontend, permitindo que novas interfaces consumam a mesma aplicação sem duplicar o núcleo funcional.
 
-Na prática, o HouseHost oferece uma estrutura inicial para:
+O painel administrativo está organizado em `frontend/admin`. O backend também possui um contrato público pronto para receber um site institucional e um fluxo de reservas: visitantes podem consultar acomodações, verificar disponibilidade, solicitar cotação e cadastrar uma reserva pública com aceite versionado da política de privacidade.
 
-- cadastrar e gerenciar hóspedes, quartos, reservas e estadias;
-- realizar check-in e check-out com atualização de estados operacionais;
-- registrar transações financeiras associadas a reservas, hóspedes e caixa;
-- controlar entradas, saídas, valores liquidados e valores aguardando liquidação;
-- usar um módulo financeiro desacoplado, criado para poder ser reaproveitado em outros sistemas e projetos com contextos diferentes;
-- consultar métricas consolidadas para dashboard administrativo;
-- autenticar usuários por e-mail e senha com JWT;
-- proteger rotas internas com `Authorization: Bearer <token>`;
-- manter contratos de API por DTOs e respostas padronizadas;
-- entregar uma experiência responsiva para uso em desktop e telas menores;
-- separar controller, service, repository, DTO, entidade e tratamento de exceções.
+Na prática, o HouseHost oferece uma estrutura para:
 
-| Dashboard administrativo | Gestão operacional | Design responsivo                                                                                          |
-| --- | --- |------------------------------------------------------------------------------------------------------------|
-| <img src="imgs/img.png" alt="Dashboard administrativo do HouseHost" width="320"> | <img src="imgs/img_1.png" alt="Tela operacional do HouseHost" width="320"> | <img src="imgs/WhatsApp Image 2026-05-24 at 21.39.55.jpeg" alt="HouseHost em tela responsiva" width="180"> |
+- administrar hóspedes, acomodações, reservas e hospedagens;
+- executar check-in e check-out com regras próprias de domínio;
+- registrar receitas, despesas, liquidações, caixa e parcelamentos;
+- consultar métricas operacionais e financeiras;
+- autenticar usuários com senha protegida e token JWT;
+- autorizar operações de acordo com o perfil do usuário;
+- receber reservas originadas de um site público;
+- manter inventário das operações de tratamento de dados pessoais;
+- avaliar, revisar, aprovar e versionar bases legais;
+- criar, publicar e disponibilizar versões verificáveis da política de privacidade;
+- mascarar dados pessoais conforme o nível de acesso;
+- manter trilha de auditoria vinculada às operações de tratamento;
+- governar fornecedores, operadores, contratos, riscos e destino dos dados.
+
+| Sistema de autenticação | Dashboard administrativo | Responsivo para tablet |
+| --- | --- | --- |
+| <img src="imgs/Sistema de Autenticação.png" alt="Sistema de autenticação do HouseHost" width="320"> | <img src="imgs/Dashboard Admnistrativo.png" alt="Dashboard administrativo do HouseHost" width="320"> | <img src="imgs/responsivoTablet.jpeg" alt="Dashboard do HouseHost responsivo para tablet" width="180"> |
 
 ## Sumário
 
 - [1. Introdução e motivação](#1-introdução-e-motivação)
-  - [1.1. HouseHost como base para gestão de hospedagem](#11-househost-como-base-para-gestão-de-hospedagem)
-  - [1.2. Objetivo do projeto](#12-objetivo-do-projeto)
-- [2. Visão geral da arquitetura](#2-visão-geral-da-arquitetura)
-  - [2.1. Camadas da aplicação](#21-camadas-da-aplicação)
-  - [2.2. Organização do código](#22-organização-do-código)
-  - [2.3. Tecnologias utilizadas](#23-tecnologias-utilizadas)
+  - [1.1. HouseHost como base para gestão de hospedagens](#11-househost-como-base-para-gestão-de-hospedagens)
+  - [1.2. Escopo funcional](#12-escopo-funcional)
+- [2. Arquiteturas do projeto](#2-arquiteturas-do-projeto)
+  - [2.1. Arquitetura do backend](#21-arquitetura-do-backend)
+    - [2.1.1. Arquitetura hexagonal](#211-arquitetura-hexagonal)
+    - [2.1.2. Direção das dependências](#212-direção-das-dependências)
+    - [2.1.3. Organização do backend](#213-organização-do-backend)
+    - [2.1.4. Submódulos hexagonais de privacy](#214-submódulos-hexagonais-de-privacy)
+  - [2.2. Arquitetura do frontend](#22-arquitetura-do-frontend)
+    - [2.2.1. Organização do frontend](#221-organização-do-frontend)
+    - [2.2.2. Inicialização e autenticação](#222-inicialização-e-autenticação)
+    - [2.2.3. Cliente da API e sessão local](#223-cliente-da-api-e-sessão-local)
+    - [2.2.4. Controller de interface e navegação](#224-controller-de-interface-e-navegação)
+    - [2.2.5. Views e widgets](#225-views-e-widgets)
+    - [2.2.6. Permissões e responsividade](#226-permissões-e-responsividade)
 - [3. Protocolos, DTOs e segurança](#3-protocolos-dtos-e-segurança)
   - [3.1. Protocolo de response](#31-protocolo-de-response)
-  - [3.2. DTOs de request e response](#32-dtos-de-request-e-response)
-  - [3.3. Autenticação com JWT](#33-autenticação-com-jwt)
-  - [3.4. Rotas públicas e protegidas](#34-rotas-públicas-e-protegidas)
+  - [3.2. DTOs de entrada e saída](#32-dtos-de-entrada-e-saída)
+  - [3.3. Autenticação e autorização](#33-autenticação-e-autorização)
+  - [3.4. Proteção de login](#34-proteção-de-login)
 - [4. Fluxo de request e response](#4-fluxo-de-request-e-response)
-  - [4.1. Backend](#41-backend)
-    - [4.1.1. Login e sessão JWT](#411-login-e-sessão-jwt)
-    - [4.1.2. Cadastro e perfil de usuário](#412-cadastro-e-perfil-de-usuário)
-    - [4.1.3. Cadastro de hóspede](#413-cadastro-de-hóspede)
-    - [4.1.4. Criação de reserva](#414-criação-de-reserva)
-    - [4.1.5. Check-in e check-out](#415-check-in-e-check-out)
-    - [4.1.6. Liquidação financeira](#416-liquidação-financeira)
-  - [4.2. Frontend](#42-frontend)
-    - [4.2.1. Inicialização da interface](#421-inicialização-da-interface)
-    - [4.2.2. API client e sessão local](#422-api-client-e-sessão-local)
-    - [4.2.3. Views e widgets](#423-views-e-widgets)
-- [5. Modelo de domínio](#5-modelo-de-domínio)
-  - [5.1. User](#51-user)
-  - [5.2. Guest](#52-guest)
-  - [5.3. Room](#53-room)
-  - [5.4. Booking](#54-booking)
-  - [5.5. Stay, CheckIn e CheckOut](#55-stay-checkin-e-checkout)
-- [6. Módulo financeiro, caixa e métricas](#6-módulo-financeiro-caixa-e-métricas)
-  - [6.1. FinancialTransaction como API financeira](#61-financialtransaction-como-api-financeira)
-  - [6.2. Transações parceladas](#62-transações-parceladas)
-  - [6.3. Cashier, CashierEntry e CashierExpense](#63-cashier-cashierentry-e-cashierexpense)
-  - [6.4. Métricas e dashboard](#64-métricas-e-dashboard)
-- [7. API REST](#7-api-rest)
-- [8. Tratamento de erros](#8-tratamento-de-erros)
-- [9. Decisões de projeto](#9-decisões-de-projeto)
-- [10. Refúgio Cantinho das Lavandas: exemplo real de uso e deploy](#10-refúgio-cantinho-das-lavandas-exemplo-real-de-uso-e-deploy)
-  - [10.1. Contexto da pousada](#101-contexto-da-pousada)
-  - [10.2. Arquitetura de nuvem](#102-arquitetura-de-nuvem)
-  - [10.3. Backend como serviço Linux](#103-backend-como-serviço-linux)
-  - [10.4. Nginx como servidor web e proxy reverso](#104-nginx-como-servidor-web-e-proxy-reverso)
-  - [10.5. Ciclo de deploy](#105-ciclo-de-deploy)
-- [11. Como rodar o HouseHost](#11-como-rodar-o-househost)
-  - [11.1. Pré-requisitos](#111-pré-requisitos)
-  - [11.2. Configuração do banco de dados](#112-configuração-do-banco-de-dados)
-  - [11.3. Backend](#113-backend)
-  - [11.4. Frontend](#114-frontend)
-- [12. Como adicionar novos fluxos](#12-como-adicionar-novos-fluxos)
-- [13. Próximos passos](#13-próximos-passos)
+  - [4.1. Fluxo administrativo autenticado](#41-fluxo-administrativo-autenticado)
+  - [4.2. Fluxo de reserva pública](#42-fluxo-de-reserva-pública)
+  - [4.3. Fluxo do painel administrativo](#43-fluxo-do-painel-administrativo)
+- [5. Módulos da aplicação](#5-módulos-da-aplicação)
+  - [5.1. Autenticação e segurança](#51-autenticação-e-segurança)
+  - [5.2. Hóspedes](#52-hóspedes)
+  - [5.3. Acomodações](#53-acomodações)
+  - [5.4. Reservas, check-in e check-out](#54-reservas-check-in-e-check-out)
+  - [5.5. Financeiro e caixa](#55-financeiro-e-caixa)
+  - [5.6. Métricas](#56-métricas)
+  - [5.7. API pública](#57-api-pública)
+  - [5.8. Auditoria](#58-auditoria)
+  - [5.9. Privacidade](#59-privacidade)
+  - [5.10. Fornecedores](#510-fornecedores)
+- [6. API REST](#6-api-rest)
+  - [6.1. Endpoints públicos](#61-endpoints-públicos)
+  - [6.2. Endpoints administrativos](#62-endpoints-administrativos)
+  - [6.3. Perfis de acesso](#63-perfis-de-acesso)
+- [7. LGPD e privacidade por construção](#7-lgpd-e-privacidade-por-construção)
+  - [7.1. Inventário das operações de tratamento](#71-inventário-das-operações-de-tratamento)
+  - [7.2. Avaliação e versionamento das bases legais](#72-avaliação-e-versionamento-das-bases-legais)
+  - [7.3. Referências legais centralizadas](#73-referências-legais-centralizadas)
+  - [7.4. Necessidade e minimização](#74-necessidade-e-minimização)
+  - [7.5. Transparência e registro do aceite](#75-transparência-e-registro-do-aceite)
+  - [7.6. Política de privacidade](#76-política-de-privacidade)
+  - [7.7. Controle de acesso e mascaramento](#77-controle-de-acesso-e-mascaramento)
+  - [7.8. Segurança dos dados pessoais](#78-segurança-dos-dados-pessoais)
+  - [7.9. Auditoria e prestação de contas](#79-auditoria-e-prestação-de-contas)
+  - [7.10. Governança de fornecedores e operadores](#710-governança-de-fornecedores-e-operadores)
+  - [7.11. Retenção e eliminação](#711-retenção-e-eliminação)
+  - [7.12. Testes dos controles de privacidade](#712-testes-dos-controles-de-privacidade)
+- [8. Tecnologias utilizadas](#8-tecnologias-utilizadas)
+  - [8.1. Backend](#81-backend)
+  - [8.2. Frontend administrativo](#82-frontend-administrativo)
+- [9. Como rodar o HouseHost](#9-como-rodar-o-househost)
+  - [9.1. Pré-requisitos](#91-pré-requisitos)
+  - [9.2. Configuração do ambiente](#92-configuração-do-ambiente)
+  - [9.3. Inicialização do backend](#93-inicialização-do-backend)
+  - [9.4. Inicialização do painel](#94-inicialização-do-painel)
+- [10. Como adicionar novos fluxos](#10-como-adicionar-novos-fluxos)
+  - [10.1. Novo caso de uso](#101-novo-caso-de-uso)
+  - [10.2. Novo adaptador](#102-novo-adaptador)
+  - [10.3. Nova integração pública](#103-nova-integração-pública)
 
 ## 1. Introdução e motivação
 
-Operações de hospedagem pequenas costumam nascer com controles separados: agenda para reservas, planilhas para pagamentos, conversas para dados do hóspede, anotações para check-in e outro controle para caixa. Esse modelo funciona no início, mas cria inconsistência quando o mesmo dado precisa aparecer em mais de uma tela ou quando uma ação operacional tem consequência financeira.
+Operações de hospedagem pequenas costumam começar com controles separados: agenda para reservas, planilhas para pagamentos, conversas para dados do hóspede e anotações para entrada e saída. Essa fragmentação cria inconsistências quando o mesmo fato precisa aparecer no atendimento, na ocupação, no financeiro e no histórico da hospedagem.
 
-O HouseHost foi criado para concentrar essas informações em um fluxo único. Uma reserva representa o compromisso comercial. Uma estadia representa a presença real do hóspede no imóvel. Uma transação financeira representa uma intenção ou registro financeiro. Uma entrada ou saída representa movimento de caixa. Essa separação evita que uma reserva futura ocupe automaticamente um quarto, evita que dinheiro aguardando liquidação seja tratado como saldo em caixa e permite que o dashboard mostre uma visão coerente da operação.
+O HouseHost concentra esses fluxos sem transformar conceitos diferentes em uma única entidade. Uma reserva representa o compromisso comercial. Check-in e check-out representam acontecimentos operacionais. Uma transação representa o fato financeiro, enquanto o caixa representa sua movimentação efetiva. A auditoria registra fatos relevantes e o módulo de privacidade documenta por que e como os dados pessoais são tratados.
 
-### 1.1. HouseHost como base para gestão de hospedagem
+### 1.1. HouseHost como base para gestão de hospedagens
 
-O HouseHost pode servir como base para sistemas administrativos de pousadas, casas de temporada, hotéis pequenos e hospedagens independentes. A aplicação já possui módulos de autenticação, hóspedes, quartos, reservas, estadias, check-in, check-out, caixa, transações financeiras e métricas.
+O HouseHost funciona como uma fundação reutilizável para sistemas administrativos de pousadas, hotéis pequenos, imóveis de temporada e hospedagens independentes. O domínio não depende de uma tela específica. O mesmo caso de uso pode ser acionado pelo painel administrativo, por um site público ou por outro adaptador criado para uma integração.
 
-O ponto central é manter as regras de negócio no backend e deixar o frontend como consumidor da API. Controllers recebem requisições HTTP, services executam regras e repositories persistem dados. Essa organização permite evoluir o produto sem misturar regra financeira, regra operacional e renderização de tela.
+A arquitetura permite que o produto cresça por módulos. Reservas não precisam conhecer detalhes do JWT; o financeiro não precisa acessar diretamente o controller de hóspedes; a auditoria recebe fatos por portas; a persistência converte modelos de domínio em entidades JPA nos limites externos da aplicação.
 
-### 1.2. Objetivo do projeto
+### 1.2. Escopo funcional
 
-O projeto cobre:
+O sistema cobre:
 
-- cadastro e gestão de hóspedes;
-- cadastro e gestão de quartos;
-- criação, edição, exclusão e visualização de reservas;
-- controle de status de reserva;
-- check-in com criação ou associação de estadia;
-- check-out com encerramento de estadia;
-- criação de transações financeiras associadas a reservas;
-- liquidação de pagamentos;
-- criação automática de entradas e saídas no caixa;
-- exibição de métricas operacionais e financeiras;
-- perfil de hóspede, reserva e usuário;
-- autenticação por e-mail e senha com token JWT;
-- atualização de perfil, telefone, cargo, senha e foto de usuário.
+- usuários internos, perfis e autenticação;
+- hóspedes e proteção de seus dados;
+- acomodações, capacidade, diária e situação operacional;
+- reservas administrativas e públicas;
+- check-in e check-out;
+- transações financeiras, liquidação e parcelamento;
+- caixas, entradas e despesas;
+- métricas para o painel;
+- fornecedores e relações de tratamento;
+- eventos de auditoria;
+- inventário de tratamentos e avaliação das bases legais.
 
-## 2. Visão geral da arquitetura
+## 2. Arquiteturas do projeto
 
-O HouseHost segue uma arquitetura monolítica em camadas. Backend, regras de negócio, acesso a dados, segurança e frontend estático vivem no mesmo repositório, mas com responsabilidades separadas.
+O HouseHost separa a arquitetura do backend da arquitetura do frontend administrativo. O backend é um monólito modular organizado segundo arquitetura hexagonal. O frontend é uma aplicação estática modular em HTML, CSS e JavaScript, responsável por sessão local, navegação, composição visual e consumo da API REST.
 
 ```text
-Frontend estático
+Frontend administrativo
   |
   | fetch HTTP/JSON + Authorization: Bearer <token>
   v
-JwtAuthenticationFilter / Spring Security
+Spring Security / Controllers REST
   |
   v
-Controllers REST
+Portas e casos de uso
   |
   v
-Services de negócio
+Domínio
   |
   v
-Repositories JPA
-  |
-  v
-MySQL
+Adaptadores JPA / MySQL / integrações
 ```
 
-Essa divisão permite que cada parte tenha uma responsabilidade clara. O controller não precisa conhecer detalhes de persistência. O service concentra validações e orquestrações. O repository encapsula consultas JPA. O filtro JWT autentica requisições antes de chegarem aos controllers protegidos.
+### 2.1. Arquitetura do backend
 
-### 2.1. Camadas da aplicação
+Todos os contextos do backend são executados na mesma aplicação Spring Boot, mas cada um preserva responsabilidades, regras e vocabulário próprios.
 
-- **Controller**: recebe requisições HTTP, delega para services e retorna `ResponseDTO`.
-- **DTO**: define contratos de entrada e saída da API.
-- **Service**: concentra regras de negócio, validações e orquestração entre módulos.
-- **Repository**: encapsula acesso ao banco via Spring Data JPA.
-- **Model/Entity**: representa o domínio persistido.
-- **Security**: configura Spring Security, CORS, sessão stateless e filtro JWT.
-- **Frontend Views/Widgets**: compõem telas e componentes visuais no navegador.
+#### 2.1.1. Arquitetura hexagonal
 
-### 2.2. Organização do código
+Cada módulo é organizado ao redor do domínio e dos casos de uso:
+
+```text
+                    adaptadores de entrada
+                 REST controllers / filtros
+                            |
+                            v
+                     portas de entrada
+                          use cases
+                            |
+                            v
+             serviços de aplicação e domínio
+                            |
+                            v
+                      portas de saída
+        persistência / auditoria / segurança / integração
+                            |
+                            v
+                    adaptadores de saída
+                  JPA / JWT / outros módulos
+```
+
+- `domain`: modelos, estados, invariantes e comportamentos do negócio;
+- `application/port/in`: contratos oferecidos pelo módulo;
+- `application/port/out`: recursos externos exigidos pelos casos de uso;
+- `application/service`: regras, validações, transações e orquestração;
+- `adapter/in`: controllers REST, filtros e inicializadores;
+- `adapter/out`: persistência, mapeamento, tokens e integrações.
+
+#### 2.1.2. Direção das dependências
+
+As dependências apontam para o núcleo. Modelos de domínio não possuem anotações JPA e não conhecem controllers. Entidades de persistência vivem em `adapter/out/persistence/entity` e são convertidas por mappers. Services dependem de interfaces de portas; adapters implementam essas interfaces usando Spring Data JPA, Spring Security, JJWT ou serviços de outro módulo.
+
+Exemplo do fluxo público:
+
+```text
+PublicBookingController
+        |
+        v
+PublicBookingUseCase
+        |
+        v
+PublicBookingService
+        |
+        +--> BookingPersistencePort --> adapter JPA
+        +--> GuestPersistencePort ----> adapter JPA
+        +--> PublicBookingAuditPort --> módulo audit
+```
+
+#### 2.1.3. Organização do backend
 
 ```text
 src/main/java/com/househost
-  auth/       autenticação, usuários e cargos
-  booking/    reservas e pagamentos associados a reservas
-  config/     compatibilidade de schema e configurações de startup
-  finance/    caixa, transações financeiras, entradas e saídas
-  guest/      hóspedes e status financeiro do hóspede
-  metrics/    métricas consolidadas para dashboard
-  room/       quartos
-  security/   JWT, filtro de autenticação e configuração Spring Security
-  shared/     DTO padrão e exceções globais
-  stay/       estadias, check-ins e check-outs
-
-frontend
-  index.html
-  css/
-  js/
-    api.js
-    controllers/
-    views/
-    widgets/
+├── audit/                       eventos e rastreabilidade
+├── auth/                        autenticação e usuários
+├── booking/
+│   ├── booking/                 reservas
+│   ├── checking/                check-in
+│   └── checkout/                check-out
+├── finance/
+│   ├── cashier/                 caixa, entradas e despesas
+│   └── financialtransaction/    transações e parcelas
+├── guest/                       hóspedes
+├── metrics/                     indicadores
+├── privacy/                     governança LGPD
+├── publicapi/                   reservas públicas
+├── room/                        acomodações
+├── security/                    JWT e autorização
+├── shared/                      respostas e exceções comuns
+└── supplier/                    fornecedores e operadores
 ```
 
-Padrão interno por módulo backend:
+Padrão interno de um módulo:
 
 ```text
 module/
-  controller/
-  dto/
-  model/
-  repository/
-  service/
+├── domain/model
+├── application/dto
+├── application/port/in
+├── application/port/out
+├── application/service
+├── adapter/in/rest
+└── adapter/out/persistence
 ```
 
-### 2.3. Tecnologias utilizadas
+#### 2.1.4. Submódulos hexagonais de privacy
 
-Backend:
+O módulo `privacy` passou a ser dividido por capacidades de negócio. Em vez de concentrar todo o domínio de privacidade nos mesmos pacotes, cada capacidade relevante possui seu próprio núcleo, casos de uso, portas e adaptadores:
 
-- Java 21
-- Spring Boot 3.2.5
-- Spring Web
-- Spring Data JPA
-- Spring Security
-- Spring Security Crypto
-- JJWT
-- Hibernate
-- MySQL
-- Maven Wrapper
+```text
+privacy/
+├── processing/                  inventário das operações de tratamento
+│   ├── domain/
+│   ├── application/
+│   └── adapter/
+├── legalbasis/                  avaliação e versionamento das bases legais
+│   ├── domain/
+│   ├── application/
+│   └── adapter/
+├── policy/                      política de privacidade
+│   ├── domain/
+│   ├── application/
+│   └── adapter/
+├── application/                composição entre submódulos
+└── adapter/                     entradas que apresentam a visão integrada
+```
 
-Frontend:
+O padrão adotado é:
 
-- HTML estático
-- CSS modular
-- JavaScript ES Modules
-- Fetch API
-- `localStorage` para sessão JWT
-- Tabler Icons via CDN
-- Google Fonts
+```text
+módulo
+└── submódulo funcional
+    ├── domain
+    ├── application
+    │   ├── dto
+    │   ├── records
+    │   ├── port/in
+    │   ├── port/out
+    │   └── service
+    └── adapter
+        ├── in
+        └── out
+```
+
+`processing`, `legalbasis` e `policy` podem evoluir de maneira independente, enquanto a camada diretamente abaixo de `privacy` compõe informações dos submódulos para a governança integrada. Esse desenho preserva o limite de cada domínio sem transformar o módulo de privacidade em um único conjunto de services e entidades.
+
+### 2.2. Arquitetura do frontend
+
+O painel administrativo é uma aplicação estática sem framework, construída com HTML5, CSS modular e JavaScript ES Modules. O navegador não contém regras centrais de negócio: ele coleta entradas, controla a navegação, apresenta os dados e chama os casos de uso expostos pela API. Validação definitiva, autorização e persistência permanecem no backend.
+
+#### 2.2.1. Organização do frontend
+
+```text
+frontend/admin/
+├── index.html
+├── css/
+│   ├── home.css
+│   ├── loginWidget.css
+│   ├── metricsResumeWidget.css
+│   └── sidebarWidget.css
+├── js/
+│   ├── api.js
+│   ├── permissions.js
+│   ├── controllers/
+│   │   ├── main.js
+│   │   └── UICOntroller.js
+│   ├── views/
+│   └── widgets/
+└── tests/
+```
+
+As responsabilidades são separadas da seguinte forma:
+
+- `index.html`: documento inicial, estilos, fontes, ícones e ponto de entrada JavaScript;
+- `controllers`: inicialização, navegação e coordenação entre telas;
+- `api.js`: comunicação HTTP e gerenciamento da sessão local;
+- `permissions.js`: capacidades visuais derivadas do perfil do usuário;
+- `views`: telas e fluxos completos de cada recurso;
+- `widgets`: componentes reutilizáveis do layout;
+- `css`: estilos gerais e estilos dos componentes;
+- `tests`: contratos do cliente da API e fluxos de governança.
+
+#### 2.2.2. Inicialização e autenticação
+
+`controllers/main.js` é executado quando o documento termina de carregar:
+
+```text
+index.html
+  |
+  v
+controllers/main.js
+  |
+  +--> getStoredUser()
+  |
+  +--> sessão válida: startUIController()
+  |
+  +--> sem sessão: renderAuthLayout()
+                       |
+                       +--> composição visual da tela de acesso
+                       +--> login ou cadastro
+```
+
+Após o login, o widget entrega o usuário autenticado ao controller principal e o painel substitui o layout de autenticação pelo shell administrativo. O evento global `househost:session-expired` retorna a aplicação à tela de login com uma mensagem de sessão expirada.
+
+#### 2.2.3. Cliente da API e sessão local
+
+`frontend/admin/js/api.js` centraliza as requisições. Suas responsabilidades são:
+
+- resolver a URL-base da API;
+- criar chamadas com `fetch`;
+- serializar requests JSON;
+- interpretar o envelope `ResponseDTO`;
+- armazenar `househost_token` no `localStorage`;
+- armazenar `househost_user` sem duplicar token, tipo ou expiração;
+- adicionar `Authorization: Bearer <token>` às chamadas autenticadas;
+- permitir chamadas públicas com `auth: false`;
+- limpar a sessão e emitir `househost:session-expired` após uma resposta `401` autenticada.
+
+```text
+View ou widget
+  |
+  v
+função específica de api.js
+  |
+  v
+apiRequest(path, options)
+  |
+  +--> URL-base
+  +--> Content-Type
+  +--> Bearer token
+  |
+  v
+fetch -> API REST -> parseJsonResponse
+```
+
+Quando o painel é servido localmente fora da porta `8080`, o cliente usa `http://localhost:8080` como base. Em outras origens, utiliza caminhos relativos, permitindo que um proxy reverso encaminhe a API no mesmo domínio.
+
+#### 2.2.4. Controller de interface e navegação
+
+`UICOntroller.js` funciona como orquestrador da SPA. Ele monta o shell com sidebar, topbar, área principal e botão responsivo. Cada função `render...Panel` escolhe a view, injeta callbacks e preserva o contexto de retorno entre lista, formulário e perfil.
+
+```text
+Sidebar / Topbar / ação de uma view
+  |
+  v
+UICOntroller
+  |
+  +--> verifica a permissão visual
+  +--> escolhe o painel
+  +--> configura callbacks de navegação
+  |
+  v
+View renderizada em #main-pannel-container
+```
+
+Essa navegação não depende de recarregar a página. Views recebem funções como `onBack`, `onSaved`, `onEdit` e `onOpen...`, mantendo os componentes desacoplados da árvore completa da interface.
+
+#### 2.2.5. Views e widgets
+
+As views representam telas ou fluxos de negócio:
+
+- dashboard e calendário de ocupação;
+- quartos;
+- reservas, criação, edição e perfil;
+- hóspedes, cadastro e perfil;
+- check-in e check-out;
+- financeiro e perfil de transação;
+- fornecedores, formulário e governança;
+- operações de tratamento;
+- avaliações de bases legais, formulário e perfil;
+- perfil do usuário.
+
+Os widgets representam componentes reutilizáveis:
+
+- autenticação e cadastro;
+- resumo de métricas;
+- sidebar;
+- topbar;
+- identidade visual;
+- linha do tempo de acomodações.
+
+As views importam somente as funções da API e os componentes necessários ao próprio fluxo. O controller decide quando cada view aparece e como ela retorna à anterior.
+
+#### 2.2.6. Permissões e responsividade
+
+`permissions.js` traduz os perfis `CEO`, `CTO`, `ADMIN`, `MANAGER`, `RECEPTION` e `HOUSEKEEPING` em capacidades visuais. O resultado controla menus, botões, exclusões, acesso financeiro, governança e operações administrativas. Essa camada melhora a experiência, enquanto a autorização efetiva continua sendo aplicada pelo Spring Security no backend.
+
+O layout usa media queries, grades flexíveis e uma sidebar recolhível. Em telas menores, o `UICOntroller` alterna a classe `sidebar-open`, modifica o ícone e atualiza o rótulo acessível do botão entre abrir e fechar menu. Formulários, cards, métricas e filtros reduzem suas colunas conforme a largura disponível, mantendo o painel utilizável em desktop, tablet e celular.
 
 ## 3. Protocolos, DTOs e segurança
 
-Contratos são uma parte importante do HouseHost. A API não expõe entidades JPA diretamente: requests e responses passam por DTOs, e todas as respostas seguem o envelope `ResponseDTO`.
+Protocolos e DTOs definem a fronteira entre clientes e aplicação. O protocolo padroniza o envelope geral da resposta. Os DTOs representam os dados específicos de cada operação e evitam que entidades de persistência sejam expostas pela API.
 
 ### 3.1. Protocolo de response
 
-O protocolo `ResponseDTO` padroniza respostas de sucesso e erro.
+Todas as respostas REST usam `ResponseDTO`:
 
 ```json
 {
@@ -223,1017 +438,614 @@ O protocolo `ResponseDTO` padroniza respostas de sucesso e erro.
 }
 ```
 
-- `status`: indica sucesso ou erro.
-- `message`: descreve o resultado da operação.
-- `data`: carrega o conteúdo específico da resposta.
+- `status`: informa o resultado geral;
+- `message`: explica o resultado da operação;
+- `data`: carrega o DTO específico do fluxo.
 
-### 3.2. DTOs de request e response
+Erros de autenticação e autorização também seguem JSON padronizado, com status HTTP `401` e `403`.
 
-Os DTOs isolam o contrato HTTP das entidades persistidas. Isso evita vazamento de campos sensíveis, permite respostas com dados derivados e mantém o frontend acoplado ao contrato da API, não ao modelo JPA.
+### 3.2. DTOs de entrada e saída
 
-Exemplos de DTOs:
+Cada contexto possui DTOs próprios em `application/dto`. A API pública usa objetos exclusivos, como `PublicRoomResponseDTO`, `PublicAvailabilityResponseDTO`, `PublicQuoteRequestDTO` e `PublicBookingRequestDTO`. Essa separação impede que o contrato público exponha o cadastro administrativo completo.
 
-- `LoginRequestDTO`
-- `LoginResponseDTO`
-- `RegistrationRequestDTO`
-- `RegistrationResponseDTO`
-- `UserProfileUpdateRequestDTO`
-- `GuestRequestDTO`
-- `GuestResponseDTO`
-- `BookingFormCreateRequestDTO`
-- `BookingResponseDTO`
-- `FinancialTransactionRequestDTO`
-- `FinancialTransactionResponseDTO`
-- `CashierResponseDTO`
-- `MetricsSummaryDTO`
+O mesmo princípio aparece nos módulos de hóspedes, reservas, finanças, privacidade e fornecedores. Requests carregam somente campos aceitos pela operação; responses apresentam somente informações pertencentes àquele contrato.
 
-### 3.3. Autenticação com JWT
+### 3.3. Autenticação e autorização
 
-O HouseHost usa Spring Security em modo stateless com JWT.
+O HouseHost usa Spring Security em modo stateless:
 
 ```text
 POST /auth/login
   -> valida e-mail e senha com BCrypt
   -> gera JWT assinado
-  -> retorna dados seguros do usuário + token
-  -> frontend salva token em localStorage
-  -> chamadas protegidas enviam Authorization: Bearer <token>
+  -> devolve token Bearer
+  -> cliente envia Authorization: Bearer <token>
+  -> JwtAuthenticationFilter valida o token
+  -> SecurityFilterChain aplica as regras de acesso
 ```
 
-O token é gerado por `JwtService` usando JJWT. Ele possui:
+O JWT possui identificador, assunto, emissão, expiração e assinatura. A cadeia de segurança autoriza rotas de acordo com método HTTP, endpoint e papel do usuário.
 
-- `sub`: e-mail do usuário autenticado;
-- `jti`: identificador único do token;
-- `iat`: data de emissão;
-- `exp`: expiração;
-- assinatura HMAC com chave configurada no service.
+### 3.4. Proteção de login
 
-Tempo de expiração atual:
+O módulo de autenticação controla falhas em três escopos:
 
-```text
-expiresIn = 3600 segundos
-```
+- combinação de e-mail e IP;
+- endereço IP;
+- conta.
 
-Resposta resumida de login:
-
-```json
-{
-  "status": "success",
-  "message": "Login realizado com sucesso",
-  "data": {
-    "id": 1,
-    "username": "admin",
-    "email": "admin@househost.com",
-    "phone": null,
-    "role": "ADMIN",
-    "photoUrl": null,
-    "token": "jwt-assinado",
-    "tokenType": "Bearer",
-    "expiresIn": 3600
-  }
-}
-```
-
-### 3.4. Rotas públicas e protegidas
-
-Rotas públicas:
-
-```text
-OPTIONS /**
-GET     /
-GET     /index.html
-GET     /css/**
-GET     /js/**
-GET     /assets/**
-GET     /favicon.ico
-POST    /auth/login
-POST    /auth/registration
-GET     /auth/users/quick-access
-```
-
-Todas as demais rotas exigem JWT válido.
-
-Exemplo de chamada autenticada:
-
-```bash
-curl -H "Authorization: Bearer SEU_TOKEN" http://localhost:8080/guests
-```
-
-Respostas de segurança:
-
-```json
-{
-  "status": "error",
-  "message": "Autenticação obrigatória.",
-  "data": null
-}
-```
-
-```json
-{
-  "status": "error",
-  "message": "Token inválido ou expirado.",
-  "data": null
-}
-```
+Cada escopo possui janela, limite e duração de bloqueio configuráveis. As chaves usadas para identificar e-mail, IP e pares são derivadas com HMAC. O serviço registra sucesso, falha, bloqueio temporário, tempo restante e expurgo do estado expirado. Alertas de segurança são enviados ao destino operacional configurado.
 
 ## 4. Fluxo de request e response
 
-O HouseHost usa REST para ações administrativas e financeiras. O frontend chama a API com `fetch`, recebe `ResponseDTO` e atualiza views/widgets de acordo com a resposta.
-
-### 4.1. Backend
-
-#### 4.1.1. Login e sessão JWT
+### 4.1. Fluxo administrativo autenticado
 
 ```text
-loginWidget.js
+Painel administrativo
   |
-  | e-mail + senha
+  | HTTP/JSON + Bearer token
   v
-api.js -> login()
-  |
-  | POST /auth/login
-  v
-AuthController
+JwtAuthenticationFilter
   |
   v
-AuthService
+SecurityFilterChain
   |
   v
-UserRepository + PasswordEncoder
+Controller REST
   |
   v
-JwtService gera token
+Porta de entrada / Service
+  |
+  +--> domínio e validações
+  +--> porta de persistência
+  +--> porta de auditoria
   |
   v
-ResponseDTO(LoginResponseDTO)
+ResponseDTO
 ```
 
-Depois do login, o frontend salva o token em `localStorage` e passa a enviar `Authorization: Bearer <token>` nas chamadas protegidas.
-
-#### 4.1.2. Cadastro e perfil de usuário
+### 4.2. Fluxo de reserva pública
 
 ```text
-Frontend
+Site público
   |
-  | POST /auth/registration
+  | GET disponibilidade / POST cotação ou reserva
   v
-AuthController
-  |
-  v
-AuthService
+PublicBookingController
   |
   v
-UserRepository
+PublicBookingService
+  |
+  +--> valida período e capacidade
+  +--> impede sobreposição de reserva
+  +--> minimiza e valida dados pessoais
+  +--> registra hóspede e reserva
+  +--> registra aceite e auditoria
+  |
+  v
+Código público + status + total
 ```
 
-O cadastro valida duplicidade de username/e-mail, normaliza cargo para `UserRole`, codifica senha com BCrypt e salva `User`.
+A reserva pública nasce com status `UNCONFIRMED`. O retorno contém um código público, o identificador da reserva, valor total e mensagem de atendimento.
 
-O perfil administrativo permite atualizar:
+### 4.3. Fluxo do painel administrativo
 
-- nome;
-- e-mail;
-- telefone;
-- cargo;
-- foto;
-- senha.
-
-Para trocar senha, o backend exige senha atual correta e nova senha com pelo menos 8 caracteres.
-
-#### 4.1.3. Cadastro de hóspede
+O painel em `frontend/admin` usa módulos JavaScript e um cliente central de API. As views cuidam de reservas, hóspedes, quartos, finanças, operações de tratamento, avaliações de base legal e fornecedores. O controle visual de permissões utiliza os mesmos perfis funcionais reconhecidos pelo backend.
 
 ```text
-Frontend
-  |
-  | POST /guests
-  v
-GuestController
-  |
-  v
-GuestService
-  |
-  v
-GuestRepository
+index.html
+  -> controllers/main.js
+  -> api.js
+  -> views e widgets
+  -> API REST do HouseHost
 ```
 
-O perfil do hóspede agrega dados pessoais, histórico, reservas, estadias e transações. Se houver pagamentos pendentes ou em débito, o perfil exibe ações para liquidação.
-
-#### 4.1.4. Criação de reserva
-
-```text
-Frontend
-  |
-  | POST /bookings/form
-  v
-BookingController
-  |
-  v
-BookingService
-  |
-  +--> GuestRepository
-  +--> RoomRepository
-  +--> FinancialTransactionService
-  |
-  v
-BookingRepository
-```
-
-Fluxo principal:
-
-1. usuário escolhe hóspede por nome ou CPF;
-2. escolhe quarto, período, origem e detalhes da hospedagem;
-3. define dados de pagamento;
-4. backend valida hóspede, quarto e período;
-5. backend calcula valor total: diária x noites - desconto;
-6. reserva é salva;
-7. se há pagamento informado, cria uma transação financeira ou parcelada;
-8. se `paymentCompleted = true`, a transação é liquidada imediatamente;
-9. se `paymentCompleted = false`, a transação e suas entradas/saídas ficam aguardando.
-
-Reservas `PENDING` e `CONFIRMED` bloqueiam período. Reserva cancelada não bloqueia período. Check-in realizado muda status para `GOT_CHECKIN`.
-
-#### 4.1.5. Check-in e check-out
-
-Check-in:
-
-```text
-POST /check-ins
-  |
-  v
-CheckInService
-  |
-  +--> cria ou associa Stay
-  +--> muda Booking para GOT_CHECKIN
-  +--> muda Guest para IN_STAY
-```
-
-Check-out:
-
-```text
-POST /check-outs
-  |
-  v
-CheckOutService
-  |
-  +--> encerra Stay
-  +--> define checkout real
-  +--> muda Guest para GOT_CHECKOUT
-```
-
-#### 4.1.6. Liquidação financeira
-
-```text
-PUT /financial-transactions/{id}/settle
-  |
-  v
-FinancialTransactionService.toSettle(id)
-  |
-  +--> muda transação para SETTLED
-  +--> liquida parcelas, se houver
-  +--> liquida entradas/saídas do caixa
-  +--> atualiza pagamento da reserva, se origem BOOKING
-  +--> recalcula status financeiro do hóspede
-```
-
-Liquidar uma transação não é apenas trocar um texto de status. A ação tem efeitos contábeis e operacionais.
-
-### 4.2. Frontend
-
-#### 4.2.1. Inicialização da interface
-
-```text
-HTML carregado
-  |
-  v
-main.js
-  |
-  +--> getStoredUser()
-  |
-  +--> se há usuário salvo: startUIController()
-  |
-  +--> se não há usuário salvo: renderAuthLayout()
-```
-
-#### 4.2.2. API client e sessão local
-
-Arquivo:
+## 5. Módulos da aplicação
 
-```text
-frontend/js/api.js
-```
+### 5.1. Autenticação e segurança
 
-Responsabilidades:
+`auth` mantém usuários, perfis, cadastro, atualização, BCrypt e proteção de login. `security` valida tokens, resolve a identidade autenticada e aplica autorização. A separação permite que autenticação, emissão de token e acesso HTTP sejam adaptadores em torno dos casos de uso.
 
-- resolver a base da API;
-- salvar `househost_token` no `localStorage`;
-- salvar `househost_user` sem dados sensíveis do token;
-- adicionar `Authorization: Bearer <token>` por padrão;
-- permitir chamadas públicas com `{ auth: false }`;
-- limpar sessão local ao receber HTTP 401.
+### 5.2. Hóspedes
 
-Quando aberto fora da porta `8080`, o frontend usa `http://localhost:8080` como base da API.
+`guest` cadastra, consulta, pesquisa, atualiza e exclui hóspedes. O módulo também integra situação financeira, relações com outras entidades, auditoria e mascaramento de dados. Consultas podem devolver uma visão reduzida ou dados completos conforme endpoint e autorização.
 
-#### 4.2.3. Views e widgets
+### 5.3. Acomodações
 
-Widgets:
+`room` administra número, tipo, capacidade, diária e status das acomodações. O módulo atende tanto o painel interno quanto a API pública, que converte o domínio em um DTO reduzido e lista somente unidades ativas.
 
-- `loginWidget.js`
-- `registrationWidget.js`
-- `metricsResumeWidget.js`
-- `sidebarWidget.js`
-- `dashboardTopbarWidget.js`
-- `roomTimelineWidget.js`
+### 5.4. Reservas, check-in e check-out
 
-Views:
+O contexto `booking` é dividido em três módulos:
 
-- dashboard;
-- reservas;
-- nova reserva;
-- edição de reserva;
-- perfil de reserva;
-- hóspedes;
-- perfil de hóspede;
-- formulário de hóspede;
-- quartos;
-- formulário de quarto;
-- check-in;
-- check-out;
-- caixa;
-- perfil de usuário.
+- `booking/booking`: período, hóspedes, origem, valores, status e aceite de privacidade;
+- `booking/checking`: processo de entrada e atualização da situação operacional;
+- `booking/checkout`: encerramento e registro da saída.
 
-## 5. Modelo de domínio
+Reservas bloqueiam disponibilidade conforme seu status. Os casos de uso registram criação, consulta, alteração e exclusão na trilha de auditoria.
 
-### 5.1. User
+### 5.5. Financeiro e caixa
 
-Representa usuário administrativo da plataforma.
+`finance/financialtransaction` representa receitas, despesas, forma, origem, participante, situação e liquidação. Também oferece planos parcelados e liquidação individual de parcelas.
 
-Campos principais:
+`finance/cashier` representa caixas, entradas e despesas. Serviços específicos validam movimentos, resolvem participantes e mantêm a relação entre transações financeiras e movimento efetivo.
 
-- `username`
-- `email`
-- `phone`
-- `passwordHash`
-- `role`
-- `photoUrl`
+### 5.6. Métricas
 
-Cargos:
+`metrics` consolida dados operacionais e financeiros para o dashboard. O módulo separa coleta dos dados, fotografia da situação e cálculo dos indicadores antes de compor `MetricsSummaryDTO`.
 
-- `CEO`
-- `CTO`
-- `ADMIN`
-- `MANAGER`
-- `RECEPTION`
-- `HOUSEKEEPING`
+### 5.7. API pública
 
-A senha nunca é salva em texto puro. O backend usa `PasswordEncoder` com BCrypt via `PasswordConfig`.
+`publicapi` é a porta de entrada destinada ao site. O módulo oferece acomodações, disponibilidade, cotação e criação de reserva sem exigir JWT. Ele valida e reduz a entrada antes de delegar aos domínios existentes, evitando a criação de uma regra paralela de reservas.
 
-### 5.2. Guest
+### 5.8. Auditoria
 
-Representa a pessoa hospedada ou cliente que possui reservas.
+`audit` registra fatos relevantes com tipo do evento, entidade, ator, data, IP, `User-Agent`, operação de tratamento e metadados JSON. Integrações locais conectam autenticação, hóspedes, reservas, check-in, check-out, financeiro, API pública, privacidade e fornecedores ao serviço geral de auditoria.
 
-Campos e conceitos principais:
+### 5.9. Privacidade
 
-- dados pessoais: nome, e-mail, telefone, documento, cidade, estado, endereço;
-- tipo: `NOVO`, `REGULAR`, `VIP`;
-- situação operacional: `IN_BOOKING`, `IN_STAY`, `GOT_CHECKOUT`;
-- status financeiro: `WAITING_PAYMENT`, `PAYMENT_SETTLED`, `DEBTOR`;
-- histórico: reservas, estadias e transações financeiras;
-- preferências e observações.
+`privacy` é formado por três submódulos hexagonais. `processing` mantém o inventário e a revisão das operações de tratamento. `legalbasis` cuida da prontidão, avaliação, aprovação, rejeição e versionamento das bases legais. `policy` administra o conteúdo, as versões, a publicação, a integridade e a consulta pública da política de privacidade. A camada de governança do módulo combina essas capacidades sem misturar seus modelos de domínio.
 
-O status financeiro do hóspede é derivado das transações associadas a ele:
+### 5.10. Fornecedores
 
-1. se existe transação pendente com data passada, o hóspede fica `DEBTOR`;
-2. se não está em débito, o sistema olha a transação mais recente;
-3. se a última está liquidada/paga, fica `PAYMENT_SETTLED`;
-4. se a última está aguardando, fica `WAITING_PAYMENT`.
+`supplier` registra fornecedores e suas relações de tratamento de dados. O domínio acompanha papel LGPD, finalidade, localização, transferência internacional, retenção, eliminação, segurança, incidentes, suboperadores, contrato, risco, revisão e destino dos dados ao final da relação.
 
-### 5.3. Room
+## 6. API REST
 
-Representa quarto ou unidade de hospedagem.
+### 6.1. Endpoints públicos
 
-Campos principais:
+| Método | Endpoint | Função |
+| --- | --- | --- |
+| `POST` | `/auth/login` | Autentica usuário interno. |
+| `POST` | `/auth/registration` | Cadastra usuário. |
+| `GET` | `/public/privacy-policy` | Retorna a política de privacidade publicada e vigente. |
+| `GET` | `/public/rooms` | Lista acomodações disponíveis para apresentação pública. |
+| `GET` | `/public/availability` | Consulta disponibilidade por período. |
+| `POST` | `/public/quote` | Calcula cotação. |
+| `POST` | `/public/bookings` | Registra solicitação de reserva pública. |
 
-- número/nome do quarto;
-- tipo;
-- capacidade;
-- diária;
-- status.
-
-Tipos:
-
-- `SINGLE`
-- `DOUBLE`
-- `SUITE`
-- `FAMILY`
-- `STANDARD`
-
-Status:
-
-- `AVAILABLE`
-- `OCCUPIED`
-- `MAINTENANCE`
-- `INACTIVE`
-
-Uma reserva futura não deve, sozinha, tornar o quarto ocupado. Ocupação real depende de estadia ativa/check-in.
-
-### 5.4. Booking
-
-Representa a intenção comercial de hospedagem em um período.
-
-Campos principais:
-
-- hóspede;
-- quarto;
-- data de check-in;
-- data de check-out;
-- status;
-- origem;
-- quantidade de adultos, crianças e pets;
-- forma de pagamento;
-- parcelas;
-- diária;
-- desconto;
-- valor pago;
-- valor total;
-- observações.
-
-Status:
-
-- `PENDING`
-- `CONFIRMED`
-- `CANCELLED`
-- `GOT_CHECKIN`
-
-Origem:
-
-- `DIRETO_TELEFONE`
-- `WHATSAPP`
-- `INSTAGRAM`
-- `BOOKING`
-- `AIRBNB`
-- `INDICACAO`
-
-Status de pagamento da reserva não é salvo como campo independente. Ele é calculado a partir de `totalAmount` e `paidAmount`:
-
-- `WAITING`: nada pago;
-- `PARTIAL`: valor parcialmente pago;
-- `PAID`: valor pago cobre o total.
-
-### 5.5. Stay, CheckIn e CheckOut
-
-`Stay` representa a presença real do hóspede no hotel. Uma reserva pode existir antes da estadia. A estadia nasce quando o check-in é realizado.
-
-Status de `Stay`:
-
-- `ACTIVE`
-- `CHECKED_OUT`
-- `CANCELLED`
-
-`CheckIn` registra o evento operacional de entrada. Quando criado como `COMPLETED`, cria uma estadia ativa se ainda não existir, muda a reserva para `GOT_CHECKIN` e muda o hóspede para `IN_STAY`.
-
-`CheckOut` registra o evento operacional de saída. Quando criado como `COMPLETED`, atualiza a estadia para `CHECKED_OUT`, define a data real de checkout e muda o hóspede para `GOT_CHECKOUT`.
-
-## 6. Módulo financeiro, caixa e métricas
-
-O módulo financeiro foi desenhado para ser desacoplado do restante da aplicação. Ele não depende rigidamente de reservas, estadias ou hóspedes para existir: esses módulos se conectam ao financeiro por origem (`sourceType` e `sourceId`) e por participantes (`senderType`, `senderId`, `receiverType`, `receiverId`). Essa decisão permite reaproveitar o mesmo módulo em outros sistemas e projetos, inclusive em contextos diferentes de hospedagem, como controle de caixa, contas a receber, contas a pagar ou movimentações internas.
-
-### 6.1. FinancialTransaction como API financeira
-
-`FinancialTransaction` funciona como uma API conceitual para solicitar movimentação financeira entre participantes.
-
-Ela exige:
-
-- tipo do pagante (`senderType`);
-- id do pagante (`senderId`);
-- tipo do recebedor (`receiverType`);
-- id do recebedor (`receiverId`);
-- valor;
-- tipo da transação;
-- data;
-- descrição.
-
-Participantes possíveis:
-
-- `CASHIER`
-- `GUEST`
-
-Tipos:
-
-- `ENTRY`
-- `EXPENSE`
-- `TRANSFER`
-
-Status:
-
-- `WAITING`
-- `SETTLED`
-- `PAID`
-- `ON_TIME`
-- `LATE`
-- `NOT_REALIZED`
-- `PARTIALLY_REALIZED`
-- `CANCELED`
-
-A transação também pode guardar origem:
-
-- `MANUAL`
-- `BOOKING`
-- `STAY`
-- `CHECK_IN`
-- `CHECK_OUT`
-- `INSTALLMENT`
-- `GUEST`
-
-Para reservas:
-
-```text
-sourceType = BOOKING
-sourceId = booking.id
-```
-
-Essa decisão evita uma relação rígida direta entre `Booking` e `FinancialTransaction`, mantendo a transação flexível como API financeira.
-
-### 6.2. Transações parceladas
-
-Quando uma reserva é criada com mais de uma parcela, o backend instancia `InstallmentPlanTransaction`, que herda de `FinancialTransaction`.
-
-Esse plano possui parcelas (`InstallmentTransaction`) relacionadas. A liquidação do plano também atualiza as parcelas para status liquidado.
-
-### 6.3. Cashier, CashierEntry e CashierExpense
-
-O caixa não se relaciona diretamente com `FinancialTransaction`. Ele se relaciona com:
-
-- `CashierEntry`: entrada;
-- `CashierExpense`: saída.
-
-Cada entrada/saída pode guardar a transação financeira de origem.
-
-Quando uma transação é criada com status `WAITING`:
-
-- entradas e saídas também nascem `WAITING`;
-- o valor não entra em `cashOnHand`;
-- o montante esperado altera `Cashier.onWaiting`.
-
-Quando `toSettle` é chamado:
-
-- transação vira `SETTLED`;
-- entradas e saídas relacionadas viram `SETTLED`;
-- valores saem de `onWaiting`;
-- entradas aumentam `cashOnHand`;
-- saídas diminuem `cashOnHand`;
-- se a origem for `BOOKING`, a reserva registra pagamento.
-
-### 6.4. Métricas e dashboard
-
-Endpoint principal:
-
-```text
-GET /metrics/summary
-```
-
-O `MetricsService` consolida dados de:
-
-- reservas;
-- hóspedes;
-- quartos;
-- estadias;
-- check-ins;
-- check-outs;
-- entradas do caixa;
-- saídas do caixa.
-
-Exemplos de métricas:
-
-- total de reservas;
-- reservas confirmadas;
-- reservas com check-in realizado;
-- hóspedes em estadia;
-- hóspedes com reserva;
-- quartos ocupados;
-- quartos livres;
-- check-ins esperados hoje;
-- check-ins realizados hoje;
-- check-outs esperados;
-- receita mensal;
-- saldo mensal do caixa.
-
-Quartos ocupados são calculados por estadia ativa ou status operacional real, não por reserva futura isolada.
-
-## 7. API REST
-
-Com exceção das rotas públicas listadas em [3.4. Rotas públicas e protegidas](#34-rotas-públicas-e-protegidas), os endpoints abaixo exigem:
+Exemplo de consulta:
 
 ```http
-Authorization: Bearer <token>
+GET /public/availability?roomId=1&checkIn=2026-08-10&checkOut=2026-08-13&guests=2
 ```
 
-Autenticação:
+Exemplo resumido de reserva:
+
+```json
+{
+  "roomId": 1,
+  "checkIn": "2026-08-10",
+  "checkOut": "2026-08-13",
+  "adults": 2,
+  "children": 0,
+  "pets": 0,
+  "guest": {
+    "firstName": "Maria",
+    "lastName": "Silva",
+    "phone": "35999999999",
+    "city": "São Paulo"
+  },
+  "privacyPolicyId": 2,
+  "termsVersion": "2026-07",
+  "privacyAccepted": true
+}
+```
+
+### 6.2. Endpoints administrativos
+
+| Grupo | Prefixo principal |
+| --- | --- |
+| Usuários | `/auth/users/**` |
+| Hóspedes | `/guests/**` |
+| Acomodações | `/rooms/**` |
+| Reservas | `/bookings/**` |
+| Check-in | `/check-ins/**` |
+| Check-out | `/check-outs/**` |
+| Transações | `/financial-transactions/**` |
+| Parcelamentos | `/installment-plans/**` |
+| Caixa | `/cashiers/**`, `/cashier-entries/**`, `/cashier-expenses/**` |
+| Métricas | `/metrics/**` |
+| Operações de tratamento | `/data-processing-operations/**` |
+| Bases legais | `/legal-basis-assessments/**` |
+| Políticas de privacidade | `/privacy-policies/**` |
+| Fornecedores | `/suppliers/**` |
+
+### 6.3. Perfis de acesso
+
+Os perfis reconhecidos são `CEO`, `CTO`, `ADMIN`, `MANAGER`, `RECEPTION` e `HOUSEKEEPING`.
+
+- privacidade e fornecedores: `CEO`, `CTO` e `ADMIN`;
+- financeiro e caixa: administração e gerência;
+- criação e alteração operacional: administração, gerência e recepção;
+- consultas operacionais: perfis internos autorizados;
+- contato e dados completos de hóspedes: perfis operacionais;
+- API `/public/**`: acesso anônimo.
+
+## 7. LGPD e privacidade por construção
+
+O HouseHost incorpora controles técnicos e registros de governança relacionados à Lei nº 13.709/2018. O módulo de privacidade documenta decisões; os módulos operacionais aplicam minimização, autorização, mascaramento, auditoria e evidência de aceite nos fluxos em que dados pessoais são utilizados.
+
+### 7.1. Inventário das operações de tratamento
+
+`DataProcessingOperation` representa uma atividade de tratamento. Cada registro informa:
+
+- código, nome, descrição e finalidade;
+- base legal declarada;
+- categorias de titulares e dados pessoais;
+- fonte dos dados e ações realizadas;
+- perfis internos e destinatários externos;
+- transferência internacional;
+- retenção e método de eliminação;
+- medidas de segurança;
+- área responsável, sistema, status e revisão.
+
+O catálogo é inicializado de forma idempotente com nove operações:
+
+1. gestão de reservas;
+2. gestão cadastral de hóspedes;
+3. hospedagem, check-in e check-out;
+4. gestão financeira;
+5. marketing por WhatsApp;
+6. usuários e controle de acesso;
+7. fornecedores e operadores;
+8. segurança, auditoria e incidentes;
+9. governança de privacidade e bases legais.
+
+Marketing por WhatsApp permanece inativo e separado da reserva. O cadastro público não recebe opção de marketing e o aceite da política não é interpretado como autorização promocional.
+
+### 7.2. Avaliação e versionamento das bases legais
+
+`ProcessingLegalBasisAssessment` registra a decisão aplicada a uma finalidade concreta. A avaliação possui:
+
+- base legal, justificativa e categorias de dados;
+- análise de necessidade;
+- norma externa específica e descrição da obrigação;
+- contexto contratual;
+- coleta, prova e revogação do consentimento;
+- interesse legítimo, expectativa do titular, impacto, salvaguardas e balanceamento;
+- dados sensíveis, hipótese específica e indispensabilidade;
+- versão, avaliação anterior, revisor e datas.
+
+O ciclo usa `DRAFT`, `UNDER_REVIEW`, `APPROVED`, `REJECTED` e `SUPERSEDED`. Somente rascunhos são editáveis. Uma decisão aprovada origina uma nova revisão; quando a revisão é aprovada, a versão anterior é marcada como substituída. Submissão, aprovação, rejeição e substituição geram auditoria.
+
+As validações dependem da base escolhida:
+
+- obrigação legal exige norma concreta e explicação da obrigação;
+- contrato exige contexto contratual;
+- consentimento exige coleta, prova e revogação;
+- legítimo interesse exige análise de expectativa, impacto, salvaguardas e balanceamento;
+- dados sensíveis exigem hipótese do art. 11, demonstração de indispensabilidade e salvaguardas.
+
+### 7.3. Referências legais centralizadas
+
+`LegalBasisType` associa cada base à referência correspondente:
+
+| Base | Referência LGPD |
+| --- | --- |
+| Consentimento | Lei nº 13.709/2018, art. 7º, I |
+| Obrigação legal ou regulatória | Lei nº 13.709/2018, art. 7º, II |
+| Contrato ou procedimentos preliminares | Lei nº 13.709/2018, art. 7º, V |
+| Exercício regular de direitos | Lei nº 13.709/2018, art. 7º, VI |
+| Proteção da vida | Lei nº 13.709/2018, art. 7º, VII |
+| Legítimo interesse | Lei nº 13.709/2018, art. 7º, IX e art. 10 |
+| Proteção do crédito | Lei nº 13.709/2018, art. 7º, X |
+
+A citação da LGPD fica separada de `legalReference`. Esse segundo campo registra a lei ou o regulamento externo que cria a obrigação concreta, como uma norma fiscal, contábil ou de hospedagem.
+
+### 7.4. Necessidade e minimização
+
+A API pública aplica minimização na entrada:
+
+- coleta nome, telefone e cidade para o contato inicial;
+- não solicita documento, endereço, nascimento ou informação financeira;
+- usa DTOs públicos reduzidos;
+- valida nomes, telefone, datas, capacidade e quantidades;
+- limita observações e versões informadas;
+- rejeita CPF e números semelhantes a cartão em campos fora do escopo;
+- limita o corpo da requisição pública a 16 KiB.
+
+O site consulta datas bloqueadas sem receber dados das pessoas associadas às reservas. O DTO público de acomodação também expõe somente informações necessárias à apresentação e cotação.
+
+### 7.5. Transparência e registro do aceite
+
+A reserva pública exige `privacyAccepted = true` e o identificador da política exibida ao visitante. Antes de criar a reserva, o backend confirma que esse identificador corresponde à publicação vigente. O domínio persiste um snapshot da evidência:
+
+- versão da política de privacidade;
+- hash do conteúdo publicado;
+- versão dos termos;
+- data e hora do aceite.
+
+Se uma nova política tiver sido publicada entre a leitura e o envio da reserva, a API rejeita o aceite da versão anterior e orienta o cliente a apresentar a versão vigente. O evento `PRIVACY_ACCEPTED` registra a ocorrência, a versão, o hash e a versão dos termos. O aceite dos termos e da política não é utilizado como autorização automática para marketing.
+
+### 7.6. Política de privacidade
+
+O submódulo `privacy.policy` transforma a política de privacidade em um documento governado pelo domínio, em vez de mantê-la como texto estático isolado do backend.
+
+#### 7.6.1. Estrutura e validação do documento
+
+O conteúdo é um documento JSON estruturado com `schemaVersion` e uma lista de seções. Cada seção possui título e blocos dos tipos:
+
+- `paragraph`: parágrafo de texto;
+- `list`: lista de itens;
+- `link`: texto e URL HTTP ou HTTPS.
+
+O backend rejeita campos desconhecidos, estrutura inválida, seções vazias, tipos não suportados, URLs fora de HTTP/HTTPS, markup HTML e ocorrências de `javascript:`. Título, conteúdo, textos e links também possuem limites de tamanho. Depois da validação, o JSON é canonicalizado, garantindo uma representação estável do mesmo documento.
+
+#### 7.6.2. Ciclo de vida e versionamento
+
+`PrivacyPolicy` possui três estados:
 
 ```text
-POST /auth/login               público, retorna JWT
-POST /auth/registration        público
-GET  /auth/users/quick-access  público
-PUT  /auth/users/{id}          protegido
-PUT  /auth/users/{id}/photo    protegido
+DRAFT -> PUBLISHED -> SUPERSEDED
 ```
 
-Hóspedes:
+- uma política é criada como `DRAFT`;
+- somente rascunhos podem ser alterados;
+- o número da versão não pode ser modificado depois da criação;
+- a publicação identifica o usuário responsável e registra a data;
+- quando uma nova versão é publicada, a anterior passa para `SUPERSEDED`;
+- somente uma política permanece publicada como vigente.
+
+As políticas administrativas são listadas em ordem decrescente de versão. O histórico conserva título, conteúdo, hash, status, vigência, publicador e datas de criação, atualização e publicação.
+
+#### 7.6.3. Integridade com SHA-256
+
+Na publicação, o conteúdo validado é canonicalizado e recebe um hash SHA-256 no formato:
 
 ```text
-POST   /guests
-POST   /guests/register
-GET    /guests
-GET    /guests/{id}
-PUT    /guests/{id}
-DELETE /guests/{id}
+sha256:<64 caracteres hexadecimais>
 ```
 
-Reservas:
+O hash identifica exatamente o conteúdo publicado. A versão e o hash são copiados para a reserva no momento do aceite, formando uma evidência independente do estado futuro do catálogo. Assim, a reserva não mantém uma dependência de domínio ou chave estrangeira para o submódulo `policy`; ela conserva o snapshot necessário para demonstrar qual texto foi aceito.
 
-```text
-POST   /bookings
-POST   /bookings/form
-GET    /bookings
-GET    /bookings/{id}
-GET    /bookings/guest/{guestId}
-GET    /bookings/room/{roomId}
-PUT    /bookings/{id}
-DELETE /bookings/{id}
+#### 7.6.4. Publicação e consulta
+
+O contrato administrativo oferece:
+
+| Método | Endpoint | Função |
+| --- | --- | --- |
+| `POST` | `/privacy-policies` | Cria um rascunho. |
+| `PUT` | `/privacy-policies/{id}` | Atualiza um rascunho. |
+| `POST` | `/privacy-policies/{id}/publish` | Publica a versão e substitui a anterior. |
+| `GET` | `/privacy-policies` | Lista o histórico por versão. |
+| `GET` | `/privacy-policies/{id}` | Consulta uma política específica. |
+
+O site consulta a versão vigente por:
+
+```http
+GET /public/privacy-policy
 ```
 
-Quartos:
+A resposta pública contém `id`, versão, título, conteúdo estruturado, hash e data de vigência. O `id` retornado deve ser enviado como `privacyPolicyId` na solicitação de reserva.
 
-```text
-POST   /rooms
-GET    /rooms
-GET    /rooms/{id}
-PUT    /rooms/{id}
-DELETE /rooms/{id}
-```
+#### 7.6.5. Política inicial confiável
 
-Estadias:
+Na inicialização da aplicação, `PrivacyPolicyCatalogInitializer` garante a presença da política pública inicial. O inicializador valida o documento, canonicaliza seu conteúdo, calcula o hash esperado e publica a versão inicial com um usuário administrativo. A execução é idempotente: uma versão existente é verificada em vez de duplicada. Divergência entre o conteúdo ou hash persistido e a versão confiável interrompe a inicialização, preservando a integridade do texto publicado.
 
-```text
-POST   /stays
-GET    /stays
-GET    /stays/{id}
-GET    /stays/guest/{guestId}
-GET    /stays/room/{roomId}
-GET    /stays/booking/{bookingId}
-PUT    /stays/{id}
-DELETE /stays/{id}
-```
+#### 7.6.6. Concorrência do aceite
 
-Check-ins:
+O aceite da reserva usa uma consulta com bloqueio sobre a política vigente. O backend distingue três situações:
 
-```text
-POST   /check-ins
-GET    /check-ins
-GET    /check-ins/{id}
-PUT    /check-ins/{id}
-DELETE /check-ins/{id}
-```
+- o identificador corresponde à política atual: a reserva continua;
+- o identificador não existe: a política é rejeitada como inexistente;
+- o identificador pertence a outra versão: a API informa conflito porque a política foi atualizada.
 
-Check-outs:
+Essa verificação ocorre dentro da transação da reserva e impede que uma versão seja substituída silenciosamente enquanto o aceite está sendo validado.
 
-```text
-POST   /check-outs
-GET    /check-outs
-GET    /check-outs/{id}
-PUT    /check-outs/{id}
-DELETE /check-outs/{id}
-```
+#### 7.6.7. Auditoria da política
 
-Financeiro:
+O submódulo registra os eventos:
 
-```text
-POST   /financial-transactions
-GET    /financial-transactions
-GET    /financial-transactions/{id}
-PUT    /financial-transactions/{id}
-PUT    /financial-transactions/{id}/settle
-DELETE /financial-transactions/{id}
-```
+- `PRIVACY_POLICY_DRAFT_CREATED`;
+- `PRIVACY_POLICY_DRAFT_UPDATED`;
+- `PRIVACY_POLICY_PUBLISHED`;
+- `PRIVACY_POLICY_SUPERSEDED`.
 
-Caixa:
+Cada evento é associado à operação `PRIVACY_GOVERNANCE` e inclui versão, status e hash quando disponível. A identidade do publicador e as datas também permanecem no registro da política.
 
-```text
-POST   /cashiers
-GET    /cashiers
-GET    /cashiers/{id}
-PUT    /cashiers/{id}
-DELETE /cashiers/{id}
-```
+### 7.7. Controle de acesso e mascaramento
 
-Entradas:
+Spring Security restringe os recursos por perfil e finalidade funcional. Rotas de privacidade e fornecedores são administrativas. Dados completos de hóspedes e endpoints de contato exigem perfil operacional autorizado.
 
-```text
-POST   /cashier-entries
-GET    /cashier-entries
-GET    /cashier-entries/cashier/{cashierId}
-GET    /cashier-entries/{id}
-PUT    /cashier-entries/{id}
-DELETE /cashier-entries/{id}
-```
+`GuestDataSecurityService` cria uma visão mascarada do hóspede. E-mail, telefone, documento, endereço e observações são substituídos por `***`. Nome e dados operacionais compatíveis com a visão reduzida são mantidos. O parâmetro de consulta que solicita dados não mascarados possui regra de autorização específica.
 
-Saídas:
+### 7.8. Segurança dos dados pessoais
 
-```text
-POST   /cashier-expenses
-GET    /cashier-expenses
-GET    /cashier-expenses/cashier/{cashierId}
-GET    /cashier-expenses/{id}
-PUT    /cashier-expenses/{id}
-DELETE /cashier-expenses/{id}
-```
+Os controles implementados incluem:
 
-Métricas:
+- BCrypt para senhas;
+- JWT assinado e sessão stateless;
+- autorização por rota, método HTTP e perfil;
+- respostas uniformes de autenticação e acesso negado;
+- validação e normalização das entradas;
+- limite de payload na API pública;
+- proteção de login por e-mail/IP, IP e conta;
+- chaves HMAC no estado de proteção de login;
+- alertas operacionais de segurança;
+- registro auditável das ações relevantes.
 
-```text
-GET /metrics/summary
-```
+### 7.9. Auditoria e prestação de contas
 
-## 8. Tratamento de erros
+`AuditEvent` registra:
 
-O projeto centraliza exceções em `GlobalExceptionHandler`.
+- tipo do evento;
+- tipo e identificador da entidade;
+- operação de tratamento relacionada;
+- tipo, identificador e rótulo do ator;
+- momento do acontecimento;
+- IP e `User-Agent`;
+- metadados JSON minimizados.
 
-Na arquitetura, erros de negócio e erros de tecnologia são tratados em pontos diferentes:
+Existem adaptadores de auditoria para autenticação, hóspedes, reservas, reserva pública, check-in, check-out, financeiro, avaliações de bases legais, políticas de privacidade e fornecedores. Os eventos usam identificadores, estados, quantidades e contexto funcional, evitando copiar o conteúdo integral dos registros pessoais para os metadados.
 
-- **Exceções de negócio**: nascem nos services quando uma regra do domínio é violada, como reserva inválida, hóspede inexistente, login incorreto, quarto indisponível ou transação financeira inconsistente. Elas são representadas por exceptions específicas de módulo e convertidas em `ResponseDTO` pelo `GlobalExceptionHandler`.
-- **Exceções de tecnologia**: podem vir de infraestrutura, persistência, JSON, HTTP, banco de dados ou segurança. Quando são previstas pelo fluxo da aplicação, são normalizadas antes de chegar ao cliente. Quando vêm da autenticação JWT, podem ser tratadas antes do controller pelo filtro de segurança ou pelo `authenticationEntryPoint` do Spring Security.
-- **Erros de autenticação**: são tratados no `JwtAuthenticationFilter` e em `SecurityConfig`, antes da requisição chegar ao controller protegido.
+O registro usa transação `REQUIRES_NEW`. Assim, o evento possui uma transação independente. Uma falha de auditoria é registrada no log operacional e não troca a resposta do caso de uso principal.
 
-Cada módulo tem exceções próprias para representar falhas de negócio:
+### 7.10. Governança de fornecedores e operadores
 
-- `BookingException`
-- `FinanceException`
-- `GuestException`
-- `InvalidLoginException`
-- `RegistrationException`
-- `RoomException`
-- `StayException`
+`SupplierDataProcessingRelationship` documenta a participação de terceiros no tratamento. O registro inclui:
 
-Erros de autenticação também seguem `ResponseDTO`, mas podem ser produzidos antes do controller:
+- finalidade, dados, titulares e ações;
+- papel LGPD e sua justificativa;
+- localização do armazenamento;
+- transferência internacional e mecanismo;
+- retenção, devolução e eliminação;
+- segurança e canal de incidente;
+- suboperadores;
+- contrato e responsabilidades;
+- risco, revisão e próxima avaliação;
+- encerramento e destino dos dados.
 
-- falta de token em rota protegida: HTTP 401 com mensagem `Autenticação obrigatória.`;
-- token inválido ou expirado: HTTP 401 com mensagem `Token inválido ou expirado.`;
-- e-mail/senha inválidos no login: HTTP 401 com mensagem `Usuário ou senha inválidos`.
+Uma relação aprovada exige revisor, data e contrato ativo ou justificativa de não aplicabilidade. Uma relação inativa exige data de encerramento e destino dos dados. Retenção depois do encerramento exige justificativa.
 
+### 7.11. Retenção e eliminação
 
-## 9. Decisões de projeto
+O inventário registra período de retenção e método de eliminação para cada operação. As relações com fornecedores registram critérios de retenção, procedimento de devolução ou eliminação e situação final dos dados.
 
-- Reserva não é estadia. Reserva é promessa comercial; estadia é hospedagem acontecendo.
-- Status de pagamento da reserva é calculado a partir de `totalAmount` e `paidAmount`.
-- `FinancialTransaction` não pertence rigidamente a `Booking`; ela guarda `sourceType` e `sourceId`.
-- O módulo financeiro foi feito desacoplado para poder ser reutilizado em outros sistemas e projetos.
-- Caixa conhece entradas e saídas, não contratos financeiros abstratos.
-- Entradas e saídas `WAITING` alteram `onWaiting`, mas não `cashOnHand`.
-- `GuestFinancialStatus` é recalculado a partir das transações associadas ao hóspede.
-- `DatabaseSchemaCompatibilityRunner` existe para reduzir fricção em bancos já existentes.
-- JWT protege a API, mas ainda não define autorização por cargo.
-- Controllers são pequenos; services concentram regras de negócio.
-- DTOs isolam API de entidades JPA.
-- O frontend é uma SPA simples sem framework.
-- Cache-busting manual usa query strings nos imports e CSS.
-- Métricas ficam centralizadas em `/metrics/summary`.
+O estado usado na proteção de login possui período configurável e serviço de expurgo. O padrão de configuração conserva esse estado por 30 dias. Encerramentos de fornecedores distinguem dados eliminados, devolvidos ou retidos com justificativa.
 
+### 7.12. Testes dos controles de privacidade
 
-## 10. Refúgio Cantinho das Lavandas: exemplo real de uso e deploy
+A suíte automatizada cobre:
 
-### 10.1. Contexto da pousada
+- mascaramento de hóspedes;
+- catálogo de operações de tratamento;
+- prontidão e ciclo das avaliações legais;
+- validações condicionais de contrato, consentimento, obrigação legal, legítimo interesse e dados sensíveis;
+- autorização dos endpoints de privacidade;
+- persistência e auditoria das avaliações;
+- validação estrutural, publicação, substituição e hash das políticas;
+- consulta pública e conflito de aceite com política desatualizada;
+- aceite e minimização da reserva pública;
+- rejeição de CPF e cartão fora do escopo;
+- limite de 16 KiB;
+- proteção e bloqueio de login;
+- auditoria de autenticação, hóspedes e finanças;
+- invariantes dos fornecedores.
 
-O Refúgio Cantinho das Lavandas é uma pousada em Monte Verde - MG usada como exemplo real de aplicação do HouseHost. O sistema foi adaptado para apoiar uma operação de hospedagem com reservas, hóspedes, quartos, check-ins, check-outs, caixa, métricas e autenticação administrativa.
+## 8. Tecnologias utilizadas
 
-Essa implantação foi feita por mim, Rafael Moreno dos Santos Medrano, incluindo a organização do backend, frontend, banco de dados, serviço Linux, Nginx e estrutura de deploy em AWS EC2.
+### 8.1. Backend
 
-### 10.2. Arquitetura de nuvem
+- Java 21;
+- Spring Boot 3.2.5;
+- Spring Web;
+- Spring Data JPA;
+- Hibernate;
+- Spring Security;
+- Spring Security Crypto;
+- JJWT 0.13;
+- MySQL;
+- Maven Wrapper;
+- JUnit 5, AssertJ, Mockito e Spring Security Test.
 
-A arquitetura de produção foi pensada para manter a aplicação simples, controlável e próxima de um cenário real de hospedagem:
+### 8.2. Frontend administrativo
 
-```text
-Usuário no navegador
-  |
-  | HTTP/HTTPS
-  v
-AWS EC2
-  |
-  v
-Nginx porta 80/443
-  |
-  +--> serve frontend estático em /var/www/cantinho-das-lavandas
-  |
-  +--> proxy reverso para localhost:8080
-         |
-         v
-      Spring Boot .jar
-         |
-         v
-      MySQL local na EC2
-```
+- HTML5;
+- CSS modular;
+- JavaScript ES Modules;
+- Fetch API;
+- views, widgets e controllers separados;
+- testes JavaScript do cliente de API e das telas de governança.
 
-Na EC2, a aplicação depende de:
+## 9. Como rodar o HouseHost
 
-- Java 21 para executar o backend Spring Boot;
-- MySQL para persistência;
-- Nginx para servir o frontend e encaminhar chamadas de API;
-- `systemd` para manter o backend ativo em segundo plano;
-- variáveis de ambiente externas ao Git para credenciais do banco.
+### 9.1. Pré-requisitos
 
-### 10.3. Backend como serviço Linux
+- Java 21;
+- MySQL;
+- navegador para o painel administrativo.
 
-Em produção, o backend não roda com `./mvnw spring-boot:run`. O projeto é empacotado em um `.jar`:
+O Maven Wrapper acompanha o projeto, portanto não é necessário instalar Maven separadamente.
+
+### 9.2. Configuração do ambiente
+
+Crie `.env` a partir do exemplo:
 
 ```bash
-./mvnw clean package
+cp .env.example .env
 ```
 
-O artefato gerado fica em:
-
-```text
-target/househost-0.0.1-SNAPSHOT.jar
-```
-
-Na EC2, o `.jar` é executado pelo `systemd` como serviço chamado `cantinho-das-lavandas`. Esse serviço permite:
-
-- iniciar automaticamente quando a instância liga;
-- reiniciar o backend em caso de falha;
-- consultar logs com `journalctl`;
-- carregar variáveis de ambiente por um arquivo fora do repositório;
-- manter a aplicação rodando sem depender de terminal aberto.
-
-O arquivo de ambiente usado na EC2 fica fora do Git:
-
-```text
-/etc/cantinho-das-lavandas.env
-```
-
-Ele concentra variáveis como:
-
-```text
-HOUSEHOST_DB_URL
-HOUSEHOST_DB_USERNAME
-HOUSEHOST_DB_PASSWORD
-```
-
-### 10.4. Nginx como servidor web e proxy reverso
-
-O Nginx fica na frente da aplicação e recebe o tráfego público nas portas `80` e `443`. O Spring Boot continua rodando internamente em:
-
-```text
-localhost:8080
-```
-
-Essa separação evita expor a porta `8080` publicamente e permite que o Nginx assuma duas responsabilidades:
-
-- servir o frontend estático direto do disco;
-- encaminhar chamadas de API para o backend Spring Boot.
-
-O frontend fica separado do `.jar` em:
-
-```text
-/var/www/cantinho-das-lavandas
-```
-
-Com isso, alterações em HTML, CSS, JavaScript e assets podem ser publicadas sem recompilar o backend. Quando a mudança é apenas visual, basta sincronizar os arquivos estáticos e o Nginx passa a entregá-los. Quando a mudança é no backend, o `.jar` é atualizado e o serviço `cantinho-das-lavandas` é reiniciado.
-
-### 10.5. Ciclo de deploy
-
-O fluxo de deploy usado no exemplo do Refúgio Cantinho das Lavandas segue esta lógica:
-
-1. atualizar o código na EC2 ou enviar artefatos pela máquina local;
-2. compilar o backend com Maven quando houver mudança Java;
-3. substituir o `.jar` em `target/`;
-4. reiniciar o serviço `cantinho-das-lavandas` com `systemctl`;
-5. sincronizar `frontend/` para `/var/www/cantinho-das-lavandas` quando houver mudança visual;
-6. testar a configuração do Nginx com `sudo nginx -t`;
-7. recarregar o Nginx quando houver mudança de configuração;
-8. consultar logs do backend com `journalctl -u cantinho-das-lavandas`;
-9. manter o Security Group expondo apenas portas necessárias, como `80`, `443` e `22` restrita.
-
-Essa arquitetura de deploy e nuvem foi implementada por mim para transformar o HouseHost em uma aplicação executável em ambiente real, com backend Java isolado, frontend estático independente, proxy reverso e banco persistente na EC2.
-
-
-## 11. Como rodar o HouseHost
-
-### 11.1. Pré-requisitos
-
-- Java 21
-- MySQL
-- Maven Wrapper incluso no projeto
-
-### 11.2. Configuração do banco de dados
-
-Crie um arquivo `.env` na raiz, baseado em `.env.example`:
-
-```bash
-HOUSEHOST_DB_URL=jdbc:mysql://localhost:3306/househost?createDatabaseIfNotExist=true&serverTimezone=UTC
-HOUSEHOST_DB_USERNAME=root
-HOUSEHOST_DB_PASSWORD=sua_senha
-```
-
-Configuração principal em `src/main/resources/application.properties`:
+Principais variáveis:
 
 ```properties
-spring.datasource.url=${HOUSEHOST_DB_URL:jdbc:mysql://localhost:3306/househost?createDatabaseIfNotExist=true&serverTimezone=UTC}
-spring.datasource.username=${HOUSEHOST_DB_USERNAME:root}
-spring.datasource.password=${HOUSEHOST_DB_PASSWORD:}
-spring.jpa.hibernate.ddl-auto=update
-spring.jpa.show-sql=true
+HOUSEHOST_DB_URL=jdbc:mysql://localhost:3306/househost?createDatabaseIfNotExist=true&serverTimezone=UTC
+HOUSEHOST_DB_USERNAME=root
+HOUSEHOST_DB_PASSWORD=senha_local
+HOUSEHOST_LOGIN_LIMIT_HMAC_SECRET=segredo_aleatorio_exclusivo
 ```
 
-O projeto usa `ddl-auto=update` para evolução automática básica do schema em desenvolvimento.
+As janelas, limites, bloqueios e retenção da proteção de login também podem ser configurados no mesmo arquivo.
 
-Também existe o `DatabaseSchemaCompatibilityRunner`, que roda no startup e aplica ajustes específicos no MySQL. Ele foi criado porque algumas mudanças de enum, colunas novas e migrações de valores antigos não são sempre resolvidas bem apenas com `ddl-auto=update`.
+### 9.3. Inicialização do backend
 
-Responsabilidades do runner:
-
-- garantir enums atualizados;
-- adicionar colunas novas;
-- normalizar valores antigos;
-- criar o caixa principal quando necessário;
-- manter compatibilidade com bancos já existentes;
-- sincronizar status de hóspedes a partir de estadias.
-
-### 11.3. Backend
-
-```bash
-./scripts/run-dev.sh
-```
-
-Ou, exportando as variáveis manualmente:
+Na raiz do projeto:
 
 ```bash
 ./mvnw spring-boot:run
 ```
 
-Por padrão, o backend roda em:
+O backend fica disponível em:
 
 ```text
 http://localhost:8080
 ```
 
-Para rodar testes:
+Para executar os testes:
 
 ```bash
 ./mvnw test
 ```
 
-### 11.4. Frontend
+### 9.4. Inicialização do painel
 
-O frontend está em:
+O painel estático está em:
 
 ```text
-frontend/index.html
+frontend/admin/index.html
 ```
 
-Quando aberto fora da porta `8080`, `frontend/js/api.js` usa `http://localhost:8080` como base da API.
+Ele deve ser servido por HTTP para que os módulos JavaScript funcionem corretamente. O script `scripts/run-dev.sh` organiza a execução local do projeto.
 
+O site público pode consumir diretamente:
 
-## 12. Como adicionar novos fluxos
+```text
+GET  /public/rooms
+GET  /public/availability
+GET  /public/privacy-policy
+POST /public/quote
+POST /public/bookings
+```
 
-Para adicionar um novo fluxo no backend:
+## 10. Como adicionar novos fluxos
 
-1. crie ou atualize DTOs de request/response;
-2. adicione ou ajuste a entidade de domínio, se necessário;
-3. crie o repository ou método de consulta;
-4. implemente a regra no service;
-5. exponha o endpoint no controller;
-6. retorne sempre `ResponseDTO`;
-7. atualize o frontend em `api.js`;
-8. crie ou ajuste view/widget;
-9. documente endpoints, estados e efeitos colaterais no README ou em `docs/`.
+### 10.1. Novo caso de uso
 
-Para fluxos financeiros, também verifique:
+Para adicionar uma operação ao núcleo:
 
-- impacto em `Cashier.cashOnHand`;
-- impacto em `Cashier.onWaiting`;
-- criação ou liquidação de `CashierEntry`;
-- criação ou liquidação de `CashierExpense`;
-- atualização de reserva quando `sourceType = BOOKING`;
-- atualização do status financeiro do hóspede.
+1. Defina ou amplie o modelo de domínio.
+2. Crie o contrato em `application/port/in`.
+3. Crie DTOs de entrada e saída.
+4. Implemente a orquestração em `application/service`.
+5. Declare em `application/port/out` as dependências externas necessárias.
+6. Cubra regras e transições com testes.
 
+### 10.2. Novo adaptador
 
-## 13. Próximos passos
+Para expor ou integrar o caso de uso:
 
-- criar autorização por cargo;
-- mover a chave JWT para variável de ambiente;
-- adicionar refresh token ou renovação controlada de sessão;
-- substituir `ddl-auto=update` por Flyway ou Liquibase;
-- adicionar testes unitários para services principais;
-- adicionar testes de segurança para rotas públicas, rotas protegidas e token expirado;
-- adicionar testes de integração para fluxos de reserva, check-in e financeiro;
-- criar build formal do frontend ou migrar para ferramenta leve se necessário;
-- versionar contratos da API;
-- adicionar auditoria de movimentações financeiras;
-- melhorar relatórios financeiros;
-- criar agenda/calendário de reservas com filtros;
-- adicionar controle de consumo e manutenção quando esses módulos forem retomados.
+1. Implemente um adapter de entrada, como controller REST.
+2. Implemente adapters de saída para as portas necessárias.
+3. Mantenha entidades JPA e mappers no adapter de persistência.
+4. Configure autorização para o endpoint.
+5. Registre eventos relevantes por uma porta de auditoria local.
 
+### 10.3. Nova integração pública
 
-## Autor
+Uma integração pública deve usar DTO próprio e reutilizar casos de uso existentes. O fluxo segue o padrão do módulo `publicapi`: valida e minimiza a entrada, impede exposição de entidades administrativas, aplica limites, associa o tratamento à operação cadastrada e registra os acontecimentos necessários na auditoria.
 
-Rafael Moreno dos Santos Medrano
+---
 
-[![GitHub](https://img.shields.io/badge/GitHub-181717?logo=github&logoColor=white)](https://github.com/RafaelSMedrano) [![LinkedIn](https://img.shields.io/badge/LinkedIn-0077B5?logo=linkedin&logoColor=white)](https://www.linkedin.com/in/rafaelsmedrano/) [![Gmail](https://img.shields.io/badge/Gmail-333333?logo=gmail&logoColor=red)](mailto:rafael.smedrano@gmail.com)
+Rafael Medrano
 
-Projeto desenvolvido como sistema administrativo para gestão de hospedagem, com foco em modelagem de domínio, arquitetura em camadas, operação hoteleira e controle financeiro.
+[![LinkedIn](https://img.shields.io/badge/LinkedIn-0077B5?logo=linkedin&logoColor=white)](https://www.linkedin.com/in/rafaelsmedrano/) [![Gmail](https://img.shields.io/badge/Gmail-333333?logo=gmail&logoColor=red)](mailto:rafael.smedrano@gmail.com)
