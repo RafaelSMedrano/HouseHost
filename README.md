@@ -28,7 +28,7 @@ Na prática, o HouseHost oferece uma estrutura para:
 
 | Sistema de autenticação | Dashboard administrativo | Responsivo para tablet |
 | --- | --- | --- |
-| <img src="imgs/Sistema de Autenticação.png" alt="Sistema de autenticação do HouseHost" width="320"> | <img src="imgs/Dashboard Admnistrativo.png" alt="Dashboard administrativo do HouseHost" width="320"> | <img src="imgs/responsivoTablet.jpeg" alt="Dashboard do HouseHost responsivo para tablet" width="180"> |
+| <img src="imgs/authentication-system.png" alt="Sistema de autenticação do HouseHost" width="320"> | <img src="imgs/Dashboard Admnistrativo.png" alt="Dashboard administrativo do HouseHost" width="320"> | <img src="imgs/responsivoTablet.jpeg" alt="Dashboard do HouseHost responsivo para tablet" width="180"> |
 
 ## Sumário
 
