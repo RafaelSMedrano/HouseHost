@@ -5,16 +5,39 @@ import com.househost.booking.checking.domain.model.CheckIn;
 import com.househost.booking.checking.domain.model.CheckInStatus;
 import com.househost.guest.adapter.out.persistence.entity.GuestJpaEntity;
 import com.househost.room.adapter.out.persistence.entity.RoomJpaEntity;
-import jakarta.persistence.*;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToOne;
+import jakarta.persistence.PrePersist;
+import jakarta.persistence.Table;
 import java.time.LocalDateTime;
 
 @Entity(name = "CheckIn")
 @Table(name = "check_ins")
 public class CheckInJpaEntity extends CheckIn {
-    @Id @GeneratedValue(strategy = GenerationType.IDENTITY) Long id;
-    @OneToOne @JoinColumn(name = "booking_id", unique = true) BookingJpaEntity booking;
-    @ManyToOne @JoinColumn(name = "guest_id", nullable = false) GuestJpaEntity guest;
-    @ManyToOne @JoinColumn(name = "room_id", nullable = false) RoomJpaEntity room;
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    Long id;
+
+    @OneToOne(optional = true)
+    @JoinColumn(name = "booking_id", unique = true, nullable = true)
+    BookingJpaEntity booking;
+
+    @ManyToOne
+    @JoinColumn(name = "guest_id", nullable = false)
+    GuestJpaEntity guest;
+
+    @ManyToOne
+    @JoinColumn(name = "room_id", nullable = false)
+    RoomJpaEntity room;
+
     Integer adults;
     Integer children;
     Integer pets;
@@ -26,16 +49,28 @@ public class CheckInJpaEntity extends CheckIn {
     String vehiclePlate;
     String vehicleModel;
     String performedBy;
-    @Column(length = 1000) String notes;
-    @Enumerated(EnumType.STRING) @Column(nullable = false) CheckInStatus status;
-    @Column(nullable = false, updatable = false) LocalDateTime createdAt;
+    @Column(length = 1000)
+    String notes;
 
-    protected CheckInJpaEntity() {}
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    CheckInStatus status;
 
-    @PrePersist void prePersist() {
+    @Column(nullable = false, updatable = false)
+    LocalDateTime createdAt;
+
+    protected CheckInJpaEntity() {
+    }
+
+    @PrePersist
+    void prePersist() {
         LocalDateTime now = LocalDateTime.now();
         createdAt = createdAt == null ? now : createdAt;
         status = status == null ? CheckInStatus.COMPLETED : status;
     }
-    @Override public Long getId() { return id; }
+
+    @Override
+    public Long getId() {
+        return id;
+    }
 }

@@ -1,65 +1,64 @@
 package com.househost.finance.cashier.application.service;
 
-import com.househost.finance.financialtransaction.application.port.out.FinancialParty;
+import com.househost.finance.cashier.application.port.in.CashierFinancialTransactionUseCase;
 import com.househost.finance.financialtransaction.domain.model.FinancialPartyType;
 import com.househost.finance.financialtransaction.domain.model.FinancialTransaction;
 import com.househost.finance.financialtransaction.domain.model.InstallmentPlanTransaction;
 import org.springframework.stereotype.Service;
 
 @Service
-public class CashierTransactionParticipantService implements FinancialParty {
+public class CashierTransactionParticipantService implements CashierFinancialTransactionUseCase {
 
-    private final CashierMovementService movementService;
+    private final CashierMovementService cashierMovementService;
 
-    CashierTransactionParticipantService(CashierMovementService movementService) {
-        this.movementService = movementService;
+    CashierTransactionParticipantService(CashierMovementService cashierMovementService) {
+        this.cashierMovementService = cashierMovementService;
     }
 
     @Override
-    public FinancialPartyType getType() {
-        return FinancialPartyType.CASHIER;
-    }
-
-    @Override
-    public void onCreate(Long cashierId, FinancialTransaction transaction) {
-        if (transaction instanceof InstallmentPlanTransaction plan) {
-            plan.getInstallments().forEach(installment -> onCreateSingleTransaction(cashierId, installment));
-            return;
-        }
-        onCreateSingleTransaction(cashierId, transaction);
-    }
-
-    private void onCreateSingleTransaction(Long cashierId, FinancialTransaction transaction) {
-        if (transaction.getReceiverType() == FinancialPartyType.CASHIER
-                && cashierId.equals(transaction.getReceiverId())) {
-            movementService.scheduleDeposit(cashierId, transaction);
-        }
-        if (transaction.getSenderType() == FinancialPartyType.CASHIER
-                && cashierId.equals(transaction.getSenderId())) {
-            movementService.scheduleWithdrawal(cashierId, transaction);
-        }
-    }
-
-    @Override
-    public void onSettle(Long cashierId, FinancialTransaction transaction) {
-        if (transaction.getReceiverType() == FinancialPartyType.CASHIER
-                && cashierId.equals(transaction.getReceiverId())) {
-            movementService.settleDeposit(cashierId, transaction);
-        }
-        if (transaction.getSenderType() == FinancialPartyType.CASHIER
-                && cashierId.equals(transaction.getSenderId())) {
-            movementService.settleWithdrawal(cashierId, transaction);
-        }
-    }
-
-    @Override
-    public void onDelete(FinancialTransaction transaction) {
-        if (transaction instanceof InstallmentPlanTransaction plan) {
-            plan.getInstallments().forEach(
-                    installment -> movementService.reverseMovementsForTransaction(installment.getId())
+    public void registerTransaction(Long cashierId, FinancialTransaction transaction) {
+        if (transaction instanceof InstallmentPlanTransaction installmentPlanTransaction) {
+            installmentPlanTransaction.getInstallments().forEach(
+                    installmentTransaction -> registerSingleTransaction(cashierId, installmentTransaction)
             );
             return;
         }
-        movementService.reverseMovementsForTransaction(transaction.getId());
+        registerSingleTransaction(cashierId, transaction);
+    }
+
+    private void registerSingleTransaction(Long cashierId, FinancialTransaction transaction) {
+        if (transaction.getReceiverType() == FinancialPartyType.CASHIER
+                && cashierId.equals(transaction.getReceiverId())) {
+            cashierMovementService.scheduleDeposit(cashierId, transaction);
+        }
+        if (transaction.getSenderType() == FinancialPartyType.CASHIER
+                && cashierId.equals(transaction.getSenderId())) {
+            cashierMovementService.scheduleWithdrawal(cashierId, transaction);
+        }
+    }
+
+    @Override
+    public void settleTransaction(Long cashierId, FinancialTransaction transaction) {
+        if (transaction.getReceiverType() == FinancialPartyType.CASHIER
+                && cashierId.equals(transaction.getReceiverId())) {
+            cashierMovementService.settleDeposit(cashierId, transaction);
+        }
+        if (transaction.getSenderType() == FinancialPartyType.CASHIER
+                && cashierId.equals(transaction.getSenderId())) {
+            cashierMovementService.settleWithdrawal(cashierId, transaction);
+        }
+    }
+
+    @Override
+    public void reverseTransaction(FinancialTransaction transaction) {
+        if (transaction instanceof InstallmentPlanTransaction installmentPlanTransaction) {
+            installmentPlanTransaction.getInstallments().forEach(
+                    installmentTransaction -> cashierMovementService.reverseMovementsForTransaction(
+                            installmentTransaction.getId()
+                    )
+            );
+            return;
+        }
+        cashierMovementService.reverseMovementsForTransaction(transaction.getId());
     }
 }

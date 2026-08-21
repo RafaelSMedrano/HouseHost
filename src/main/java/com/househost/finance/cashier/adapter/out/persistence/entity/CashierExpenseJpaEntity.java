@@ -45,8 +45,11 @@ public class CashierExpenseJpaEntity {
     @Column(nullable = false)
     private BigDecimal amount;
 
-    @Column(nullable = false)
-    private LocalDate expenseDate;
+    @Column(name = "due_date")
+    private LocalDate dueDate;
+
+    @Column(name = "settlement_date")
+    private LocalDate settlementDate;
 
     private String category;
 
@@ -73,7 +76,8 @@ public class CashierExpenseJpaEntity {
         entity.cashier = CashierJpaEntity.reference(expense.getCashier().getId());
         entity.description = expense.getDescription();
         entity.amount = expense.getAmount();
-        entity.expenseDate = expense.getExpenseDate();
+        entity.dueDate = expense.getDueDate();
+        entity.settlementDate = expense.getSettlementDate();
         entity.category = expense.getCategory();
         entity.status = expense.getStatus();
         entity.sourceTransaction = expense.getSourceTransaction() == null
@@ -84,15 +88,32 @@ public class CashierExpenseJpaEntity {
         return entity;
     }
 
-    public CashierExpenseJpaEntity(CashierJpaEntity cashier, String description, BigDecimal amount, LocalDate expenseDate, String category, FinancialTransactionStatus status) {
-        this(cashier, description, amount, expenseDate, category, status, null);
+    public CashierExpenseJpaEntity(
+            CashierJpaEntity cashier,
+            String description,
+            BigDecimal amount,
+            LocalDate dueDate,
+            String category,
+            FinancialTransactionStatus status
+    ) {
+        this(cashier, description, amount, dueDate, null, category, status, null);
     }
 
-    public CashierExpenseJpaEntity(CashierJpaEntity cashier, String description, BigDecimal amount, LocalDate expenseDate, String category, FinancialTransactionStatus status, FinancialTransactionJpaEntity sourceTransaction) {
+    public CashierExpenseJpaEntity(
+            CashierJpaEntity cashier,
+            String description,
+            BigDecimal amount,
+            LocalDate dueDate,
+            LocalDate settlementDate,
+            String category,
+            FinancialTransactionStatus status,
+            FinancialTransactionJpaEntity sourceTransaction
+    ) {
         this.cashier = cashier;
         this.description = description;
         this.amount = normalizeExpenseAmount(amount);
-        this.expenseDate = expenseDate;
+        this.dueDate = dueDate;
+        this.settlementDate = settlementDate;
         this.category = category;
         this.sourceTransaction = sourceTransaction;
         this.status = status == null ? FinancialTransactionStatus.WAITING : status;
@@ -110,15 +131,30 @@ public class CashierExpenseJpaEntity {
         updatedAt = LocalDateTime.now();
     }
 
-    public void updateExpense(CashierJpaEntity cashier, String description, BigDecimal amount, LocalDate expenseDate, String category, FinancialTransactionStatus status) {
-        updateExpense(cashier, description, amount, expenseDate, category, status, sourceTransaction);
+    public void updateExpense(
+            CashierJpaEntity cashier,
+            String description,
+            BigDecimal amount,
+            LocalDate dueDate,
+            String category,
+            FinancialTransactionStatus status
+    ) {
+        updateExpense(cashier, description, amount, dueDate, category, status, sourceTransaction);
     }
 
-    public void updateExpense(CashierJpaEntity cashier, String description, BigDecimal amount, LocalDate expenseDate, String category, FinancialTransactionStatus status, FinancialTransactionJpaEntity sourceTransaction) {
+    public void updateExpense(
+            CashierJpaEntity cashier,
+            String description,
+            BigDecimal amount,
+            LocalDate dueDate,
+            String category,
+            FinancialTransactionStatus status,
+            FinancialTransactionJpaEntity sourceTransaction
+    ) {
         this.cashier = cashier;
         this.description = description;
         this.amount = normalizeExpenseAmount(amount);
-        this.expenseDate = expenseDate;
+        this.dueDate = dueDate;
         this.category = category;
         this.sourceTransaction = sourceTransaction;
         this.status = status == null ? FinancialTransactionStatus.WAITING : status;
@@ -144,8 +180,12 @@ public class CashierExpenseJpaEntity {
         return amount;
     }
 
-    public LocalDate getExpenseDate() {
-        return expenseDate;
+    public LocalDate getDueDate() {
+        return dueDate;
+    }
+
+    public LocalDate getSettlementDate() {
+        return settlementDate;
     }
 
     public String getCategory() {

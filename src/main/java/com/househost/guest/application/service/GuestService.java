@@ -14,6 +14,8 @@ import com.househost.guest.application.port.out.GuestRelationQueryPort;
 import com.househost.shared.exception.GuestException;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
 
@@ -44,7 +46,7 @@ public class GuestService implements GuestUseCase {
         guestValidationService.validateRegistration(request);
 
         Guest guest = new Guest();
-        applyProfile(guest, request);
+        applyEditableProfile(guest, request);
 
         Guest savedGuest = guestRepository.save(guest);
         guestAuditPort.record("GUEST_CREATED", savedGuest.getId(), Map.of("source", "REGISTER"));
@@ -158,7 +160,7 @@ public class GuestService implements GuestUseCase {
         guestValidationService.validateUpdate(id, request);
         Guest guest = findGuestById(id);
 
-        applyProfile(guest, request);
+        applyEditableProfile(guest, request);
 
         Guest savedGuest = guestRepository.save(guest);
         guestAuditPort.record("GUEST_UPDATED", savedGuest.getId(), Map.of());
@@ -182,9 +184,9 @@ public class GuestService implements GuestUseCase {
 
     private GuestRegisterResponseDTO toResponse(
             Guest guest,
-            List<Long> bookingIds
+            List<Long> bookingIdList
     ) {
-        return new GuestRegisterResponseDTO(guest, bookingIds);
+        return new GuestRegisterResponseDTO(guest, bookingIdList);
     }
 
     public Guest findGuestById(Long id) {
@@ -196,9 +198,19 @@ public class GuestService implements GuestUseCase {
                 .orElseThrow(() -> new GuestException("Hospede nao encontrado."));
     }
 
-    public Guest changeStatus(Long id, GuestStatus status) {
+    public Guest setStatus(Long id, GuestStatus status) {
         Guest guest = findGuestById(id);
-        guest.changeStatus(status);
+        guest.setStatus(status);
+        return guestRepository.save(guest);
+    }
+
+    public Guest applyCompletedStay(
+            Long id,
+            LocalDate completedStayDate,
+            BigDecimal finalizedStayAmount
+    ) {
+        Guest guest = findGuestById(id);
+        guest.applyCompletedStay(completedStayDate, finalizedStayAmount);
         return guestRepository.save(guest);
     }
 
@@ -234,7 +246,7 @@ public class GuestService implements GuestUseCase {
         return guests.get(0);
     }
 
-    private void applyProfile(Guest guest, GuestRegisterRequestDTO request) {
+    private void applyEditableProfile(Guest guest, GuestRegisterRequestDTO request) {
         guest.updateProfile(
                 request.fullName.trim(),
                 normalizeOptional(request.email),
@@ -246,31 +258,11 @@ public class GuestService implements GuestUseCase {
                 request.birthDate,
                 normalizeOptional(request.gender),
                 request.guestType == null ? GuestType.REGULAR : request.guestType,
-                request.status == null ? GuestStatus.IN_BOOKING : request.status,
-                Boolean.TRUE.equals(request.travelsWithPets),
-                normalizeOptional(request.petType),
-                Boolean.TRUE.equals(request.needsAccessibility),
-                normalizeOptional(request.favoriteRoom),
-                request.stayCount,
-                request.totalSpent,
-                request.lastStayDate,
-                request.rating,
                 normalizeOptional(request.originChannel),
-                normalizeOptional(request.referredBy),
                 normalizeOptional(request.notes),
-                normalizePreferences(request.preferences)
+                normalizeOptional(request.preferencesAndRestrictions),
+                normalizeOptional(request.accessibilityNeeds)
         );
-    }
-
-    private List<String> normalizePreferences(List<String> preferences) {
-        if (preferences == null) {
-            return List.of();
-        }
-        return preferences.stream()
-                .map(this::normalizeOptional)
-                .filter(preference -> preference != null)
-                .distinct()
-                .toList();
     }
 
     private String normalizeOptional(String value) {

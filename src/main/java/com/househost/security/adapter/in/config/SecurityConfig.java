@@ -3,6 +3,7 @@ package com.househost.security.adapter.in.config;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.househost.shared.dto.ResponseDTO;
 import com.househost.security.adapter.in.web.JwtAuthenticationFilter;
+import jakarta.servlet.DispatcherType;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -53,10 +54,37 @@ public class SecurityConfig {
                             response.getWriter().write(objectMapper.writeValueAsString(new ResponseDTO("error", "Voce nao tem permissao para executar esta operacao.", null)));
                         }))
                 .authorizeHttpRequests(auth -> auth
+                        .dispatcherTypeMatchers(DispatcherType.ERROR).permitAll()
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+                        .requestMatchers(
+                                HttpMethod.POST,
+                                "/notifier/provider-feedback/sns"
+                        ).permitAll()
                         .requestMatchers("/", "/index.html", "/css/**", "/js/**", "/assets/**", "/favicon.ico").permitAll()
                         .requestMatchers("/public/**").permitAll()
                         .requestMatchers("/auth/login", "/auth/registration", "/auth/users/quick-access").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/client-logs").hasAnyRole(ALL_ROLES)
+                        .requestMatchers(
+                                HttpMethod.POST,
+                                "/ratings",
+                                "/ratings/**"
+                        ).hasAnyRole(OPERATIONAL_ROLES)
+                        .requestMatchers(
+                                HttpMethod.GET,
+                                "/ratings",
+                                "/ratings/**"
+                        ).hasAnyRole(OPERATIONAL_ROLES)
+                        .requestMatchers(
+                                HttpMethod.GET,
+                                "/financial-transaction-plans/booking/**",
+                                "/financial-transaction-plans/*/scheduled/**",
+                                "/financial-transaction-plans/commands/reservation/**",
+                                "/financial-transaction-plans/*/commands/replacement/**"
+                        ).hasAnyRole(OPERATIONAL_ROLES)
+                        .requestMatchers(
+                                HttpMethod.POST,
+                                "/financial-transaction-plans/*/scheduled/*/replace"
+                        ).hasAnyRole(OPERATIONAL_ROLES)
                         .requestMatchers(
                                 "/data-processing-operations/**",
                                 "/legal-basis-assessments/**",
@@ -64,7 +92,13 @@ public class SecurityConfig {
                                 "/audit-events/**",
                                 "/suppliers/**"
                         ).hasAnyRole(ADMIN_ROLES)
-                        .requestMatchers("/financial-transactions/**", "/cashiers/**", "/cashier-entries/**", "/cashier-expenses/**").hasAnyRole(MANAGEMENT_ROLES)
+                        .requestMatchers(
+                                "/financial-transactions/**",
+                                "/financial-transaction-plans/**",
+                                "/cashiers/**",
+                                "/cashier-entries/**",
+                                "/cashier-expenses/**"
+                        ).hasAnyRole(MANAGEMENT_ROLES)
                         .requestMatchers(HttpMethod.DELETE,
                                 "/bookings/**",
                                 "/guests/**",
@@ -113,7 +147,7 @@ public class SecurityConfig {
         configuration.setAllowedOriginPatterns(List.of("*"));
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(List.of("*"));
-        configuration.setExposedHeaders(List.of("Authorization"));
+        configuration.setExposedHeaders(List.of("Authorization", "X-Correlation-ID"));
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration);

@@ -1,6 +1,7 @@
 package com.househost.booking.booking.adapter.in.rest;
 
 import com.househost.booking.booking.application.dto.BookingFormCreateRequestDTO;
+import com.househost.booking.booking.application.dto.BookingFormCreateResponseDTO;
 import com.househost.booking.booking.application.dto.BookingRequestDTO;
 import com.househost.booking.booking.application.dto.BookingResponseDTO;
 import com.househost.booking.booking.application.port.in.BookingFormUseCase;
@@ -38,7 +39,7 @@ public class BookingController {
 
     @PostMapping("/form")
     public ResponseDTO createFromForm(@RequestBody BookingFormCreateRequestDTO request) {
-        BookingResponseDTO data = bookingFormService.create(request);
+        BookingFormCreateResponseDTO data = bookingFormService.create(request);
         return new ResponseDTO("success", "Reserva cadastrada com sucesso", data);
     }
 

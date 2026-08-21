@@ -26,97 +26,123 @@ class FinancialTransactionServiceAuditTest {
 
     @Test
     void auditsCreationAfterSavingAndNotifyingParticipants() {
-        TestContext context = context();
-        when(context.persistence.save(any(FinancialTransaction.class))).thenAnswer(invocation -> {
-            FinancialTransaction transaction = invocation.getArgument(0);
-            transaction.restorePersistenceState(10L, null, null);
-            return transaction;
-        });
+        TestContextRecord testContextRecord = testContextRecord();
+        when(testContextRecord.financialTransactionPersistencePort.save(any(FinancialTransaction.class)))
+                .thenAnswer(invocation -> {
+                    FinancialTransaction transaction = invocation.getArgument(0);
+                    transaction.restorePersistenceState(10L, null, null);
+                    return transaction;
+                });
 
-        context.service.create(request());
+        testContextRecord.financialTransactionService.create(request());
 
-        var order = inOrder(context.persistence, context.participantNotifier, context.auditPort);
-        order.verify(context.persistence).save(any(FinancialTransaction.class));
-        order.verify(context.participantNotifier).notifyCreation(any(FinancialTransaction.class));
-        order.verify(context.auditPort).record("FINANCIAL_TRANSACTION_CREATED", 10L, waitingMetadata());
+        var notificationOrder = inOrder(
+                testContextRecord.financialTransactionPersistencePort,
+                testContextRecord.financialParticipantNotifier,
+                testContextRecord.financialAuditPort
+        );
+        notificationOrder.verify(testContextRecord.financialTransactionPersistencePort)
+                .save(any(FinancialTransaction.class));
+        notificationOrder.verify(testContextRecord.financialParticipantNotifier)
+                .notifyCreation(any(FinancialTransaction.class));
+        notificationOrder.verify(testContextRecord.financialAuditPort)
+                .record("FINANCIAL_TRANSACTION_CREATED", 10L, waitingMetadata());
     }
 
     @Test
     void auditsListAndDetailViews() {
-        TestContext context = context();
+        TestContextRecord testContextRecord = testContextRecord();
         FinancialTransaction transaction = transaction();
-        when(context.persistence.findAll()).thenReturn(List.of(transaction));
-        when(context.persistence.findById(10L)).thenReturn(Optional.of(transaction));
+        when(testContextRecord.financialTransactionPersistencePort.findAll()).thenReturn(List.of(transaction));
+        when(testContextRecord.financialTransactionPersistencePort.findById(10L))
+                .thenReturn(Optional.of(transaction));
 
-        context.service.findAll();
-        context.service.findById(10L);
+        testContextRecord.financialTransactionService.findAll();
+        testContextRecord.financialTransactionService.findById(10L);
 
-        verify(context.auditPort).record("FINANCIAL_TRANSACTION_LIST_VIEWED", null, Map.of("resultCount", 1));
-        verify(context.auditPort).record("FINANCIAL_TRANSACTION_VIEWED", 10L, Map.of());
+        verify(testContextRecord.financialAuditPort)
+                .record("FINANCIAL_TRANSACTION_LIST_VIEWED", null, Map.of("resultCount", 1));
+        verify(testContextRecord.financialAuditPort)
+                .record("FINANCIAL_TRANSACTION_VIEWED", 10L, Map.of());
     }
 
     @Test
     void auditsUpdateAfterSaving() {
-        TestContext context = context();
+        TestContextRecord testContextRecord = testContextRecord();
         FinancialTransaction transaction = transaction();
-        when(context.persistence.findById(10L)).thenReturn(Optional.of(transaction));
-        when(context.persistence.save(transaction)).thenReturn(transaction);
+        when(testContextRecord.financialTransactionPersistencePort.findById(10L))
+                .thenReturn(Optional.of(transaction));
+        when(testContextRecord.financialTransactionPersistencePort.save(transaction)).thenReturn(transaction);
 
-        context.service.update(10L, request());
+        testContextRecord.financialTransactionService.update(10L, request());
 
-        var order = inOrder(context.persistence, context.auditPort);
-        order.verify(context.persistence).save(transaction);
-        order.verify(context.auditPort).record("FINANCIAL_TRANSACTION_UPDATED", 10L, waitingMetadata());
+        var notificationOrder = inOrder(
+                testContextRecord.financialTransactionPersistencePort,
+                testContextRecord.financialAuditPort
+        );
+        notificationOrder.verify(testContextRecord.financialTransactionPersistencePort).save(transaction);
+        notificationOrder.verify(testContextRecord.financialAuditPort)
+                .record("FINANCIAL_TRANSACTION_UPDATED", 10L, waitingMetadata());
     }
 
     @Test
     void auditsSettlementAfterPersistenceAndNotifications() {
-        TestContext context = context();
+        TestContextRecord testContextRecord = testContextRecord();
         FinancialTransaction transaction = transaction();
-        when(context.persistence.findById(10L)).thenReturn(Optional.of(transaction));
-        when(context.persistence.save(transaction)).thenReturn(transaction);
+        when(testContextRecord.financialTransactionPersistencePort.findById(10L))
+                .thenReturn(Optional.of(transaction));
+        when(testContextRecord.financialTransactionPersistencePort.save(transaction)).thenReturn(transaction);
 
-        context.service.toSettle(10L);
+        testContextRecord.financialTransactionService.toSettle(10L);
 
-        var order = inOrder(
-                context.participantNotifier,
-                context.sourceNotifier,
-                context.persistence,
-                context.auditPort
+        var notificationOrder = inOrder(
+                testContextRecord.financialParticipantNotifier,
+                testContextRecord.financialTransactionPersistencePort,
+                testContextRecord.financialAuditPort
         );
-        order.verify(context.persistence).save(transaction);
-        order.verify(context.participantNotifier).notifySettlement(transaction);
-        order.verify(context.sourceNotifier).notifySettlement(transaction);
-        order.verify(context.auditPort).record("FINANCIAL_TRANSACTION_SETTLED", 10L, settledMetadata());
+        notificationOrder.verify(testContextRecord.financialTransactionPersistencePort).save(transaction);
+        notificationOrder.verify(testContextRecord.financialParticipantNotifier).notifySettlement(transaction);
+        notificationOrder.verify(testContextRecord.financialAuditPort)
+                .record("FINANCIAL_TRANSACTION_SETTLED", 10L, settledMetadata());
     }
 
     @Test
     void auditsDeletionAfterParticipantNotificationAndDeletion() {
-        TestContext context = context();
+        TestContextRecord testContextRecord = testContextRecord();
         FinancialTransaction transaction = transaction();
-        when(context.persistence.findById(10L)).thenReturn(Optional.of(transaction));
+        when(testContextRecord.financialTransactionPersistencePort.findById(10L))
+                .thenReturn(Optional.of(transaction));
 
-        context.service.delete(10L);
+        testContextRecord.financialTransactionService.delete(10L);
 
-        var order = inOrder(context.participantNotifier, context.persistence, context.auditPort);
-        order.verify(context.participantNotifier).notifyDeletion(transaction);
-        order.verify(context.persistence).delete(transaction);
-        order.verify(context.auditPort).record("FINANCIAL_TRANSACTION_DELETED", 10L, waitingMetadata());
+        var notificationOrder = inOrder(
+                testContextRecord.financialParticipantNotifier,
+                testContextRecord.financialTransactionPersistencePort,
+                testContextRecord.financialAuditPort
+        );
+        notificationOrder.verify(testContextRecord.financialParticipantNotifier).notifyDeletion(transaction);
+        notificationOrder.verify(testContextRecord.financialTransactionPersistencePort).delete(transaction);
+        notificationOrder.verify(testContextRecord.financialAuditPort)
+                .record("FINANCIAL_TRANSACTION_DELETED", 10L, waitingMetadata());
     }
 
-    private TestContext context() {
-        FinancialTransactionPersistencePort persistence = mock(FinancialTransactionPersistencePort.class);
-        FinancialParticipantNotifier participantNotifier = mock(FinancialParticipantNotifier.class);
-        FinancialSourceNotifier sourceNotifier = mock(FinancialSourceNotifier.class);
-        FinancialAuditPort auditPort = mock(FinancialAuditPort.class);
-        FinancialTransactionService service = new FinancialTransactionService(
-                persistence,
-                participantNotifier,
-                sourceNotifier,
-                auditPort,
+    private TestContextRecord testContextRecord() {
+        FinancialTransactionPersistencePort financialTransactionPersistencePort =
+                mock(FinancialTransactionPersistencePort.class);
+        FinancialParticipantNotifier financialParticipantNotifier = mock(FinancialParticipantNotifier.class);
+        FinancialAuditPort financialAuditPort = mock(FinancialAuditPort.class);
+        FinancialTransactionService financialTransactionService = new FinancialTransactionService(
+                financialTransactionPersistencePort,
+                financialParticipantNotifier,
+                financialAuditPort,
                 new FinancialTransactionValidationService()
         );
-        return new TestContext(service, persistence, participantNotifier, sourceNotifier, auditPort);
+        return new TestContextRecord(
+                financialTransactionService,
+                financialTransactionPersistencePort,
+                financialParticipantNotifier,
+                financialAuditPort
+        );
     }
 
     private FinancialTransaction transaction() {
@@ -125,7 +151,7 @@ class FinancialTransactionServiceAuditTest {
                 20L,
                 FinancialPartyType.CASHIER,
                 1L,
-                FinancialTransactionType.EXPENSE,
+                FinancialTransactionType.STANDARD,
                 new BigDecimal("250.00"),
                 LocalDate.of(2026, 7, 16),
                 "Hospedagem",
@@ -142,7 +168,7 @@ class FinancialTransactionServiceAuditTest {
         request.senderId = 20L;
         request.receiverType = FinancialPartyType.CASHIER;
         request.receiverId = 1L;
-        request.type = FinancialTransactionType.EXPENSE;
+        request.type = FinancialTransactionType.STANDARD;
         request.amount = new BigDecimal("250.00");
         request.transactionDate = LocalDate.of(2026, 7, 16);
         request.description = "Hospedagem";
@@ -161,18 +187,17 @@ class FinancialTransactionServiceAuditTest {
     private Map<String, Object> metadata(String status) {
         return Map.of(
                 "status", status,
-                "type", "EXPENSE",
+                "type", "STANDARD",
                 "amount", new BigDecimal("250.00"),
                 "transactionDate", "2026-07-16"
         );
     }
 
-    private record TestContext(
-            FinancialTransactionService service,
-            FinancialTransactionPersistencePort persistence,
-            FinancialParticipantNotifier participantNotifier,
-            FinancialSourceNotifier sourceNotifier,
-            FinancialAuditPort auditPort
+    private record TestContextRecord(
+            FinancialTransactionService financialTransactionService,
+            FinancialTransactionPersistencePort financialTransactionPersistencePort,
+            FinancialParticipantNotifier financialParticipantNotifier,
+            FinancialAuditPort financialAuditPort
     ) {
     }
 }

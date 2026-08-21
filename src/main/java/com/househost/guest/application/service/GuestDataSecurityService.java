@@ -33,19 +33,16 @@ public class GuestDataSecurityService {
                 null,
                 guest.getGender(),
                 guest.getGuestTypeEnum(),
+                guest.getOriginChannel(),
+                maskData(guest.getNotes()),
+                maskData(guest.getPreferencesAndRestrictions()),
+                maskData(guest.getAccessibilityNeeds())
+        );
+        maskedGuest.restoreOperationalState(
                 guest.getStatus(),
-                guest.isTravelsWithPets(),
-                guest.getPetType(),
-                guest.isNeedsAccessibility(),
-                guest.getFavoriteRoom(),
                 guest.getStayCount(),
                 guest.getTotalSpent(),
-                guest.getLastStayDate(),
-                guest.getRating(),
-                guest.getOriginChannel(),
-                guest.getReferredBy(),
-                maskData(guest.getNotes()),
-                guest.getPreferences()
+                guest.getLastStayDate()
         );
         maskedGuest.restorePersistenceState(
                 guest.getId(),

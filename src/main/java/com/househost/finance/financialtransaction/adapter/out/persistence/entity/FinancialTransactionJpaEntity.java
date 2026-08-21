@@ -15,6 +15,7 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Inheritance;
 import jakarta.persistence.InheritanceType;
+import jakarta.persistence.Index;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
@@ -24,7 +25,13 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "financial_transactions")
+@Table(
+        name = "financial_transactions",
+        indexes = @Index(
+                name = "idx_financial_transaction_plan_membership",
+                columnList = "source_type,source_id,due_date,plan_component_order"
+        )
+)
 @Inheritance(strategy = InheritanceType.JOINED)
 public class FinancialTransactionJpaEntity {
 
@@ -51,18 +58,14 @@ public class FinancialTransactionJpaEntity {
 
     private Long sourceId;
 
-    @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
-    private FinancialTransactionType type;
+    @Column(name = "plan_component_order")
+    private Integer planComponentOrder;
+
+    @Column(nullable = false, length = 50)
+    private String type;
 
     @Column(nullable = false)
     private BigDecimal amount;
-
-    @Column(nullable = false)
-    private BigDecimal entryAmount;
-
-    @Column(nullable = false)
-    private BigDecimal expenseAmount;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
@@ -97,31 +100,103 @@ public class FinancialTransactionJpaEntity {
         return transaction;
     }
 
-    public FinancialTransactionJpaEntity(FinancialPartyType senderType, Long senderId, FinancialPartyType receiverType, Long receiverId, FinancialTransactionType type, BigDecimal amount, LocalDate transactionDate, String description) {
-        this(senderType, senderId, receiverType, receiverId, type, amount, transactionDate, description, null);
+    public FinancialTransactionJpaEntity(
+            FinancialPartyType senderType,
+            Long senderId,
+            FinancialPartyType receiverType,
+            Long receiverId,
+            FinancialTransactionType type,
+            BigDecimal amount,
+            LocalDate transactionDate,
+            String description
+    ) {
+        this(
+                senderType,
+                senderId,
+                receiverType,
+                receiverId,
+                type,
+                amount,
+                transactionDate,
+                description,
+                null
+        );
     }
 
-    public FinancialTransactionJpaEntity(FinancialPartyType senderType, Long senderId, FinancialPartyType receiverType, Long receiverId, FinancialTransactionType type, BigDecimal amount, LocalDate transactionDate, String description, FinancialTransactionMethod method) {
+    public FinancialTransactionJpaEntity(
+            FinancialPartyType senderType,
+            Long senderId,
+            FinancialPartyType receiverType,
+            Long receiverId,
+            FinancialTransactionType type,
+            BigDecimal amount,
+            LocalDate transactionDate,
+            String description,
+            FinancialTransactionMethod method
+    ) {
         this.senderType = senderType;
         this.senderId = senderId;
         this.receiverType = receiverType;
         this.receiverId = receiverId;
-        this.type = type;
+        this.type = type.name();
         this.amount = amount;
-        applyTypeAmounts(type, amount);
         this.status = FinancialTransactionStatus.WAITING;
         this.method = method;
         this.transactionDate = transactionDate;
         this.description = description;
     }
 
-    public FinancialTransactionJpaEntity(FinancialPartyType senderType, Long senderId, FinancialPartyType receiverType, Long receiverId, FinancialTransactionType type, BigDecimal amount, LocalDate transactionDate, String description, FinancialTransactionMethod method, FinancialTransactionStatus status) {
-        this(senderType, senderId, receiverType, receiverId, type, amount, transactionDate, description, method);
+    public FinancialTransactionJpaEntity(
+            FinancialPartyType senderType,
+            Long senderId,
+            FinancialPartyType receiverType,
+            Long receiverId,
+            FinancialTransactionType type,
+            BigDecimal amount,
+            LocalDate transactionDate,
+            String description,
+            FinancialTransactionMethod method,
+            FinancialTransactionStatus status
+    ) {
+        this(
+                senderType,
+                senderId,
+                receiverType,
+                receiverId,
+                type,
+                amount,
+                transactionDate,
+                description,
+                method
+        );
         setStatus(status);
     }
 
-    public FinancialTransactionJpaEntity(FinancialPartyType senderType, Long senderId, FinancialPartyType receiverType, Long receiverId, FinancialTransactionType type, BigDecimal amount, LocalDate transactionDate, LocalDate dueDate, String description, FinancialTransactionMethod method, FinancialTransactionStatus status) {
-        this(senderType, senderId, receiverType, receiverId, type, amount, transactionDate, description, method, status);
+    public FinancialTransactionJpaEntity(
+            FinancialPartyType senderType,
+            Long senderId,
+            FinancialPartyType receiverType,
+            Long receiverId,
+            FinancialTransactionType type,
+            BigDecimal amount,
+            LocalDate transactionDate,
+            LocalDate dueDate,
+            String description,
+            FinancialTransactionMethod method,
+            FinancialTransactionStatus status
+    ) {
+        this(
+                senderType,
+                senderId,
+                receiverType,
+                receiverId,
+                type,
+                amount,
+                transactionDate,
+                description,
+                method,
+                status
+        );
         this.dueDate = dueDate == null ? transactionDate : dueDate;
     }
 
@@ -138,18 +213,42 @@ public class FinancialTransactionJpaEntity {
         updatedAt = LocalDateTime.now();
     }
 
-    public void updateTransaction(FinancialPartyType senderType, Long senderId, FinancialPartyType receiverType, Long receiverId, FinancialTransactionType type, BigDecimal amount, LocalDate transactionDate, String description) {
-        updateTransaction(senderType, senderId, receiverType, receiverId, type, amount, transactionDate, description, method);
+    public void updateTransaction(
+            FinancialPartyType senderType,
+            Long senderId,
+            FinancialPartyType receiverType,
+            Long receiverId,
+            BigDecimal amount,
+            LocalDate transactionDate,
+            String description
+    ) {
+        updateTransaction(
+                senderType,
+                senderId,
+                receiverType,
+                receiverId,
+                amount,
+                transactionDate,
+                description,
+                method
+        );
     }
 
-    public void updateTransaction(FinancialPartyType senderType, Long senderId, FinancialPartyType receiverType, Long receiverId, FinancialTransactionType type, BigDecimal amount, LocalDate transactionDate, String description, FinancialTransactionMethod method) {
+    public void updateTransaction(
+            FinancialPartyType senderType,
+            Long senderId,
+            FinancialPartyType receiverType,
+            Long receiverId,
+            BigDecimal amount,
+            LocalDate transactionDate,
+            String description,
+            FinancialTransactionMethod method
+    ) {
         this.senderType = senderType;
         this.senderId = senderId;
         this.receiverType = receiverType;
         this.receiverId = receiverId;
-        this.type = type;
         this.amount = amount;
-        applyTypeAmounts(type, amount);
         this.method = method;
         this.transactionDate = transactionDate;
         this.description = description;
@@ -165,31 +264,27 @@ public class FinancialTransactionJpaEntity {
     public void setSource(FinancialTransactionSourceType sourceType, Long sourceId) {
         this.sourceType = sourceType;
         this.sourceId = sourceType == null ? null : sourceId;
+        if (sourceType != FinancialTransactionSourceType.PLAN) {
+            planComponentOrder = null;
+        }
     }
 
-    public void restorePersistenceState(Long id, LocalDate creationDate, LocalDate settlementDate, LocalDateTime createdAt, LocalDateTime updatedAt) {
+    public void setPlanComponentOrder(Integer planComponentOrder) {
+        this.planComponentOrder = planComponentOrder;
+    }
+
+    public void restorePersistenceState(
+            Long id,
+            LocalDate creationDate,
+            LocalDate settlementDate,
+            LocalDateTime createdAt,
+            LocalDateTime updatedAt
+    ) {
         this.id = id;
         this.creationDate = creationDate;
         this.settlementDate = settlementDate;
         this.createdAt = createdAt;
         this.updatedAt = updatedAt;
-    }
-
-    private void applyTypeAmounts(FinancialTransactionType type, BigDecimal amount) {
-        if (type == FinancialTransactionType.ENTRY) {
-            this.entryAmount = amount;
-            this.expenseAmount = BigDecimal.ZERO;
-            return;
-        }
-
-        if (type == FinancialTransactionType.TRANSFER) {
-            this.entryAmount = amount;
-            this.expenseAmount = amount;
-            return;
-        }
-
-        this.entryAmount = BigDecimal.ZERO;
-        this.expenseAmount = amount.abs();
     }
 
     public Long getId() {
@@ -202,6 +297,10 @@ public class FinancialTransactionJpaEntity {
 
     public Long getSourceId() {
         return sourceId;
+    }
+
+    public Integer getPlanComponentOrder() {
+        return planComponentOrder;
     }
 
     public FinancialPartyType getSenderType() {
@@ -221,19 +320,11 @@ public class FinancialTransactionJpaEntity {
     }
 
     public FinancialTransactionType getType() {
-        return type;
+        return FinancialTransactionType.valueOf(type);
     }
 
     public BigDecimal getAmount() {
         return amount;
-    }
-
-    public BigDecimal getEntryAmount() {
-        return entryAmount;
-    }
-
-    public BigDecimal getExpenseAmount() {
-        return expenseAmount;
     }
 
     public FinancialTransactionStatus getStatus() {
@@ -260,7 +351,7 @@ public class FinancialTransactionJpaEntity {
         return settlementDate;
     }
 
-    protected void setDueDate(LocalDate dueDate) {
+    public void setDueDate(LocalDate dueDate) {
         this.dueDate = dueDate;
     }
 

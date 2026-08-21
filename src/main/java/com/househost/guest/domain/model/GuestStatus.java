@@ -1,7 +1,8 @@
 package com.househost.guest.domain.model;
 
 public enum GuestStatus {
-    IN_BOOKING,
+    WITH_UNCONFIRMED_BOOKING,
+    WITH_CONFIRMED_BOOKING,
     IN_STAY,
-    GOT_CHECKOUT
+    INACTIVE
 }

@@ -20,39 +20,35 @@ import java.util.Map;
 @Service
 public class InstallmentPlanTransactionService implements InstallmentPlanTransactionUseCase {
     private final FinancialTransactionPersistencePort transactionPersistence;
-    private final InstallmentTransactionService installmentService;
-    private final FinancialParticipantNotifier participantNotifier;
-    private final FinancialSourceNotifier sourceNotifier;
+    private final InstallmentTransactionService installmentTransactionService;
+    private final FinancialParticipantNotifier financialParticipantNotifier;
     private final FinancialAuditPort financialAuditPort;
-    private final InstallmentPlanValidationService validationService;
+    private final InstallmentPlanValidationService installmentPlanValidationService;
 
     public InstallmentPlanTransactionService(
             FinancialTransactionPersistencePort transactionPersistence,
-            InstallmentTransactionService installmentService,
-            FinancialParticipantNotifier participantNotifier,
-            FinancialSourceNotifier sourceNotifier,
+            InstallmentTransactionService installmentTransactionService,
+            FinancialParticipantNotifier financialParticipantNotifier,
             FinancialAuditPort financialAuditPort,
-            InstallmentPlanValidationService validationService
+            InstallmentPlanValidationService installmentPlanValidationService
     ) {
         this.transactionPersistence = transactionPersistence;
-        this.installmentService = installmentService;
-        this.participantNotifier = participantNotifier;
-        this.sourceNotifier = sourceNotifier;
+        this.installmentTransactionService = installmentTransactionService;
+        this.financialParticipantNotifier = financialParticipantNotifier;
         this.financialAuditPort = financialAuditPort;
-        this.validationService = validationService;
+        this.installmentPlanValidationService = installmentPlanValidationService;
     }
 
     @Override
     @Transactional
     public InstallmentPlanTransactionResponseDTO create(InstallmentPlanTransactionRequestDTO request) {
-        validationService.validate(request);
+        installmentPlanValidationService.validate(request);
 
         InstallmentPlanTransaction plan = new InstallmentPlanTransaction(
                 request.senderType,
                 request.senderId,
                 request.receiverType,
                 request.receiverId,
-                request.type,
                 request.amount,
                 request.transactionDate == null ? LocalDate.now() : request.transactionDate,
                 request.description.trim(),
@@ -63,7 +59,7 @@ public class InstallmentPlanTransactionService implements InstallmentPlanTransac
         plan.setSource(request.sourceType, request.sourceId);
 
         InstallmentPlanTransaction savedPlan = transactionPersistence.save(plan);
-        participantNotifier.notifyCreation(savedPlan);
+        financialParticipantNotifier.notifyCreation(savedPlan);
         financialAuditPort.record(
                 "INSTALLMENT_PLAN_TRANSACTION_CREATED",
                 savedPlan.getId(),
@@ -82,9 +78,10 @@ public class InstallmentPlanTransactionService implements InstallmentPlanTransac
     @Override
     @Transactional
     public InstallmentPlanTransactionResponseDTO settleInstallment(Long planId, Integer installmentNumber) {
-        InstallmentTransactionService.SettlementResult result = installmentService.settle(planId, installmentNumber);
-        InstallmentPlanTransaction plan = result.plan();
-        if (!result.changed()) {
+        InstallmentTransactionService.SettlementResult settlementResultRecord =
+                installmentTransactionService.settle(planId, installmentNumber);
+        InstallmentPlanTransaction plan = settlementResultRecord.plan();
+        if (!settlementResultRecord.changed()) {
             return new InstallmentPlanTransactionResponseDTO(plan);
         }
         boolean planSettled = false;
@@ -94,10 +91,9 @@ public class InstallmentPlanTransactionService implements InstallmentPlanTransac
         }
         plan = transactionPersistence.save(plan);
         InstallmentTransaction settledInstallment = plan.findInstallment(installmentNumber);
-        participantNotifier.notifySettlement(settledInstallment);
+        financialParticipantNotifier.notifyInstallmentSettlement(settledInstallment);
         if (planSettled) {
-            participantNotifier.notifySettlement(plan);
-            sourceNotifier.notifySettlement(plan);
+            financialParticipantNotifier.notifySourceSettlementOnly(plan);
         }
         recordInstallmentSettlement(plan, settledInstallment);
         if (planSettled) {
@@ -139,5 +135,4 @@ public class InstallmentPlanTransactionService implements InstallmentPlanTransac
     private void toSettle(InstallmentPlanTransaction plan) {
         plan.setStatus(FinancialTransactionStatus.SETTLED);
     }
-
 }

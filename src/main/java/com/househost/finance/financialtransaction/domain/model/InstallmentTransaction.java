@@ -16,13 +16,38 @@ public class InstallmentTransaction extends FinancialTransaction {
     InstallmentTransaction() {
     }
 
-    InstallmentTransaction(FinancialPartyType senderType, Long senderId, FinancialPartyType receiverType, Long receiverId, FinancialTransactionType type, BigDecimal amount, LocalDate transactionDate, String description, FinancialTransactionMethod method, InstallmentPlanTransaction installmentPlan, Integer installmentNumber, Integer totalInstallments, LocalDate dueDate, InstallmentTransactionStatus installmentStatus) {
-        super(senderType, senderId, receiverType, receiverId, type, amount, transactionDate, description, method);
+    InstallmentTransaction(
+            FinancialPartyType senderType,
+            Long senderId,
+            FinancialPartyType receiverType,
+            Long receiverId,
+            BigDecimal amount,
+            LocalDate transactionDate,
+            String description,
+            FinancialTransactionMethod method,
+            InstallmentPlanTransaction installmentPlan,
+            Integer installmentNumber,
+            Integer totalInstallments,
+            LocalDate dueDate,
+            InstallmentTransactionStatus installmentStatus
+    ) {
+        super(
+                senderType,
+                senderId,
+                receiverType,
+                receiverId,
+                FinancialTransactionType.INSTALLMENT_TRANSACTION,
+                amount,
+                transactionDate,
+                description,
+                method
+        );
         this.installmentPlan = installmentPlan;
         this.installmentNumber = installmentNumber;
         this.totalInstallments = totalInstallments;
         setDueDate(validateDueDate(dueDate));
         this.installmentStatus = installmentStatus;
+        synchronizeSourceWithPlan();
     }
 
     public static InstallmentTransaction restore(
@@ -30,7 +55,6 @@ public class InstallmentTransaction extends FinancialTransaction {
             Long senderId,
             FinancialPartyType receiverType,
             Long receiverId,
-            FinancialTransactionType type,
             BigDecimal amount,
             LocalDate transactionDate,
             String description,
@@ -46,7 +70,6 @@ public class InstallmentTransaction extends FinancialTransaction {
                 senderId,
                 receiverType,
                 receiverId,
-                type,
                 amount,
                 transactionDate,
                 description,
@@ -82,6 +105,19 @@ public class InstallmentTransaction extends FinancialTransaction {
     public void settle() {
         setStatus(FinancialTransactionStatus.SETTLED);
         installmentStatus = InstallmentTransactionStatus.SETTLED;
+    }
+
+    @Override
+    public void settle(LocalDate effectiveSettlementDate) {
+        super.settle(effectiveSettlementDate);
+        installmentStatus = InstallmentTransactionStatus.SETTLED;
+    }
+
+    public void synchronizeSourceWithPlan() {
+        setSource(
+                FinancialTransactionSourceType.INSTALLMENT,
+                installmentPlan == null ? null : installmentPlan.getId()
+        );
     }
 
     private LocalDate validateDueDate(LocalDate dueDate) {

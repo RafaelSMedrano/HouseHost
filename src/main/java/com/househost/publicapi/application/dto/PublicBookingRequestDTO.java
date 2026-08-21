@@ -18,6 +18,7 @@ public class PublicBookingRequestDTO {
     public static class GuestData {
         public String firstName;
         public String lastName;
+        public String email;
         public String phone;
         public String city;
     }

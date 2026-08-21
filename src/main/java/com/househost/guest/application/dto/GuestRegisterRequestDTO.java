@@ -1,12 +1,22 @@
 package com.househost.guest.application.dto;
 
-import com.househost.guest.domain.model.GuestStatus;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.househost.guest.domain.model.GuestType;
 
-import java.math.BigDecimal;
 import java.time.LocalDate;
-import java.util.List;
 
+@JsonIgnoreProperties({
+        "status",
+        "travelsWithPets",
+        "petType",
+        "needsAccessibility",
+        "favoriteRoom",
+        "stayCount",
+        "totalSpent",
+        "lastStayDate",
+        "preferences",
+        "referredBy"
+})
 public class GuestRegisterRequestDTO {
 
     public String fullName;
@@ -19,17 +29,8 @@ public class GuestRegisterRequestDTO {
     public LocalDate birthDate;
     public String gender;
     public GuestType guestType;
-    public GuestStatus status;
-    public Boolean travelsWithPets;
-    public String petType;
-    public Boolean needsAccessibility;
-    public String favoriteRoom;
-    public Integer stayCount;
-    public BigDecimal totalSpent;
-    public LocalDate lastStayDate;
-    public Integer rating;
     public String originChannel;
-    public String referredBy;
     public String notes;
-    public List<String> preferences;
+    public String preferencesAndRestrictions;
+    public String accessibilityNeeds;
 }

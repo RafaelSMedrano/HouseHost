@@ -11,7 +11,7 @@ public final class CheckOutPersistenceMapper {
 
     public static CheckOut toDomain(CheckOutJpaEntity entity) {
         CheckOut checkOut = new CheckOut(
-                BookingPersistenceMapper.toDomain(entity.booking),
+                entity.booking == null ? null : BookingPersistenceMapper.toDomain(entity.booking),
                 GuestPersistenceMapper.toDomain(entity.guest),
                 RoomPersistenceMapper.toDomain(entity.room),
                 entity.actualCheckOutAt,
@@ -25,14 +25,21 @@ public final class CheckOutPersistenceMapper {
                 entity.notes,
                 entity.status
         );
-        checkOut.restorePersistenceState(entity.id, entity.createdAt, entity.updatedAt);
+        checkOut.restorePersistenceState(
+                entity.id,
+                entity.guestHistoryApplied,
+                entity.createdAt,
+                entity.updatedAt
+        );
         return checkOut;
     }
 
     public static CheckOutJpaEntity toEntity(CheckOut checkOut) {
         CheckOutJpaEntity entity = new CheckOutJpaEntity();
         entity.id = checkOut.getId();
-        entity.booking = BookingPersistenceMapper.toEntity(checkOut.getBooking());
+        entity.booking = checkOut.getBooking() == null
+                ? null
+                : BookingPersistenceMapper.toEntity(checkOut.getBooking());
         entity.guest = GuestPersistenceMapper.toEntity(checkOut.getGuest());
         entity.room = RoomPersistenceMapper.toEntity(checkOut.getRoom());
         entity.actualCheckOutAt = checkOut.getActualCheckOutAt();
@@ -45,6 +52,7 @@ public final class CheckOutPersistenceMapper {
         entity.performedBy = checkOut.getPerformedBy();
         entity.notes = checkOut.getNotes();
         entity.status = checkOut.getStatus();
+        entity.guestHistoryApplied = checkOut.isGuestHistoryApplied();
         entity.createdAt = checkOut.getCreatedAt();
         entity.updatedAt = checkOut.getUpdatedAt();
         return entity;

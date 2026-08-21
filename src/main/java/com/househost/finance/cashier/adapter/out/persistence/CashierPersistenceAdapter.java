@@ -9,33 +9,41 @@ import java.util.Optional;
 
 @Component
 public class CashierPersistenceAdapter implements CashierPersistencePort {
-    private final CashierJpaRepository repository;
+    private final CashierJpaRepository cashierJpaRepository;
 
-    public CashierPersistenceAdapter(CashierJpaRepository repository) {
-        this.repository = repository;
+    public CashierPersistenceAdapter(CashierJpaRepository cashierJpaRepository) {
+        this.cashierJpaRepository = cashierJpaRepository;
     }
 
     public Cashier save(Cashier cashier) {
-        return CashierPersistenceMapper.toDomain(repository.save(CashierPersistenceMapper.toEntity(cashier)));
+        return CashierPersistenceMapper.toDomain(
+                cashierJpaRepository.save(CashierPersistenceMapper.toEntity(cashier))
+        );
     }
 
     public List<Cashier> findAll() {
-        return repository.findAll().stream().map(CashierPersistenceMapper::toDomain).toList();
+        return cashierJpaRepository.findAll().stream()
+                .map(CashierPersistenceMapper::toDomain)
+                .toList();
     }
 
     public Optional<Cashier> findById(Long id) {
-        return repository.findById(id).map(CashierPersistenceMapper::toDomain);
+        return cashierJpaRepository.findById(id).map(CashierPersistenceMapper::toDomain);
+    }
+
+    public Optional<Cashier> findByIdForUpdate(Long id) {
+        return cashierJpaRepository.findByIdForUpdate(id).map(CashierPersistenceMapper::toDomain);
     }
 
     public void delete(Cashier cashier) {
-        repository.deleteById(cashier.getId());
+        cashierJpaRepository.deleteById(cashier.getId());
     }
 
     public boolean existsByName(String name) {
-        return repository.existsByName(name);
+        return cashierJpaRepository.existsByName(name);
     }
 
     public boolean existsByNameAndIdNot(String name, Long id) {
-        return repository.existsByNameAndIdNot(name, id);
+        return cashierJpaRepository.existsByNameAndIdNot(name, id);
     }
 }

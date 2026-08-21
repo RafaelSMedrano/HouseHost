@@ -5,3 +5,4 @@ target/
 frontend/.DS_Store
 *.pem
 docs/
+logs/

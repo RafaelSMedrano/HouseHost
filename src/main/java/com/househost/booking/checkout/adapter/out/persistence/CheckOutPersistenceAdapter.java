@@ -10,34 +10,45 @@ import java.util.Optional;
 
 @Component
 public class CheckOutPersistenceAdapter implements CheckOutPersistencePort {
-    private final CheckOutJpaRepository repository;
+    private final CheckOutJpaRepository checkOutRepository;
 
-    public CheckOutPersistenceAdapter(CheckOutJpaRepository repository) {
-        this.repository = repository;
+    public CheckOutPersistenceAdapter(CheckOutJpaRepository checkOutRepository) {
+        this.checkOutRepository = checkOutRepository;
     }
 
     @Override
     public CheckOut save(CheckOut checkOut) {
-        return CheckOutPersistenceMapper.toDomain(repository.save(CheckOutPersistenceMapper.toEntity(checkOut)));
+        return CheckOutPersistenceMapper.toDomain(
+                checkOutRepository.save(CheckOutPersistenceMapper.toEntity(checkOut))
+        );
     }
 
     @Override
     public List<CheckOut> findAll() {
-        return repository.findAll().stream().map(CheckOutPersistenceMapper::toDomain).toList();
+        return checkOutRepository.findAll()
+                .stream()
+                .map(CheckOutPersistenceMapper::toDomain)
+                .toList();
     }
 
     @Override
     public Optional<CheckOut> findById(Long id) {
-        return repository.findById(id).map(CheckOutPersistenceMapper::toDomain);
+        return checkOutRepository.findById(id).map(CheckOutPersistenceMapper::toDomain);
+    }
+
+    @Override
+    public Optional<CheckOut> findByIdForUpdate(Long id) {
+        return checkOutRepository.findByIdForUpdate(id).map(CheckOutPersistenceMapper::toDomain);
     }
 
     @Override
     public Optional<CheckOut> findByBookingId(Long bookingId) {
-        return repository.findByBooking_Id(bookingId).map(CheckOutPersistenceMapper::toDomain);
+        return checkOutRepository.findByBooking_Id(bookingId)
+                .map(CheckOutPersistenceMapper::toDomain);
     }
 
     @Override
     public void delete(CheckOut checkOut) {
-        repository.deleteById(checkOut.getId());
+        checkOutRepository.deleteById(checkOut.getId());
     }
 }

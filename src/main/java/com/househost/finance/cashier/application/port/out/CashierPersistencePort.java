@@ -9,6 +9,7 @@ public interface CashierPersistencePort {
     Cashier save(Cashier cashier);
     List<Cashier> findAll();
     Optional<Cashier> findById(Long id);
+    Optional<Cashier> findByIdForUpdate(Long id);
     void delete(Cashier cashier);
     boolean existsByName(String name);
     boolean existsByNameAndIdNot(String name, Long id);

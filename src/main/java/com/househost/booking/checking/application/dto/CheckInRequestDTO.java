@@ -1,6 +1,7 @@
 package com.househost.booking.checking.application.dto;
 
 import com.househost.booking.checking.domain.model.CheckInStatus;
+import com.househost.finance.financialtransaction.application.dto.FinancialTransactionPlanMaterializationDTO;
 
 public class CheckInRequestDTO {
 
@@ -19,5 +20,6 @@ public class CheckInRequestDTO {
     public String vehicleModel;
     public String performedBy;
     public String notes;
+    public FinancialTransactionPlanMaterializationDTO paymentMaterialization;
     public CheckInStatus status;
 }

@@ -8,18 +8,14 @@ import com.househost.booking.booking.application.port.out.BookingAuditPort;
 import com.househost.booking.booking.domain.model.Booking;
 import com.househost.booking.booking.domain.model.BookingOrigin;
 import com.househost.booking.booking.domain.model.BookingStatus;
-import com.househost.finance.financialtransaction.application.dto.FinancialTransactionRequestDTO;
-import com.househost.finance.financialtransaction.application.dto.FinancialTransactionResponseDTO;
-import com.househost.finance.financialtransaction.application.port.in.FinancialTransactionUseCase;
-import com.househost.finance.financialtransaction.domain.model.FinancialPartyType;
-import com.househost.finance.financialtransaction.domain.model.FinancialTransactionSourceType;
-import com.househost.finance.financialtransaction.domain.model.FinancialTransactionStatus;
-import com.househost.finance.financialtransaction.domain.model.FinancialTransactionType;
 import com.househost.guest.domain.model.Guest;
 import com.househost.guest.application.service.GuestService;
-import com.househost.room.domain.model.Room;
 import com.househost.room.application.service.RoomService;
+import com.househost.room.domain.model.Room;
+import com.househost.ratings.application.port.in.RatingUseCase;
+import com.househost.ratings.domain.exception.RatingConflictException;
 import com.househost.shared.exception.BookingException;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -34,24 +30,27 @@ public class BookingService implements BookingUseCase {
     private final BookingPersistencePort bookingRepository;
     private final GuestService guestService;
     private final RoomService roomService;
-    private final FinancialTransactionUseCase financialTransactionUseCase;
+    private final BookingParticipantNotifier bookingParticipantNotifier;
     private final BookingAuditPort bookingAuditPort;
     private final BookingValidationService bookingValidationService;
+    private final RatingUseCase ratingUseCase;
 
     public BookingService(
             BookingPersistencePort bookingRepository,
             GuestService guestService,
             RoomService roomService,
-            FinancialTransactionUseCase financialTransactionUseCase,
+            BookingParticipantNotifier bookingParticipantNotifier,
             BookingAuditPort bookingAuditPort,
-            BookingValidationService bookingValidationService
+            BookingValidationService bookingValidationService,
+            @Lazy RatingUseCase ratingUseCase
     ) {
         this.bookingRepository = bookingRepository;
         this.guestService = guestService;
         this.roomService = roomService;
-        this.financialTransactionUseCase = financialTransactionUseCase;
+        this.bookingParticipantNotifier = bookingParticipantNotifier;
         this.bookingAuditPort = bookingAuditPort;
         this.bookingValidationService = bookingValidationService;
+        this.ratingUseCase = ratingUseCase;
     }
 
     @Transactional
@@ -84,26 +83,7 @@ public class BookingService implements BookingUseCase {
         );
 
         Booking savedBooking = bookingRepository.save(booking);
-        FinancialTransactionRequestDTO paymentRequest = new FinancialTransactionRequestDTO();
-        paymentRequest.senderType = FinancialPartyType.GUEST;
-        paymentRequest.senderId = savedBooking.getGuest().getId();
-        paymentRequest.receiverType = FinancialPartyType.CASHIER;
-        paymentRequest.receiverId = 1L;
-        paymentRequest.sourceType = FinancialTransactionSourceType.BOOKING;
-        paymentRequest.sourceId = savedBooking.getId();
-        paymentRequest.type = FinancialTransactionType.ENTRY;
-        paymentRequest.amount = request.paidAmount != null && request.paidAmount.compareTo(BigDecimal.ZERO) > 0
-                ? request.paidAmount
-                : savedBooking.getTotalAmount();
-        paymentRequest.transactionDate = request.paymentDate;
-        paymentRequest.description = "Pagamento da reserva #" + savedBooking.getId();
-        paymentRequest.status = FinancialTransactionStatus.WAITING;
-        paymentRequest.method = request.paymentMethod;
-
-        FinancialTransactionResponseDTO paymentTransaction = financialTransactionUseCase.create(paymentRequest);
-        if (request.paymentCompleted) {
-            financialTransactionUseCase.toSettle(paymentTransaction.getId());
-        }
+        bookingParticipantNotifier.notifyCreation(savedBooking);
         bookingAuditPort.record("BOOKING_CREATED", "BOOKING", savedBooking.getId(), Map.of(
                 "status", savedBooking.getStatus().name(),
                 "origin", savedBooking.getOrigin().name()
@@ -112,12 +92,17 @@ public class BookingService implements BookingUseCase {
     }
 
     public List<BookingResponseDTO> findAll() {
-        List<BookingResponseDTO> bookings = bookingRepository.findAll()
+        List<BookingResponseDTO> bookingResponseDTOList = bookingRepository.findAll()
                 .stream()
                 .map(BookingResponseDTO::new)
                 .toList();
-        bookingAuditPort.record("BOOKING_LIST_VIEWED", "BOOKING", null, Map.of("resultCount", bookings.size()));
-        return bookings;
+        bookingAuditPort.record(
+                "BOOKING_LIST_VIEWED",
+                "BOOKING",
+                null,
+                Map.of("resultCount", bookingResponseDTOList.size())
+        );
+        return bookingResponseDTOList;
     }
 
     public List<Booking> findAllBookings() {
@@ -138,31 +123,43 @@ public class BookingService implements BookingUseCase {
     public List<BookingResponseDTO> findByGuestId(Long guestId) {
         guestService.findGuestById(guestId);
 
-        List<BookingResponseDTO> bookings = bookingRepository.findByGuestId(guestId)
+        List<BookingResponseDTO> bookingResponseDTOList = bookingRepository.findByGuestId(guestId)
                 .stream()
                 .map(BookingResponseDTO::new)
                 .toList();
-        bookingAuditPort.record("GUEST_BOOKINGS_VIEWED", "GUEST", guestId, Map.of("resultCount", bookings.size()));
-        return bookings;
+        bookingAuditPort.record(
+                "GUEST_BOOKINGS_VIEWED",
+                "GUEST",
+                guestId,
+                Map.of("resultCount", bookingResponseDTOList.size())
+        );
+        return bookingResponseDTOList;
     }
 
     public List<BookingResponseDTO> findByRoomId(Long roomId) {
         roomService.findRoomById(roomId);
 
-        List<BookingResponseDTO> bookings = bookingRepository.findByRoomId(roomId)
+        List<BookingResponseDTO> bookingResponseDTOList = bookingRepository.findByRoomId(roomId)
                 .stream()
                 .map(BookingResponseDTO::new)
                 .toList();
-        bookingAuditPort.record("ROOM_BOOKINGS_VIEWED", "ROOM", roomId, Map.of("resultCount", bookings.size()));
-        return bookings;
+        bookingAuditPort.record(
+                "ROOM_BOOKINGS_VIEWED",
+                "ROOM",
+                roomId,
+                Map.of("resultCount", bookingResponseDTOList.size())
+        );
+        return bookingResponseDTOList;
     }
 
+    @Transactional
     public BookingResponseDTO update(Long id, BookingRequestDTO request) {
         bookingValidationService.validateUpdate(id, request);
         BookingStatus status = request.status == null ? BookingStatus.UNCONFIRMED : request.status;
 
         Booking booking = bookingRepository.findById(id)
                 .orElseThrow(() -> new BookingException("Reserva nao encontrada."));
+        Long previousGuestId = booking.getGuest().getId();
         Guest guest = guestService.findGuestById(request.guestId);
         Room room = roomService.findRoomById(request.roomId);
 
@@ -188,12 +185,14 @@ public class BookingService implements BookingUseCase {
         );
 
         Booking savedBooking = bookingRepository.save(booking);
+        bookingParticipantNotifier.notifyUpdate(previousGuestId, savedBooking);
         bookingAuditPort.record("BOOKING_UPDATED", "BOOKING", savedBooking.getId(), Map.of(
                 "status", savedBooking.getStatus().name()
         ));
         return new BookingResponseDTO(savedBooking);
     }
 
+    @Transactional
     public void delete(Long id) {
         if (id == null) {
             throw new BookingException("Reserva nao encontrada.");
@@ -201,7 +200,15 @@ public class BookingService implements BookingUseCase {
 
         Booking booking = bookingRepository.findById(id)
                 .orElseThrow(() -> new BookingException("Reserva nao encontrada."));
+        if (ratingUseCase.existsByBookingId(booking.getId())) {
+            throw new RatingConflictException(
+                    "A reserva possui avaliacao e nao pode ser removida antes do tratamento "
+                            + "autorizado dessa avaliacao."
+            );
+        }
+        Long guestId = booking.getGuest().getId();
         bookingRepository.delete(booking);
+        bookingParticipantNotifier.notifyDeletion(guestId);
         bookingAuditPort.record("BOOKING_DELETED", "BOOKING", booking.getId(), Map.of());
     }
 
@@ -213,10 +220,18 @@ public class BookingService implements BookingUseCase {
                 .orElseThrow(() -> new BookingException("Reserva nao encontrada."));
     }
 
-    public Booking changeStatus(Long id, BookingStatus status) {
+    @Transactional
+    public Booking setStatus(Long id, BookingStatus status) {
         Booking booking = findBooking(id);
         booking.changeStatus(status);
-        return bookingRepository.save(booking);
+        Booking savedBooking = bookingRepository.save(booking);
+        bookingParticipantNotifier.notifyStatusChange(savedBooking);
+        return savedBooking;
+    }
+
+    @Transactional
+    public void synchronizeGuestStatus(Long guestId) {
+        bookingParticipantNotifier.notifyGuestStatusSynchronization(guestId);
     }
 
     private BigDecimal calculateTotalAmount(Room room, BookingRequestDTO request) {

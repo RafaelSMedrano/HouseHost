@@ -6,6 +6,7 @@ public enum FinancialTransactionSourceType {
     STAY,
     CHECK_IN,
     CHECK_OUT,
+    PLAN,
     INSTALLMENT,
     GUEST
 }

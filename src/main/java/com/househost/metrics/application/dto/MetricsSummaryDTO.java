@@ -13,7 +13,6 @@ public class MetricsSummaryDTO {
     private long guestsInStay;
     private long guestsWithBooking;
     private long vipGuests;
-    private long guestsWithPets;
     private BigDecimal guestsTotalRevenue;
     private long totalRooms;
     private long availableRooms;
@@ -59,7 +58,6 @@ public class MetricsSummaryDTO {
             long guestsInStay,
             long guestsWithBooking,
             long vipGuests,
-            long guestsWithPets,
             BigDecimal guestsTotalRevenue,
             long totalRooms,
             long availableRooms,
@@ -104,7 +102,6 @@ public class MetricsSummaryDTO {
         this.guestsInStay = guestsInStay;
         this.guestsWithBooking = guestsWithBooking;
         this.vipGuests = vipGuests;
-        this.guestsWithPets = guestsWithPets;
         this.guestsTotalRevenue = guestsTotalRevenue;
         this.totalRooms = totalRooms;
         this.availableRooms = availableRooms;
@@ -175,10 +172,6 @@ public class MetricsSummaryDTO {
 
     public long getVipGuests() {
         return vipGuests;
-    }
-
-    public long getGuestsWithPets() {
-        return guestsWithPets;
     }
 
     public BigDecimal getGuestsTotalRevenue() {

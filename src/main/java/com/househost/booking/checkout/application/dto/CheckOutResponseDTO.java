@@ -1,7 +1,9 @@
 package com.househost.booking.checkout.application.dto;
 
+import com.househost.booking.booking.domain.model.Booking;
 import com.househost.booking.checkout.domain.model.CheckOut;
 import com.househost.booking.checkout.domain.model.CheckOutStatus;
+import com.househost.finance.financialtransaction.application.dto.FinancialTransactionPlanReplacementOutcomeDTO;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -25,10 +27,19 @@ public class CheckOutResponseDTO {
     private CheckOutStatus status;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
+    private FinancialTransactionPlanReplacementOutcomeDTO paymentMaterialization;
 
     public CheckOutResponseDTO(CheckOut checkOut) {
+        this(checkOut, null);
+    }
+
+    public CheckOutResponseDTO(
+            CheckOut checkOut,
+            FinancialTransactionPlanReplacementOutcomeDTO paymentMaterialization
+    ) {
+        Booking booking = checkOut.getBooking();
         this.id = checkOut.getId();
-        this.bookingId = checkOut.getBooking().getId();
+        this.bookingId = booking == null ? null : booking.getId();
         this.guestId = checkOut.getGuest().getId();
         this.guestName = checkOut.getGuest().getFullName();
         this.roomId = checkOut.getRoom().getId();
@@ -45,24 +56,82 @@ public class CheckOutResponseDTO {
         this.status = checkOut.getStatus();
         this.createdAt = checkOut.getCreatedAt();
         this.updatedAt = checkOut.getUpdatedAt();
+        this.paymentMaterialization = paymentMaterialization;
     }
 
-    public Long getId() { return id; }
-    public Long getBookingId() { return bookingId; }
-    public Long getGuestId() { return guestId; }
-    public String getGuestName() { return guestName; }
-    public Long getRoomId() { return roomId; }
-    public String getRoomNumber() { return roomNumber; }
-    public LocalDateTime getActualCheckOutAt() { return actualCheckOutAt; }
-    public boolean isRoomInspected() { return roomInspected; }
-    public boolean isKeysReturned() { return keysReturned; }
-    public boolean isConsumablesChecked() { return consumablesChecked; }
-    public boolean isPendingAmountPaid() { return pendingAmountPaid; }
-    public BigDecimal getExtraCharges() { return extraCharges; }
-    public BigDecimal getPendingAmount() { return pendingAmount; }
-    public String getPerformedBy() { return performedBy; }
-    public String getNotes() { return notes; }
-    public CheckOutStatus getStatus() { return status; }
-    public LocalDateTime getCreatedAt() { return createdAt; }
-    public LocalDateTime getUpdatedAt() { return updatedAt; }
+    public Long getId() {
+        return id;
+    }
+
+    public Long getBookingId() {
+        return bookingId;
+    }
+
+    public Long getGuestId() {
+        return guestId;
+    }
+
+    public String getGuestName() {
+        return guestName;
+    }
+
+    public Long getRoomId() {
+        return roomId;
+    }
+
+    public String getRoomNumber() {
+        return roomNumber;
+    }
+
+    public LocalDateTime getActualCheckOutAt() {
+        return actualCheckOutAt;
+    }
+
+    public boolean isRoomInspected() {
+        return roomInspected;
+    }
+
+    public boolean isKeysReturned() {
+        return keysReturned;
+    }
+
+    public boolean isConsumablesChecked() {
+        return consumablesChecked;
+    }
+
+    public boolean isPendingAmountPaid() {
+        return pendingAmountPaid;
+    }
+
+    public BigDecimal getExtraCharges() {
+        return extraCharges;
+    }
+
+    public BigDecimal getPendingAmount() {
+        return pendingAmount;
+    }
+
+    public String getPerformedBy() {
+        return performedBy;
+    }
+
+    public String getNotes() {
+        return notes;
+    }
+
+    public CheckOutStatus getStatus() {
+        return status;
+    }
+
+    public LocalDateTime getCreatedAt() {
+        return createdAt;
+    }
+
+    public LocalDateTime getUpdatedAt() {
+        return updatedAt;
+    }
+
+    public FinancialTransactionPlanReplacementOutcomeDTO getPaymentMaterialization() {
+        return paymentMaterialization;
+    }
 }

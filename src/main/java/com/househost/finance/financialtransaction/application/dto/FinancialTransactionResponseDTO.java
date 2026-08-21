@@ -21,8 +21,6 @@ public class FinancialTransactionResponseDTO {
 
     private String type;
     private BigDecimal amount;
-    private BigDecimal entryAmount;
-    private BigDecimal expenseAmount;
     private String status;
     private String method;
     private String transactionClass;
@@ -50,8 +48,6 @@ public class FinancialTransactionResponseDTO {
         this.sourceId = transaction.getSourceId();
         this.type = transaction.getType().name();
         this.amount = transaction.getAmount();
-        this.entryAmount = transaction.getEntryAmount();
-        this.expenseAmount = transaction.getExpenseAmount();
         this.status = transaction.getStatus().name();
         this.method = transaction.getMethod() == null ? null : transaction.getMethod().name();
         this.transactionClass = transaction.getClass().getSimpleName();
@@ -108,14 +104,6 @@ public class FinancialTransactionResponseDTO {
 
     public BigDecimal getAmount() {
         return amount;
-    }
-
-    public BigDecimal getEntryAmount() {
-        return entryAmount;
-    }
-
-    public BigDecimal getExpenseAmount() {
-        return expenseAmount;
     }
 
     public String getStatus() {

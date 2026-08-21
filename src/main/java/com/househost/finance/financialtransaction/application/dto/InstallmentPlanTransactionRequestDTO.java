@@ -3,7 +3,6 @@ package com.househost.finance.financialtransaction.application.dto;
 import com.househost.finance.financialtransaction.domain.model.FinancialPartyType;
 import com.househost.finance.financialtransaction.domain.model.FinancialTransactionMethod;
 import com.househost.finance.financialtransaction.domain.model.FinancialTransactionSourceType;
-import com.househost.finance.financialtransaction.domain.model.FinancialTransactionType;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -15,7 +14,6 @@ public class InstallmentPlanTransactionRequestDTO {
     public Long receiverId;
     public FinancialTransactionSourceType sourceType;
     public Long sourceId;
-    public FinancialTransactionType type;
     public BigDecimal amount;
     public LocalDate transactionDate;
     public String description;

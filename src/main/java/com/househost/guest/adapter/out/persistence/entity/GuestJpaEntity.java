@@ -41,29 +41,25 @@ public class GuestJpaEntity extends Guest {
     LocalDate birthDate;
     String gender;
     @Enumerated(EnumType.STRING) @Column(nullable = false) GuestType guestType = GuestType.REGULAR;
-    @Enumerated(EnumType.STRING) @Column(nullable = false) GuestStatus status = GuestStatus.IN_BOOKING;
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    GuestStatus status = GuestStatus.INACTIVE;
     @Enumerated(EnumType.STRING) @Column(nullable = false) GuestFinancialStatus financialStatus = GuestFinancialStatus.PAYMENT_SETTLED;
-    boolean travelsWithPets;
-    String petType;
-    boolean needsAccessibility;
-    String favoriteRoom;
     Integer stayCount;
     BigDecimal totalSpent;
     LocalDate lastStayDate;
-    Integer rating;
     String originChannel;
-    String referredBy;
-    @Column(columnDefinition = "TEXT") String notes;
-
-    @ElementCollection(fetch = FetchType.EAGER)
-    @CollectionTable(name = "guest_preferences", joinColumns = @JoinColumn(name = "guest_id"))
-    @Column(name = "preference")
-    List<String> preferences = new ArrayList<>();
+    @Column(columnDefinition = "TEXT")
+    String notes;
+    @Column(name = "preferences_and_restrictions", columnDefinition = "TEXT")
+    String preferencesAndRestrictions;
+    @Column(name = "accessibility_needs", columnDefinition = "TEXT")
+    String accessibilityNeeds;
 
     @ElementCollection(fetch = FetchType.EAGER)
     @CollectionTable(name = "guest_financial_transaction_ids", joinColumns = @JoinColumn(name = "guest_id"))
     @Column(name = "financial_transaction_id", nullable = false)
-    List<Long> financialTransactionIds = new ArrayList<>();
+    List<Long> financialTransactionIdList = new ArrayList<>();
 
     @Column(nullable = false, updatable = false) LocalDateTime createdAt;
     @Column(nullable = false) LocalDateTime updatedAt;

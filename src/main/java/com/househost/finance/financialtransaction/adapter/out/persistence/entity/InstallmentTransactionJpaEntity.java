@@ -2,6 +2,7 @@ package com.househost.finance.financialtransaction.adapter.out.persistence.entit
 
 import com.househost.finance.financialtransaction.domain.model.FinancialPartyType;
 import com.househost.finance.financialtransaction.domain.model.FinancialTransactionMethod;
+import com.househost.finance.financialtransaction.domain.model.FinancialTransactionSourceType;
 import com.househost.finance.financialtransaction.domain.model.FinancialTransactionType;
 import com.househost.finance.financialtransaction.domain.model.InstallmentTransactionStatus;
 
@@ -12,6 +13,8 @@ import jakarta.persistence.Enumerated;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.PrimaryKeyJoinColumn;
+import jakarta.persistence.PrePersist;
+import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
 
 import java.math.BigDecimal;
@@ -42,14 +45,39 @@ public class InstallmentTransactionJpaEntity extends FinancialTransactionJpaEnti
     public InstallmentTransactionJpaEntity() {
     }
 
-    public InstallmentTransactionJpaEntity(FinancialPartyType senderType, Long senderId, FinancialPartyType receiverType, Long receiverId, FinancialTransactionType type, BigDecimal amount, LocalDate transactionDate, String description, FinancialTransactionMethod method, InstallmentPlanTransactionJpaEntity installmentPlan, Integer installmentNumber, Integer totalInstallments, LocalDate dueDate, InstallmentTransactionStatus installmentStatus) {
-        super(senderType, senderId, receiverType, receiverId,  type, amount, transactionDate, description, method);
+    public InstallmentTransactionJpaEntity(
+            FinancialPartyType senderType,
+            Long senderId,
+            FinancialPartyType receiverType,
+            Long receiverId,
+            BigDecimal amount,
+            LocalDate transactionDate,
+            String description,
+            FinancialTransactionMethod method,
+            InstallmentPlanTransactionJpaEntity installmentPlan,
+            Integer installmentNumber,
+            Integer totalInstallments,
+            LocalDate dueDate,
+            InstallmentTransactionStatus installmentStatus
+    ) {
+        super(
+                senderType,
+                senderId,
+                receiverType,
+                receiverId,
+                FinancialTransactionType.INSTALLMENT_TRANSACTION,
+                amount,
+                transactionDate,
+                description,
+                method
+        );
         this.installmentPlan = installmentPlan;
         this.installmentNumber = installmentNumber;
         this.totalInstallments = totalInstallments;
         setDueDate(dueDate);
         this.installmentDueDate = dueDate;
         this.installmentStatus = installmentStatus;
+        synchronizeSourceWithPlan();
     }
 
     public InstallmentPlanTransactionJpaEntity getInstallmentPlan() {
@@ -75,5 +103,14 @@ public class InstallmentTransactionJpaEntity extends FinancialTransactionJpaEnti
 
     public void setInstallmentStatus(InstallmentTransactionStatus installmentStatus) {
         this.installmentStatus = installmentStatus;
+    }
+
+    @PrePersist
+    @PreUpdate
+    public void synchronizeSourceWithPlan() {
+        setSource(
+                FinancialTransactionSourceType.INSTALLMENT,
+                installmentPlan == null ? null : installmentPlan.getId()
+        );
     }
 }

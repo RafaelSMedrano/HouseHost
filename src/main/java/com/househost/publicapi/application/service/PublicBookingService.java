@@ -8,7 +8,6 @@ import com.househost.booking.booking.domain.model.Booking;
 import com.househost.booking.booking.domain.model.BookingOrigin;
 import com.househost.booking.booking.domain.model.BookingStatus;
 import com.househost.guest.domain.model.Guest;
-import com.househost.guest.application.port.out.GuestPersistencePort;
 import com.househost.privacy.policy.application.port.in.PublicPrivacyPolicyUseCase;
 import com.househost.privacy.policy.application.records.PublishedPrivacyPolicyRecord;
 import com.househost.publicapi.application.dto.PublicAvailabilityResponseDTO;
@@ -17,9 +16,9 @@ import com.househost.publicapi.application.dto.PublicBookingResponseDTO;
 import com.househost.publicapi.application.dto.PublicQuoteRequestDTO;
 import com.househost.publicapi.application.dto.PublicQuoteResponseDTO;
 import com.househost.publicapi.application.dto.PublicRoomResponseDTO;
-import com.househost.room.application.service.RoomService;
 import com.househost.room.domain.model.Room;
 import com.househost.room.domain.model.RoomStatus;
+import com.househost.room.application.service.RoomService;
 import com.househost.shared.exception.BookingException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -47,38 +46,41 @@ public class PublicBookingService implements PublicBookingUseCase {
             "(?<!\\d)(?:\\d[ -]?){13,19}(?!\\d)"
     );
     private static final Pattern HUMAN_NAME_PATTERN = Pattern.compile("[\\p{L}][\\p{L} .'-]*");
+    private static final Pattern EMAIL_PATTERN = Pattern.compile(
+            "^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$"
+    );
     private static final int MIN_NAME_LENGTH = 2;
     private static final int MAX_NAME_LENGTH = 80;
     private static final int MAX_CITY_LENGTH = 120;
+    private static final int MAX_EMAIL_LENGTH = 255;
     private static final int MAX_NOTES_LENGTH = 500;
     private static final int MAX_VERSION_LENGTH = 100;
     private static final int MAX_PUBLIC_GUESTS = 20;
     private static final int MAX_PUBLIC_PETS = 5;
 
     private final RoomService roomService;
+    private final PublicBookingParticipantNotifier publicBookingParticipantNotifier;
     private final BookingPersistencePort bookingRepository;
-    private final GuestPersistencePort guestRepository;
     private final PublicBookingAuditPort publicBookingAuditPort;
     private final PublicPrivacyPolicyUseCase publicPrivacyPolicyUseCase;
 
     public PublicBookingService(
             RoomService roomService,
+            PublicBookingParticipantNotifier publicBookingParticipantNotifier,
             BookingPersistencePort bookingRepository,
-            GuestPersistencePort guestRepository,
             PublicBookingAuditPort publicBookingAuditPort,
             PublicPrivacyPolicyUseCase publicPrivacyPolicyUseCase
     ) {
         this.roomService = roomService;
+        this.publicBookingParticipantNotifier = publicBookingParticipantNotifier;
         this.bookingRepository = bookingRepository;
-        this.guestRepository = guestRepository;
         this.publicBookingAuditPort = publicBookingAuditPort;
         this.publicPrivacyPolicyUseCase = publicPrivacyPolicyUseCase;
     }
 
     public List<PublicRoomResponseDTO> findPublicRooms() {
-        return roomService.findAllRooms()
+        return findAvailablePublicRooms()
                 .stream()
-                .filter(room -> room.getStatus() != RoomStatus.INACTIVE)
                 .map(this::toPublicRoomResponse)
                 .toList();
     }
@@ -93,7 +95,7 @@ public class PublicBookingService implements PublicBookingUseCase {
         if (guests != null && (guests < 1 || guests > MAX_PUBLIC_GUESTS)) {
             throw new BookingException("Quantidade de hospedes deve estar entre 1 e 20.");
         }
-        Room room = resolvePublicRoom(roomId);
+        Room room = findPublicRoom(roomId);
 
         if (guests != null && guests > room.getCapacity()) {
             throw new BookingException("Quantidade de hospedes excede a capacidade da casa.");
@@ -122,7 +124,7 @@ public class PublicBookingService implements PublicBookingUseCase {
 
         validateDates(request.checkIn, request.checkOut);
         validateGuestComposition(request.adults, request.children, request.pets);
-        Room room = resolvePublicRoom(request.roomId);
+        Room room = findPublicRoom(request.roomId);
         ensureGuestCapacity(room, request.adults, request.children);
 
         long nights = ChronoUnit.DAYS.between(request.checkIn, request.checkOut);
@@ -157,14 +159,14 @@ public class PublicBookingService implements PublicBookingUseCase {
                 publicPrivacyPolicyUseCase.requireCurrentPublishedForAcceptance(
                         request.privacyPolicyId
                 );
-        Room room = resolvePublicRoom(request.roomId);
+        Room room = findPublicRoom(request.roomId);
         ensureGuestCapacity(room, request.adults, request.children);
 
         if (!findConflicts(room.getId(), request.checkIn, request.checkOut).isEmpty()) {
             throw new BookingException("Casa ja possui reserva no periodo informado.");
         }
 
-        Guest guest = createGuest(request.guest);
+        Guest guest = publicBookingParticipantNotifier.notifyGuestCreation(request.guest);
         BigDecimal total = calculateTotal(room, request.checkIn, request.checkOut);
         Booking booking = new Booking(
                 guest,
@@ -193,6 +195,8 @@ public class PublicBookingService implements PublicBookingUseCase {
         );
 
         Booking savedBooking = bookingRepository.save(booking);
+        publicBookingParticipantNotifier.notifyBookingCreation(savedBooking);
+        publicBookingParticipantNotifier.notifyReservationRequest(savedBooking);
         recordPublicBookingAuditEvents(savedBooking, request, auditContext);
         return new PublicBookingResponseDTO(
                 "CL-" + savedBooking.getId(),
@@ -257,30 +261,25 @@ public class PublicBookingService implements PublicBookingUseCase {
         );
     }
 
-    private Room resolvePublicRoom(Long roomId) {
-        Optional<Room> room = roomId == null
-                ? roomService.findAllRooms().stream().filter(candidate -> candidate.getStatus() != RoomStatus.INACTIVE).findFirst()
+    private List<Room> findAvailablePublicRooms() {
+        return roomService.findAllRooms()
+                .stream()
+                .filter(room -> room.getStatus() != RoomStatus.INACTIVE)
+                .toList();
+    }
+
+    private Room findPublicRoom(Long roomId) {
+        Optional<Room> roomOptional = roomId == null
+                ? findAvailablePublicRooms().stream().findFirst()
                 : Optional.of(roomService.findRoomById(roomId));
 
-        return room
-                .filter(candidate -> candidate.getStatus() != RoomStatus.INACTIVE)
+        return roomOptional
+                .filter(room -> room.getStatus() != RoomStatus.INACTIVE)
                 .orElseThrow(() -> new BookingException("Casa nao encontrada para reserva publica."));
     }
 
     private List<Booking> findConflicts(Long roomId, LocalDate checkIn, LocalDate checkOut) {
         return bookingRepository.findOverlappingBookings(roomId, checkIn, checkOut, BLOCKING_STATUSES);
-    }
-
-    private Guest createGuest(PublicBookingRequestDTO.GuestData guestData) {
-        Guest guest = new Guest(
-                fullName(guestData),
-                null,
-                guestData.phone,
-                null,
-                guestData.city,
-                null
-        );
-        return guestRepository.save(guest);
     }
 
     private void validateBookingRequest(PublicBookingRequestDTO request) {
@@ -297,6 +296,7 @@ public class PublicBookingService implements PublicBookingUseCase {
 
         request.guest.firstName = normalizeAndValidateName(request.guest.firstName, "Nome");
         request.guest.lastName = normalizeAndValidateName(request.guest.lastName, "Sobrenome");
+        request.guest.email = normalizeAndValidateEmail(request.guest.email);
         request.guest.phone = normalizeBrazilianPhone(request.guest.phone);
         request.guest.city = normalizeOptionalWithLimit(request.guest.city, MAX_CITY_LENGTH, "Cidade");
         request.notes = normalizeOptionalWithLimit(request.notes, MAX_NOTES_LENGTH, "Observacoes");
@@ -368,10 +368,6 @@ public class PublicBookingService implements PublicBookingUseCase {
         return room.getDailyRate().multiply(BigDecimal.valueOf(nights));
     }
 
-    private String fullName(PublicBookingRequestDTO.GuestData guestData) {
-        return guestData.firstName + " " + guestData.lastName;
-    }
-
     private String normalizeOptional(String value) {
         if (isBlank(value)) {
             return null;
@@ -428,6 +424,20 @@ public class PublicBookingService implements PublicBookingUseCase {
             throw new BookingException("Telefone deve conter DDD e 10 ou 11 digitos.");
         }
         return "+55" + digits;
+    }
+
+    private String normalizeAndValidateEmail(String value) {
+        if (isBlank(value)) {
+            throw new BookingException("Email do hospede e obrigatorio.");
+        }
+        String normalizedEmail = value.trim().toLowerCase(java.util.Locale.ROOT);
+        if (normalizedEmail.length() > MAX_EMAIL_LENGTH
+                || normalizedEmail.contains("\r")
+                || normalizedEmail.contains("\n")
+                || !EMAIL_PATTERN.matcher(normalizedEmail).matches()) {
+            throw new BookingException("Email do hospede deve ser valido.");
+        }
+        return normalizedEmail;
     }
 
     private String normalizeOptionalWithLimit(String value, int maxLength, String fieldName) {

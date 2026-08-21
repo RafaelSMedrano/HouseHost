@@ -8,6 +8,8 @@ import org.springframework.stereotype.Service;
 @Service
 class GuestValidationService {
 
+    static final int MAX_CARE_TEXT_LENGTH = 4000;
+
     private final GuestPersistencePort guestRepository;
 
     GuestValidationService(GuestPersistencePort guestRepository) {
@@ -30,14 +32,21 @@ class GuestValidationService {
         if (request == null || request.fullName == null || request.fullName.isBlank()) {
             throw new GuestException("Nome completo e obrigatorio.");
         }
-        if (request.rating != null && (request.rating < 0 || request.rating > 5)) {
-            throw new GuestException("Avaliacao do hospede deve estar entre 0 e 5.");
-        }
-        if (request.stayCount != null && request.stayCount < 0) {
-            throw new GuestException("Numero de estadias nao pode ser negativo.");
-        }
-        if (request.totalSpent != null && request.totalSpent.signum() < 0) {
-            throw new GuestException("Total gasto nao pode ser negativo.");
+        validateCareTextLength(
+                request.preferencesAndRestrictions,
+                "Preferencias e restricoes"
+        );
+        validateCareTextLength(
+                request.accessibilityNeeds,
+                "Necessidades de acessibilidade"
+        );
+    }
+
+    private void validateCareTextLength(String careText, String fieldLabel) {
+        if (careText != null && careText.length() > MAX_CARE_TEXT_LENGTH) {
+            throw new GuestException(
+                    fieldLabel + " deve ter no maximo " + MAX_CARE_TEXT_LENGTH + " caracteres."
+            );
         }
     }
 

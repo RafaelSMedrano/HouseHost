@@ -22,25 +22,60 @@ public class CheckOut {
     private String performedBy;
     private String notes;
     private CheckOutStatus status;
+    private boolean guestHistoryApplied;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 
     public CheckOut() {
     }
 
-    public CheckOut(Booking booking, Guest guest, Room room, LocalDateTime actualCheckOutAt,
-                    boolean roomInspected, boolean keysReturned, boolean consumablesChecked,
-                    boolean pendingAmountPaid, BigDecimal extraCharges, BigDecimal pendingAmount,
-                    String performedBy, String notes, CheckOutStatus status) {
-        updateCheckOut(booking, guest, room, actualCheckOutAt, roomInspected, keysReturned,
-                consumablesChecked, pendingAmountPaid, extraCharges, pendingAmount,
-                performedBy, notes, status);
+    public CheckOut(
+            Booking booking,
+            Guest guest,
+            Room room,
+            LocalDateTime actualCheckOutAt,
+            boolean roomInspected,
+            boolean keysReturned,
+            boolean consumablesChecked,
+            boolean pendingAmountPaid,
+            BigDecimal extraCharges,
+            BigDecimal pendingAmount,
+            String performedBy,
+            String notes,
+            CheckOutStatus status
+    ) {
+        updateCheckOut(
+                booking,
+                guest,
+                room,
+                actualCheckOutAt,
+                roomInspected,
+                keysReturned,
+                consumablesChecked,
+                pendingAmountPaid,
+                extraCharges,
+                pendingAmount,
+                performedBy,
+                notes,
+                status
+        );
     }
 
-    public void updateCheckOut(Booking booking, Guest guest, Room room, LocalDateTime actualCheckOutAt,
-                               boolean roomInspected, boolean keysReturned, boolean consumablesChecked,
-                               boolean pendingAmountPaid, BigDecimal extraCharges, BigDecimal pendingAmount,
-                               String performedBy, String notes, CheckOutStatus status) {
+    public void updateCheckOut(
+            Booking booking,
+            Guest guest,
+            Room room,
+            LocalDateTime actualCheckOutAt,
+            boolean roomInspected,
+            boolean keysReturned,
+            boolean consumablesChecked,
+            boolean pendingAmountPaid,
+            BigDecimal extraCharges,
+            BigDecimal pendingAmount,
+            String performedBy,
+            String notes,
+            CheckOutStatus status
+    ) {
         this.booking = booking;
         this.guest = guest;
         this.room = room;
@@ -56,26 +91,91 @@ public class CheckOut {
         this.status = status == null ? CheckOutStatus.COMPLETED : status;
     }
 
-    public void restorePersistenceState(Long id, LocalDateTime createdAt, LocalDateTime updatedAt) {
+    public void restorePersistenceState(
+            Long id,
+            boolean guestHistoryApplied,
+            LocalDateTime createdAt,
+            LocalDateTime updatedAt
+    ) {
         this.id = id;
+        this.guestHistoryApplied = guestHistoryApplied;
         this.createdAt = createdAt;
         this.updatedAt = updatedAt;
     }
 
-    public Long getId() { return id; }
-    public Booking getBooking() { return booking; }
-    public Guest getGuest() { return guest; }
-    public Room getRoom() { return room; }
-    public LocalDateTime getActualCheckOutAt() { return actualCheckOutAt; }
-    public boolean isRoomInspected() { return roomInspected; }
-    public boolean isKeysReturned() { return keysReturned; }
-    public boolean isConsumablesChecked() { return consumablesChecked; }
-    public boolean isPendingAmountPaid() { return pendingAmountPaid; }
-    public BigDecimal getExtraCharges() { return extraCharges; }
-    public BigDecimal getPendingAmount() { return pendingAmount; }
-    public String getPerformedBy() { return performedBy; }
-    public String getNotes() { return notes; }
-    public CheckOutStatus getStatus() { return status; }
-    public LocalDateTime getCreatedAt() { return createdAt; }
-    public LocalDateTime getUpdatedAt() { return updatedAt; }
+    public boolean shouldApplyGuestHistory() {
+        return status == CheckOutStatus.COMPLETED && !guestHistoryApplied;
+    }
+
+    public void markGuestHistoryApplied() {
+        guestHistoryApplied = true;
+    }
+
+    public Long getId() {
+        return id;
+    }
+
+    public Booking getBooking() {
+        return booking;
+    }
+
+    public Guest getGuest() {
+        return guest;
+    }
+
+    public Room getRoom() {
+        return room;
+    }
+
+    public LocalDateTime getActualCheckOutAt() {
+        return actualCheckOutAt;
+    }
+
+    public boolean isRoomInspected() {
+        return roomInspected;
+    }
+
+    public boolean isKeysReturned() {
+        return keysReturned;
+    }
+
+    public boolean isConsumablesChecked() {
+        return consumablesChecked;
+    }
+
+    public boolean isPendingAmountPaid() {
+        return pendingAmountPaid;
+    }
+
+    public BigDecimal getExtraCharges() {
+        return extraCharges;
+    }
+
+    public BigDecimal getPendingAmount() {
+        return pendingAmount;
+    }
+
+    public String getPerformedBy() {
+        return performedBy;
+    }
+
+    public String getNotes() {
+        return notes;
+    }
+
+    public CheckOutStatus getStatus() {
+        return status;
+    }
+
+    public boolean isGuestHistoryApplied() {
+        return guestHistoryApplied;
+    }
+
+    public LocalDateTime getCreatedAt() {
+        return createdAt;
+    }
+
+    public LocalDateTime getUpdatedAt() {
+        return updatedAt;
+    }
 }

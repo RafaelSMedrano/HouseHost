@@ -12,13 +12,17 @@ public final class GuestPersistenceMapper {
         guest.updateProfile(
                 entity.fullName, entity.email, entity.phone, entity.documentNumber,
                 entity.city, entity.state, entity.address, entity.birthDate, entity.gender,
-                entity.guestType, entity.status, entity.travelsWithPets, entity.petType,
-                entity.needsAccessibility, entity.favoriteRoom, entity.stayCount,
-                entity.totalSpent, entity.lastStayDate, entity.rating, entity.originChannel,
-                entity.referredBy, entity.notes, entity.preferences
+                entity.guestType, entity.originChannel, entity.notes,
+                entity.preferencesAndRestrictions, entity.accessibilityNeeds
+        );
+        guest.restoreOperationalState(
+                entity.status,
+                entity.stayCount,
+                entity.totalSpent,
+                entity.lastStayDate
         );
         guest.restorePersistenceState(
-                entity.id, entity.financialStatus, entity.financialTransactionIds,
+                entity.id, entity.financialStatus, entity.financialTransactionIdList,
                 entity.createdAt, entity.updatedAt
         );
         return guest;
@@ -45,19 +49,16 @@ public final class GuestPersistenceMapper {
         entity.guestType = guest.getGuestTypeEnum();
         entity.status = guest.getStatus();
         entity.financialStatus = guest.getFinancialStatus();
-        entity.travelsWithPets = guest.isTravelsWithPets();
-        entity.petType = guest.getPetType();
-        entity.needsAccessibility = guest.isNeedsAccessibility();
-        entity.favoriteRoom = guest.getFavoriteRoom();
         entity.stayCount = guest.getStayCount();
         entity.totalSpent = guest.getTotalSpent();
         entity.lastStayDate = guest.getLastStayDate();
-        entity.rating = guest.getRating();
         entity.originChannel = guest.getOriginChannel();
-        entity.referredBy = guest.getReferredBy();
         entity.notes = guest.getNotes();
-        entity.preferences = new java.util.ArrayList<>(guest.getPreferences());
-        entity.financialTransactionIds = new java.util.ArrayList<>(guest.getFinancialTransactionIds());
+        entity.preferencesAndRestrictions = guest.getPreferencesAndRestrictions();
+        entity.accessibilityNeeds = guest.getAccessibilityNeeds();
+        entity.financialTransactionIdList = new java.util.ArrayList<>(
+                guest.getFinancialTransactionIds()
+        );
         entity.createdAt = guest.getCreatedAt();
         entity.updatedAt = guest.getUpdatedAt();
         return entity;

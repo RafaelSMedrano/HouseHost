@@ -9,6 +9,7 @@ public interface CheckOutPersistencePort {
     CheckOut save(CheckOut checkOut);
     List<CheckOut> findAll();
     Optional<CheckOut> findById(Long id);
+    Optional<CheckOut> findByIdForUpdate(Long id);
     Optional<CheckOut> findByBookingId(Long bookingId);
     void delete(CheckOut checkOut);
 }

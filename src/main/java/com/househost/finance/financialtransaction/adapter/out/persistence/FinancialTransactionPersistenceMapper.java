@@ -80,21 +80,21 @@ final class FinancialTransactionPersistenceMapper {
                 plan.getSenderId(),
                 plan.getReceiverType(),
                 plan.getReceiverId(),
-                plan.getType(),
                 plan.getAmount(),
                 plan.getTransactionDate(),
                 plan.getDescription(),
                 plan.getMethod(),
                 plan.getInstallmentsQuantity(),
                 plan.getInstallmentDueDay(),
+                plan.getType(),
                 plan.getStatus()
         );
         restoreCommonEntityState(plan, entity);
 
-        List<InstallmentTransactionJpaEntity> installments = plan.getInstallments().stream()
+        List<InstallmentTransactionJpaEntity> installmentTransactionJpaEntityList = plan.getInstallments().stream()
                 .map(installment -> toInstallmentEntity(installment, entity))
                 .toList();
-        entity.replaceInstallments(installments);
+        entity.replaceInstallments(installmentTransactionJpaEntityList);
         return entity;
     }
 
@@ -107,7 +107,6 @@ final class FinancialTransactionPersistenceMapper {
                 installment.getSenderId(),
                 installment.getReceiverType(),
                 installment.getReceiverId(),
-                installment.getType(),
                 installment.getAmount(),
                 installment.getTransactionDate(),
                 installment.getDescription(),
@@ -124,26 +123,26 @@ final class FinancialTransactionPersistenceMapper {
     }
 
     private static InstallmentPlanTransaction toPlanDomain(InstallmentPlanTransactionJpaEntity entity) {
-        InstallmentPlanTransaction plan = new InstallmentPlanTransaction(
+        InstallmentPlanTransaction plan = InstallmentPlanTransaction.restore(
                 entity.getSenderType(),
                 entity.getSenderId(),
                 entity.getReceiverType(),
                 entity.getReceiverId(),
-                entity.getType(),
                 entity.getAmount(),
                 entity.getTransactionDate(),
                 entity.getDescription(),
                 entity.getMethod(),
                 entity.getInstallmentsQuantity(),
                 entity.getInstallmentDueDay(),
+                entity.getType(),
                 entity.getStatus()
         );
         restoreCommonDomainState(entity, plan);
 
-        List<InstallmentTransaction> installments = entity.getInstallments().stream()
+        List<InstallmentTransaction> installmentTransactionList = entity.getInstallments().stream()
                 .map(installment -> toInstallmentDomain(installment, plan))
                 .toList();
-        plan.restoreInstallments(installments);
+        plan.restoreInstallments(installmentTransactionList);
         return plan;
     }
 
@@ -156,7 +155,6 @@ final class FinancialTransactionPersistenceMapper {
                 entity.getSenderId(),
                 entity.getReceiverType(),
                 entity.getReceiverId(),
-                entity.getType(),
                 entity.getAmount(),
                 entity.getTransactionDate(),
                 entity.getDescription(),
@@ -169,6 +167,7 @@ final class FinancialTransactionPersistenceMapper {
         );
         installment.setStatus(entity.getStatus());
         restoreCommonDomainState(entity, installment);
+        installment.synchronizeSourceWithPlan();
         return installment;
     }
 
@@ -177,6 +176,8 @@ final class FinancialTransactionPersistenceMapper {
             FinancialTransactionJpaEntity entity
     ) {
         entity.setSource(transaction.getSourceType(), transaction.getSourceId());
+        entity.setPlanComponentOrder(transaction.getPlanComponentOrder());
+        entity.setDueDate(transaction.getDueDate());
         entity.restorePersistenceState(
                 transaction.getId(),
                 transaction.getCreationDate(),
@@ -191,6 +192,7 @@ final class FinancialTransactionPersistenceMapper {
             FinancialTransaction transaction
     ) {
         transaction.setSource(entity.getSourceType(), entity.getSourceId());
+        transaction.restorePlanComponentOrder(entity.getPlanComponentOrder());
         transaction.restorePersistenceState(
                 entity.getId(),
                 entity.getCreationDate(),

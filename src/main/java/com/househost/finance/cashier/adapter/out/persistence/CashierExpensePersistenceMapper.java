@@ -17,7 +17,8 @@ final class CashierExpensePersistenceMapper {
                 CashierPersistenceMapper.toDomain(entity.getCashier()),
                 entity.getDescription(),
                 entity.getAmount(),
-                entity.getExpenseDate(),
+                entity.getDueDate(),
+                entity.getSettlementDate(),
                 entity.getCategory(),
                 entity.getStatus(),
                 sourceTransaction

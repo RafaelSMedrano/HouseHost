@@ -2,6 +2,7 @@ package com.househost.booking.checking.application.dto;
 
 import com.househost.booking.booking.domain.model.Booking;
 import com.househost.booking.checking.domain.model.CheckIn;
+import com.househost.finance.financialtransaction.application.dto.FinancialTransactionPlanReplacementOutcomeDTO;
 
 import java.time.LocalDateTime;
 
@@ -27,8 +28,16 @@ public class CheckInResponseDTO {
     private String notes;
     private String status;
     private LocalDateTime createdAt;
+    private FinancialTransactionPlanReplacementOutcomeDTO paymentMaterialization;
 
     public CheckInResponseDTO(CheckIn checkIn) {
+        this(checkIn, null);
+    }
+
+    public CheckInResponseDTO(
+            CheckIn checkIn,
+            FinancialTransactionPlanReplacementOutcomeDTO paymentMaterialization
+    ) {
         Booking booking = checkIn.getBooking();
         this.id = checkIn.getId();
         this.bookingId = booking == null ? null : booking.getId();
@@ -50,26 +59,89 @@ public class CheckInResponseDTO {
         this.notes = checkIn.getNotes();
         this.status = checkIn.getStatus().name();
         this.createdAt = checkIn.getCreatedAt();
+        this.paymentMaterialization = paymentMaterialization;
     }
 
-    public Long getId() { return id; }
-    public Long getBookingId() { return bookingId; }
-    public Long getGuestId() { return guestId; }
-    public String getGuestName() { return guestName; }
-    public Long getRoomId() { return roomId; }
-    public String getRoomNumber() { return roomNumber; }
-    public Integer getAdults() { return adults; }
-    public Integer getChildren() { return children; }
-    public Integer getPets() { return pets; }
-    public boolean isDocumentVerified() { return documentVerified; }
-    public boolean isPaymentVerified() { return paymentVerified; }
-    public boolean isRegistrationFormSigned() { return registrationFormSigned; }
-    public boolean isRulesAccepted() { return rulesAccepted; }
-    public boolean isKeysDelivered() { return keysDelivered; }
-    public String getVehiclePlate() { return vehiclePlate; }
-    public String getVehicleModel() { return vehicleModel; }
-    public String getPerformedBy() { return performedBy; }
-    public String getNotes() { return notes; }
-    public String getStatus() { return status; }
-    public LocalDateTime getCreatedAt() { return createdAt; }
+    public Long getId() {
+        return id;
+    }
+
+    public Long getBookingId() {
+        return bookingId;
+    }
+
+    public Long getGuestId() {
+        return guestId;
+    }
+
+    public String getGuestName() {
+        return guestName;
+    }
+
+    public Long getRoomId() {
+        return roomId;
+    }
+
+    public String getRoomNumber() {
+        return roomNumber;
+    }
+
+    public Integer getAdults() {
+        return adults;
+    }
+
+    public Integer getChildren() {
+        return children;
+    }
+
+    public Integer getPets() {
+        return pets;
+    }
+
+    public boolean isDocumentVerified() {
+        return documentVerified;
+    }
+
+    public boolean isPaymentVerified() {
+        return paymentVerified;
+    }
+
+    public boolean isRegistrationFormSigned() {
+        return registrationFormSigned;
+    }
+
+    public boolean isRulesAccepted() {
+        return rulesAccepted;
+    }
+
+    public boolean isKeysDelivered() {
+        return keysDelivered;
+    }
+
+    public String getVehiclePlate() {
+        return vehiclePlate;
+    }
+
+    public String getVehicleModel() {
+        return vehicleModel;
+    }
+
+    public String getPerformedBy() {
+        return performedBy;
+    }
+
+    public String getNotes() {
+        return notes;
+    }
+
+    public String getStatus() {
+        return status;
+    }
+
+    public LocalDateTime getCreatedAt() {
+        return createdAt;
+    }
+    public FinancialTransactionPlanReplacementOutcomeDTO getPaymentMaterialization() {
+        return paymentMaterialization;
+    }
 }

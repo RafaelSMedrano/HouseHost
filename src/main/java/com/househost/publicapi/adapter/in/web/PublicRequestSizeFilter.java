@@ -19,7 +19,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 @Component
-@Order(Ordered.HIGHEST_PRECEDENCE)
+@Order(Ordered.HIGHEST_PRECEDENCE + 1)
 public class PublicRequestSizeFilter extends OncePerRequestFilter {
 
     static final int MAX_PUBLIC_REQUEST_BYTES = 16 * 1024;

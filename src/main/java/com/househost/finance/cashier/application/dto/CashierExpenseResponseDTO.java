@@ -15,6 +15,8 @@ public class CashierExpenseResponseDTO {
     private String sourceTransactionClass;
     private String description;
     private BigDecimal amount;
+    private LocalDate dueDate;
+    private LocalDate settlementDate;
     private LocalDate expenseDate;
     private String category;
     private String status;
@@ -29,7 +31,9 @@ public class CashierExpenseResponseDTO {
         this.sourceTransactionClass = expense.getSourceTransaction() == null ? null : expense.getSourceTransaction().getClass().getSimpleName();
         this.description = expense.getDescription();
         this.amount = expense.getAmount();
-        this.expenseDate = expense.getExpenseDate();
+        this.dueDate = expense.getDueDate();
+        this.settlementDate = expense.getSettlementDate();
+        this.expenseDate = expense.getDueDate();
         this.category = expense.getCategory();
         this.status = expense.getStatus().name();
         this.createdAt = expense.getCreatedAt();
@@ -66,6 +70,14 @@ public class CashierExpenseResponseDTO {
 
     public LocalDate getExpenseDate() {
         return expenseDate;
+    }
+
+    public LocalDate getDueDate() {
+        return dueDate;
+    }
+
+    public LocalDate getSettlementDate() {
+        return settlementDate;
     }
 
     public String getCategory() {

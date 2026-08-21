@@ -11,15 +11,16 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 
 class GuestDataSecurityServiceTest {
 
-    private final GuestDataSecurityService service = new GuestDataSecurityService();
+    private final GuestDataSecurityService guestDataSecurityService =
+            new GuestDataSecurityService();
 
     @Test
     void masksAnyGuestDataWithoutChangingMissingValues() {
-        assertEquals("***", service.maskData("maria@example.com"));
-        assertEquals("***", service.maskData(LocalDate.of(1990, 1, 10)));
-        assertEquals("***", service.maskData(12L));
-        assertEquals("", service.maskData(""));
-        assertNull(service.maskData(null));
+        assertEquals("***", guestDataSecurityService.maskData("maria@example.com"));
+        assertEquals("***", guestDataSecurityService.maskData(LocalDate.of(1990, 1, 10)));
+        assertEquals("***", guestDataSecurityService.maskData(12L));
+        assertEquals("", guestDataSecurityService.maskData(""));
+        assertNull(guestDataSecurityService.maskData(null));
     }
 
     @Test
@@ -29,9 +30,19 @@ class GuestDataSecurityServiceTest {
         ReflectionTestUtils.setField(guest, "address", "Rua das Flores, 10");
         ReflectionTestUtils.setField(guest, "birthDate", LocalDate.of(1990, 1, 10));
         ReflectionTestUtils.setField(guest, "notes", "Observacao interna");
+        ReflectionTestUtils.setField(
+                guest,
+                "preferencesAndRestrictions",
+                "Sem lactose"
+        );
+        ReflectionTestUtils.setField(
+                guest,
+                "accessibilityNeeds",
+                "Acesso sem degraus"
+        );
         guest.addFinancialTransactionId(30L);
 
-        Guest maskedGuest = service.maskFullData(guest);
+        Guest maskedGuest = guestDataSecurityService.maskFullData(guest);
 
         assertEquals(12L, maskedGuest.getId());
         assertEquals("Maria", maskedGuest.getFullName());
@@ -41,9 +52,13 @@ class GuestDataSecurityServiceTest {
         assertEquals("***", maskedGuest.getAddress());
         assertNull(maskedGuest.getBirthDate());
         assertEquals("***", maskedGuest.getNotes());
+        assertEquals("***", maskedGuest.getPreferencesAndRestrictions());
+        assertEquals("***", maskedGuest.getAccessibilityNeeds());
         assertEquals(guest.getFinancialTransactionIds(), maskedGuest.getFinancialTransactionIds());
 
         assertEquals("maria@example.com", guest.getEmail());
         assertEquals(LocalDate.of(1990, 1, 10), guest.getBirthDate());
+        assertEquals("Sem lactose", guest.getPreferencesAndRestrictions());
+        assertEquals("Acesso sem degraus", guest.getAccessibilityNeeds());
     }
 }

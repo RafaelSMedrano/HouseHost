@@ -126,12 +126,12 @@ class MetricsCalculationService {
                 .map(CheckOut::getExtraCharges)
                 .reduce(BigDecimal.ZERO, this::sum);
         BigDecimal monthlyCashierEntries = cashierEntries.stream()
-                .filter(entry -> YearMonth.from(entry.getEntryDate()).equals(currentMonth))
+                .filter(entry -> YearMonth.from(entry.getDueDate()).equals(currentMonth))
                 .filter(this::isDashboardEntry)
                 .map(CashierEntryResponseDTO::getAmount)
                 .reduce(BigDecimal.ZERO, this::sum);
         BigDecimal monthlyCashierExpenses = cashierExpenses.stream()
-                .filter(expense -> YearMonth.from(expense.getExpenseDate()).equals(currentMonth))
+                .filter(expense -> YearMonth.from(expense.getDueDate()).equals(currentMonth))
                 .filter(this::isDashboardExpense)
                 .map(expense -> expense.getAmount().abs())
                 .reduce(BigDecimal.ZERO, this::sum);
@@ -147,7 +147,6 @@ class MetricsCalculationService {
                 guestsInStay,
                 guestsWithBooking,
                 guests.stream().filter(guest -> guest.getGuestTypeEnum() == GuestType.VIP).count(),
-                guests.stream().filter(Guest::isTravelsWithPets).count(),
                 guests.stream().map(Guest::getTotalSpent).reduce(BigDecimal.ZERO, this::sum),
                 totalRooms,
                 availableRooms,

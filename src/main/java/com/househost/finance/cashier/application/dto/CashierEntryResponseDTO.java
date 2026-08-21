@@ -15,6 +15,8 @@ public class CashierEntryResponseDTO {
     private String sourceTransactionClass;
     private String description;
     private BigDecimal amount;
+    private LocalDate dueDate;
+    private LocalDate settlementDate;
     private LocalDate entryDate;
     private String source;
     private String status;
@@ -29,7 +31,9 @@ public class CashierEntryResponseDTO {
         this.sourceTransactionClass = entry.getSourceTransaction() == null ? null : entry.getSourceTransaction().getClass().getSimpleName();
         this.description = entry.getDescription();
         this.amount = entry.getAmount();
-        this.entryDate = entry.getEntryDate();
+        this.dueDate = entry.getDueDate();
+        this.settlementDate = entry.getSettlementDate();
+        this.entryDate = entry.getDueDate();
         this.source = entry.getSource();
         this.status = entry.getStatus().name();
         this.createdAt = entry.getCreatedAt();
@@ -66,6 +70,14 @@ public class CashierEntryResponseDTO {
 
     public LocalDate getEntryDate() {
         return entryDate;
+    }
+
+    public LocalDate getDueDate() {
+        return dueDate;
+    }
+
+    public LocalDate getSettlementDate() {
+        return settlementDate;
     }
 
     public String getSource() {

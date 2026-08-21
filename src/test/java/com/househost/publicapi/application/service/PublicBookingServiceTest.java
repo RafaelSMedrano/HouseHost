@@ -15,6 +15,7 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 
 import com.househost.booking.booking.application.port.out.BookingPersistencePort;
+import com.househost.booking.booking.application.service.BookingService;
 import com.househost.booking.booking.domain.model.Booking;
 import com.househost.guest.application.port.out.GuestPersistencePort;
 import com.househost.guest.domain.model.Guest;
@@ -25,6 +26,7 @@ import com.househost.publicapi.application.dto.PublicBookingRequestDTO;
 import com.househost.publicapi.application.dto.PublicBookingResponseDTO;
 import com.househost.publicapi.application.dto.PublicQuoteRequestDTO;
 import com.househost.publicapi.application.port.out.PublicBookingAuditPort;
+import com.househost.publicapi.application.port.out.PublicBookingNotificationPort;
 import com.househost.room.application.service.RoomService;
 import com.househost.room.domain.model.Room;
 import com.househost.room.domain.model.RoomStatus;
@@ -48,16 +50,27 @@ class PublicBookingServiceTest {
     private final BookingPersistencePort bookingPersistencePort = mock(BookingPersistencePort.class);
     private final GuestPersistencePort guestPersistencePort = mock(GuestPersistencePort.class);
     private final PublicBookingAuditPort publicBookingAuditPort = mock(PublicBookingAuditPort.class);
+    private final PublicBookingNotificationPort publicBookingNotificationPort =
+            mock(PublicBookingNotificationPort.class);
     private final PublicPrivacyPolicyUseCase publicPrivacyPolicyUseCase =
             mock(PublicPrivacyPolicyUseCase.class);
+    private final BookingService bookingService = mock(BookingService.class);
     private PublicBookingService publicBookingService;
 
     @BeforeEach
     void setUp() {
+        PublicBookingGuestResolver publicBookingGuestResolver = new PublicBookingGuestResolver(
+                guestPersistencePort,
+                bookingService
+        );
+        PublicBookingParticipantNotifier publicBookingParticipantNotifier = new PublicBookingParticipantNotifier(
+                publicBookingGuestResolver,
+                new PublicBookingNotificationResolver(publicBookingNotificationPort)
+        );
         publicBookingService = new PublicBookingService(
                 roomService,
+                publicBookingParticipantNotifier,
                 bookingPersistencePort,
-                guestPersistencePort,
                 publicBookingAuditPort,
                 publicPrivacyPolicyUseCase
         );
@@ -86,8 +99,8 @@ class PublicBookingServiceTest {
                     booking.getPrivacyAcceptedAt(),
                     booking.getMarketingOptIn(),
                     booking.getMarketingOptInAt(),
-                    null,
-                    null
+                    LocalDateTime.of(2026, 8, 21, 12, 0),
+                    LocalDateTime.of(2026, 8, 21, 12, 0)
             );
             return booking;
         });
@@ -104,6 +117,7 @@ class PublicBookingServiceTest {
     void createsBookingWithNormalizedMinimalDataAndNumericComposition() {
         PublicBookingRequestDTO request = validRequest();
         request.guest.firstName = "  Maria   Clara ";
+        request.guest.email = "  MARIA.SILVA@EXAMPLE.COM ";
         request.guest.phone = "(12) 99999-9999";
 
         PublicBookingResponseDTO response = publicBookingService.createBooking(request);
@@ -111,6 +125,7 @@ class PublicBookingServiceTest {
         assertEquals("CL-9", response.bookingCode());
         assertEquals("Maria Clara", request.guest.firstName);
         assertEquals("+5512999999999", request.guest.phone);
+        assertEquals("maria.silva@example.com", request.guest.email);
         Booking savedBooking = org.mockito.Mockito.mockingDetails(bookingPersistencePort)
                 .getInvocations()
                 .stream()
@@ -124,8 +139,9 @@ class PublicBookingServiceTest {
         assertFalse(Boolean.TRUE.equals(savedBooking.getMarketingOptIn()));
         assertNull(savedBooking.getPaymentMethod());
         assertEquals("+5512999999999", savedBooking.getGuest().getPhone());
-        assertNull(savedBooking.getGuest().getEmail());
+        assertEquals("maria.silva@example.com", savedBooking.getGuest().getEmail());
         assertNull(savedBooking.getGuest().getDocumentNumber());
+        verify(bookingService).synchronizeGuestStatus(savedBooking.getGuest().getId());
         assertEquals("2", savedBooking.getPrivacyPolicyVersion());
         assertEquals(
                 "sha256:0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
@@ -143,6 +159,10 @@ class PublicBookingServiceTest {
         PublicBookingRequestDTO invalidPhoneRequest = validRequest();
         invalidPhoneRequest.guest.phone = "123";
         assertThrows(BookingException.class, () -> publicBookingService.createBooking(invalidPhoneRequest));
+
+        PublicBookingRequestDTO invalidEmailRequest = validRequest();
+        invalidEmailRequest.guest.email = "email-invalido";
+        assertThrows(BookingException.class, () -> publicBookingService.createBooking(invalidEmailRequest));
 
         PublicBookingRequestDTO oversizedNotesRequest = validRequest();
         oversizedNotesRequest.notes = "x".repeat(501);
@@ -235,7 +255,7 @@ class PublicBookingServiceTest {
     }
 
     @Test
-    void publicDtosExcludeDocumentEmailPaymentAndMarketing() {
+    void publicDtosIncludeOnlyTransactionalEmailAndExcludeDocumentPaymentAndMarketing() {
         Set<String> bookingRequestFieldSet = Arrays.stream(PublicBookingRequestDTO.class.getFields())
                 .map(java.lang.reflect.Field::getName)
                 .collect(Collectors.toSet());
@@ -251,7 +271,7 @@ class PublicBookingServiceTest {
         assertFalse(bookingRequestFieldSet.contains("privacyPolicyVersion"));
         assertFalse(bookingRequestFieldSet.contains("privacyPolicyContentHash"));
         assertFalse(guestFieldSet.contains("document"));
-        assertFalse(guestFieldSet.contains("email"));
+        org.junit.jupiter.api.Assertions.assertTrue(guestFieldSet.contains("email"));
         assertFalse(bookingResponseComponentSet.contains("paymentMethod"));
     }
 
@@ -304,6 +324,7 @@ class PublicBookingServiceTest {
         request.guest = new PublicBookingRequestDTO.GuestData();
         request.guest.firstName = "Maria";
         request.guest.lastName = "Silva";
+        request.guest.email = "maria.silva@example.com";
         request.guest.phone = "(12) 99999-9999";
         request.guest.city = "Sao Paulo - SP";
         return request;

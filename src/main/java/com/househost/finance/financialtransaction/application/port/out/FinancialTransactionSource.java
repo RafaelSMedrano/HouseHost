@@ -7,5 +7,11 @@ public interface FinancialTransactionSource {
 
     FinancialTransactionSourceType getType();
 
+    default void onCreate(Long sourceId, FinancialTransaction transaction) {
+    }
+
     void onSettle(Long sourceId, FinancialTransaction transaction);
+
+    default void onDelete(Long sourceId, FinancialTransaction transaction) {
+    }
 }

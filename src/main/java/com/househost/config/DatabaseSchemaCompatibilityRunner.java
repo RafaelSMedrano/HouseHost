@@ -55,6 +55,7 @@ public class DatabaseSchemaCompatibilityRunner implements CommandLineRunner {
         ensureBookingOriginColumn();
         ensureBookingPaymentStatusColumn();
         ensureBookingPrivacyAcceptanceColumns();
+        ensureRatingsTable();
         removeLegacyCheckInDateColumns();
         ensureDataProcessingOperationsTable();
         ensureProcessingLegalBasisAssessmentsTable();
@@ -62,18 +63,25 @@ public class DatabaseSchemaCompatibilityRunner implements CommandLineRunner {
         ensureAuditEventsTable();
         ensureLoginSecurityControlsTable();
         ensureSupplierTables();
+        ensureGuestCareStorage();
+        removeObsoleteGuestReferralColumn();
         ensureGuestStatusColumn();
         ensureGuestTypeColumn();
         ensureGuestFinancialStatusColumn();
-        syncGuestStatusFromBookings();
         removeLegacyStaySchema();
+        ensureStayHistoryBookingLinksAreOptional();
+        ensureCheckOutGuestHistoryColumns();
+        removeObsoleteGenericRatingColumns();
         ensureFinancialStatusColumns();
-        ensureFinancialTypeColumns();
         ensureFinancialPartyColumns();
         ensureFinancialTransactionSourceColumns();
         ensureLegacyFinancialCashierColumnsAreNullable();
-        ensureFinancialAmountSigns();
+        migrateFinancialTransactionClassification();
+        ensureFinancialTransactionPlanSchema();
+        ensureFinancialCommandIdempotencySchema();
+        ensureNotifierSchema();
         ensureCashierMovementSourceColumns();
+        ensureCashierMovementTemporalColumns();
         ensureCashierOnWaitingColumn();
         ensureDefaultPaymentCashier();
     }
@@ -277,6 +285,45 @@ public class DatabaseSchemaCompatibilityRunner implements CommandLineRunner {
                     add column marketing_opt_in_at datetime(6)
                     """);
         }
+    }
+
+    void ensureRatingsTable() {
+        if (!tableExists("bookings")) {
+            return;
+        }
+
+        jdbcTemplate.execute("""
+                create table if not exists ratings (
+                    id bigint not null auto_increment,
+                    booking_id bigint not null,
+                    check_in_procedure_score int not null,
+                    check_out_procedure_score int not null,
+                    accommodation_cleanliness_score int not null,
+                    team_communication_score int not null,
+                    location_score int not null,
+                    comfort_score int not null,
+                    observations text null,
+                    evaluated_at datetime(6) not null,
+                    created_at datetime(6) not null,
+                    updated_at datetime(6) not null,
+                    primary key (id),
+                    constraint uk_ratings_booking unique (booking_id),
+                    constraint ck_ratings_check_in_procedure
+                        check (check_in_procedure_score between 1 and 5),
+                    constraint ck_ratings_check_out_procedure
+                        check (check_out_procedure_score between 1 and 5),
+                    constraint ck_ratings_accommodation_cleanliness
+                        check (accommodation_cleanliness_score between 1 and 5),
+                    constraint ck_ratings_team_communication
+                        check (team_communication_score between 1 and 5),
+                    constraint ck_ratings_location
+                        check (location_score between 1 and 5),
+                    constraint ck_ratings_comfort
+                        check (comfort_score between 1 and 5),
+                    constraint fk_ratings_booking
+                        foreign key (booking_id) references bookings(id)
+                )
+                """);
     }
 
     private void ensureAuditEventsTable() {
@@ -718,66 +765,143 @@ public class DatabaseSchemaCompatibilityRunner implements CommandLineRunner {
                 """);
     }
 
-    private void ensureGuestStatusColumn() {
-        Integer statusColumns = jdbcTemplate.queryForObject("""
-                select count(*)
-                from information_schema.columns
-                where table_schema = database()
-                  and table_name = 'guests'
-                  and column_name = 'status'
-                """, Integer.class);
+    void ensureGuestCareStorage() {
+        if (!tableExists("guests")) {
+            return;
+        }
 
-        if (statusColumns == null || statusColumns == 0) {
+        ensureGuestTextColumn("preferences_and_restrictions");
+        ensureGuestTextColumn("accessibility_needs");
+
+        if (tableExists("guest_preferences")) {
+            jdbcTemplate.execute("drop table guest_preferences");
+        }
+
+        dropGuestColumnIfPresent("travels_with_pets");
+        dropGuestColumnIfPresent("pet_type");
+        dropGuestColumnIfPresent("favorite_room");
+        dropGuestColumnIfPresent("needs_accessibility");
+    }
+
+    void removeObsoleteGuestReferralColumn() {
+        if (!tableExists("guests")) {
+            return;
+        }
+
+        dropGuestColumnIfPresent("referred_by");
+    }
+
+    private void ensureGuestTextColumn(String columnName) {
+        if (!columnExists("guests", columnName)) {
+            jdbcTemplate.execute("alter table guests add column "
+                    + sqlIdentifier(columnName) + " text null");
+        }
+    }
+
+    private void dropGuestColumnIfPresent(String columnName) {
+        if (columnExists("guests", columnName)) {
+            jdbcTemplate.execute("alter table guests drop column " + sqlIdentifier(columnName));
+        }
+    }
+
+    void ensureGuestStatusColumn() {
+        if (!tableExists("guests")) {
+            return;
+        }
+
+        if (!columnExists("guests", "status")) {
             jdbcTemplate.execute("""
                     alter table guests
-                    add column status enum('IN_BOOKING','IN_STAY','GOT_CHECKOUT') not null default 'IN_BOOKING'
+                    add column status enum(
+                        'WITH_UNCONFIRMED_BOOKING',
+                        'WITH_CONFIRMED_BOOKING',
+                        'IN_STAY',
+                        'INACTIVE'
+                    ) not null default 'INACTIVE'
                     """);
+            syncGuestStatusFromBookings();
+            return;
+        }
+
+        if (guestStatusColumnIsCompatible()) {
+            syncGuestStatusFromBookings();
             return;
         }
 
         jdbcTemplate.execute("""
                 alter table guests
-                modify column status enum('COM_RESERVA','EM_ESTADIA','COM_CHECK_OUT','IN_BOOKING','IN_STAY','GOT_CHECKOUT') not null default 'IN_BOOKING'
+                modify column status enum(
+                    'COM_RESERVA',
+                    'EM_ESTADIA',
+                    'COM_CHECK_OUT',
+                    'IN_BOOKING',
+                    'GOT_CHECKOUT',
+                    'WITH_UNCONFIRMED_BOOKING',
+                    'WITH_CONFIRMED_BOOKING',
+                    'IN_STAY',
+                    'INACTIVE'
+                ) not null default 'INACTIVE'
                 """);
 
-        jdbcTemplate.execute("""
-                update guests
-                set status = case status
-                    when 'COM_RESERVA' then 'IN_BOOKING'
-                    when 'EM_ESTADIA' then 'IN_STAY'
-                    when 'COM_CHECK_OUT' then 'GOT_CHECKOUT'
-                    else status
-                end
-                """);
+        syncGuestStatusFromBookings();
 
         jdbcTemplate.execute("""
                 alter table guests
-                modify column status enum('IN_BOOKING','IN_STAY','GOT_CHECKOUT') not null default 'IN_BOOKING'
+                modify column status enum(
+                    'WITH_UNCONFIRMED_BOOKING',
+                    'WITH_CONFIRMED_BOOKING',
+                    'IN_STAY',
+                    'INACTIVE'
+                ) not null default 'INACTIVE'
                 """);
     }
 
-    private void syncGuestStatusFromBookings() {
-        jdbcTemplate.execute("""
-                update guests guest
-                set guest.status = 'IN_STAY'
-                where exists (
-                    select 1
-                    from bookings booking
-                    where booking.guest_id = guest.id
-                      and booking.status = 'IN_STAY'
-                )
-                """);
+    private boolean guestStatusColumnIsCompatible() {
+        String guestStatusDefinition = jdbcTemplate.queryForObject("""
+                select concat(column_type, '|', is_nullable, '|', coalesce(column_default, ''))
+                from information_schema.columns
+                where table_schema = database()
+                  and table_name = ?
+                  and column_name = ?
+                """, String.class, "guests", "status");
+
+        String expectedGuestStatusDefinition =
+                "enum('WITH_UNCONFIRMED_BOOKING','WITH_CONFIRMED_BOOKING',"
+                        + "'IN_STAY','INACTIVE')|NO|INACTIVE";
+        return expectedGuestStatusDefinition.equalsIgnoreCase(guestStatusDefinition);
+    }
+
+    void syncGuestStatusFromBookings() {
+        if (!tableExists("bookings")
+                || !columnExists("bookings", "guest_id")
+                || !columnExists("bookings", "status")) {
+            jdbcTemplate.execute("update guests set status = 'INACTIVE'");
+            return;
+        }
 
         jdbcTemplate.execute("""
                 update guests guest
-                set guest.status = 'GOT_CHECKOUT'
-                where guest.status <> 'IN_STAY'
-                  and exists (
-                    select 1
-                    from bookings booking
-                    where booking.guest_id = guest.id
-                      and booking.status = 'FINISHED'
-                  )
+                set guest.status = case
+                    when exists (
+                        select 1
+                        from bookings booking
+                        where booking.guest_id = guest.id
+                          and booking.status = 'IN_STAY'
+                    ) then 'IN_STAY'
+                    when exists (
+                        select 1
+                        from bookings booking
+                        where booking.guest_id = guest.id
+                          and booking.status = 'CONFIRMED'
+                    ) then 'WITH_CONFIRMED_BOOKING'
+                    when exists (
+                        select 1
+                        from bookings booking
+                        where booking.guest_id = guest.id
+                          and booking.status = 'UNCONFIRMED'
+                    ) then 'WITH_UNCONFIRMED_BOOKING'
+                    else 'INACTIVE'
+                end
                 """);
     }
 
@@ -823,13 +947,108 @@ public class DatabaseSchemaCompatibilityRunner implements CommandLineRunner {
                 return null;
             });
         }
-        if (columnExists("check_outs", "booking_id")) {
-            Integer withoutBooking = jdbcTemplate.queryForObject(
-                    "select count(*) from check_outs where booking_id is null", Integer.class);
-            if (withoutBooking != null && withoutBooking == 0) {
-                jdbcTemplate.execute("alter table check_outs modify column booking_id bigint not null");
-            }
+    }
+
+    void ensureStayHistoryBookingLinksAreOptional() {
+        ensureOptionalBookingLink("check_ins", "fk_check_ins_booking");
+        ensureOptionalBookingLink("check_outs", "fk_check_outs_booking");
+    }
+
+    void ensureCheckOutGuestHistoryColumns() {
+        if (!tableExists("check_outs")) {
+            return;
         }
+
+        if (!columnExists("check_outs", "guest_history_applied")) {
+            jdbcTemplate.execute(
+                    "alter table check_outs add column guest_history_applied bit not null default 0"
+            );
+        }
+
+        jdbcTemplate.execute("""
+                update check_outs
+                set guest_history_applied = 1
+                where status = 'COMPLETED'
+                  and guest_history_applied = 0
+                """);
+    }
+
+    void removeObsoleteGenericRatingColumns() {
+        dropColumnIfExists("guests", "rating");
+        dropColumnIfExists("check_outs", "rating");
+    }
+
+    private void dropColumnIfExists(String tableName, String columnName) {
+        if (tableExists(tableName) && columnExists(tableName, columnName)) {
+            jdbcTemplate.execute(
+                    "alter table " + sqlIdentifier(tableName)
+                            + " drop column " + sqlIdentifier(columnName)
+            );
+        }
+    }
+
+    private void ensureOptionalBookingLink(String tableName, String replacementConstraintName) {
+        if (!tableExists("bookings")
+                || !tableExists(tableName)
+                || !columnExists(tableName, "booking_id")) {
+            return;
+        }
+
+        List<String> constraintNameList = foreignKeysForColumn(tableName, "booking_id");
+        boolean compatibleForeignKey = constraintNameList.size() == 1
+                && columnIsNullable(tableName, "booking_id")
+                && bookingForeignKeyUsesSetNull(tableName, "booking_id");
+        if (compatibleForeignKey) {
+            return;
+        }
+
+        for (String constraintName : constraintNameList) {
+            jdbcTemplate.execute("alter table " + sqlIdentifier(tableName)
+                    + " drop foreign key " + sqlIdentifier(constraintName));
+        }
+
+        jdbcTemplate.execute("alter table " + sqlIdentifier(tableName)
+                + " modify column booking_id bigint null");
+        jdbcTemplate.execute("alter table " + sqlIdentifier(tableName)
+                + " add constraint " + sqlIdentifier(replacementConstraintName)
+                + " foreign key (booking_id) references bookings(id) on delete set null");
+    }
+
+    private boolean columnIsNullable(String tableName, String columnName) {
+        String nullability = jdbcTemplate.queryForObject("""
+                select is_nullable
+                from information_schema.columns
+                where table_schema = database()
+                  and table_name = ?
+                  and column_name = ?
+                """, String.class, tableName, columnName);
+
+        return "YES".equalsIgnoreCase(nullability);
+    }
+
+    private boolean bookingForeignKeyUsesSetNull(String tableName, String columnName) {
+        Integer compatibleConstraintCount = jdbcTemplate.queryForObject("""
+                select count(*)
+                from information_schema.key_column_usage column_usage
+                join information_schema.referential_constraints referential_constraint
+                  on referential_constraint.constraint_schema = column_usage.constraint_schema
+                 and referential_constraint.constraint_name = column_usage.constraint_name
+                where column_usage.table_schema = database()
+                  and column_usage.table_name = ?
+                  and column_usage.column_name = ?
+                  and column_usage.referenced_table_name = 'bookings'
+                  and column_usage.referenced_column_name = 'id'
+                  and referential_constraint.delete_rule = 'SET NULL'
+                """, Integer.class, tableName, columnName);
+
+        return compatibleConstraintCount != null && compatibleConstraintCount == 1;
+    }
+
+    private String sqlIdentifier(String identifier) {
+        if (identifier == null || !identifier.matches("[A-Za-z0-9_$]+")) {
+            throw new IllegalArgumentException("Identificador SQL inválido");
+        }
+        return "`" + identifier + "`";
     }
 
     private List<String> foreignKeysForColumn(String table, String column) {
@@ -1013,15 +1232,6 @@ public class DatabaseSchemaCompatibilityRunner implements CommandLineRunner {
         }
     }
 
-    private void ensureFinancialTypeColumns() {
-        if (columnExists("financial_transactions", "type")) {
-            jdbcTemplate.execute("""
-                    alter table financial_transactions
-                    modify column type enum('ENTRY','EXPENSE','TRANSFER') not null
-                    """);
-        }
-    }
-
     private void ensureFinancialPartyColumns() {
         if (!columnExists("financial_transactions", "sender_type")) {
             jdbcTemplate.execute("""
@@ -1111,15 +1321,7 @@ public class DatabaseSchemaCompatibilityRunner implements CommandLineRunner {
                     """);
         }
 
-        if (columnExists("financial_transactions", "booking_id")) {
-            jdbcTemplate.execute("""
-                    update financial_transactions
-                    set source_type = 'BOOKING',
-                        source_id = booking_id
-                    where source_type is null
-                      and booking_id is not null
-                    """);
-        }
+        removeLegacyFinancialTransactionBookingLink();
 
         jdbcTemplate.execute("""
                 update financial_transactions transaction
@@ -1129,6 +1331,30 @@ public class DatabaseSchemaCompatibilityRunner implements CommandLineRunner {
                     transaction.source_id = booking.id
                 where transaction.source_type is null
                 """);
+    }
+
+    void removeLegacyFinancialTransactionBookingLink() {
+        if (columnExists("financial_transactions", "booking_id")) {
+            jdbcTemplate.execute("""
+                    update financial_transactions
+                    set source_type = 'BOOKING',
+                        source_id = booking_id
+                    where source_type is null
+                      and source_id is null
+                      and booking_id is not null
+                    """);
+
+            List<String> constraintNameList = foreignKeysForColumn(
+                    "financial_transactions",
+                    "booking_id"
+            );
+            for (String constraintName : constraintNameList) {
+                jdbcTemplate.execute("alter table `financial_transactions` drop foreign key "
+                        + sqlIdentifier(constraintName));
+            }
+
+            jdbcTemplate.execute("alter table `financial_transactions` drop column booking_id");
+        }
     }
 
     private void ensureLegacyFinancialCashierColumnsAreNullable() {
@@ -1146,28 +1372,105 @@ public class DatabaseSchemaCompatibilityRunner implements CommandLineRunner {
         }
     }
 
-    private void ensureFinancialAmountSigns() {
-        if (!columnExists("financial_transactions", "amount")
-                || !columnExists("financial_transactions", "entry_amount")
-                || !columnExists("financial_transactions", "expense_amount")
-                || !columnExists("financial_transactions", "type")) {
+    void migrateFinancialTransactionClassification() {
+        if (!tableExists("financial_transactions")) {
             return;
         }
 
-        jdbcTemplate.execute("""
-                update financial_transactions
-                set amount = abs(amount),
-                    entry_amount = abs(amount),
-                    expense_amount = 0
-                where type = 'ENTRY'
-                """);
+        if (columnExists("financial_transactions", "amount")) {
+            jdbcTemplate.execute("""
+                    update financial_transactions
+                    set amount = abs(amount)
+                    """);
+        }
+
+        dropColumnIfExists("financial_transactions", "entry_amount");
+        dropColumnIfExists("financial_transactions", "expense_amount");
+
+        if (!columnExists("financial_transactions", "type")) {
+            jdbcTemplate.execute("""
+                    alter table financial_transactions
+                    add column type varchar(50) not null default 'STANDARD'
+                    """);
+        }
 
         jdbcTemplate.execute("""
+                alter table financial_transactions
+                modify column type varchar(50) null
+                """);
+        jdbcTemplate.execute("""
                 update financial_transactions
-                set amount = -abs(amount),
-                    entry_amount = 0,
-                    expense_amount = abs(amount)
-                where type = 'EXPENSE'
+                set type = 'PLAN_DOWN_PAYMENT'
+                where type = 'PLAN_SIGNAL_TRANSACTIONAL'
+                """);
+        jdbcTemplate.execute("""
+                update financial_transactions
+                set type = 'PLAN_TRANSACTION'
+                where type = 'PLAN_TRANSACTIONAL'
+                """);
+        if (tableExists("installment_plan_transactions")) {
+            jdbcTemplate.execute("""
+                    update financial_transactions
+                    set type = 'INSTALLMENT_PLAN_BLOCK'
+                    where id in (
+                        select financial_transaction_id
+                        from installment_plan_transactions
+                    )
+                      and (
+                          type is null
+                          or type not in (
+                              'PLAN_DOWN_PAYMENT',
+                              'PLAN_CHECK_IN_PAYMENT',
+                              'PLAN_CHECK_OUT_PAYMENT',
+                              'PLAN_TRANSACTION',
+                              'INSTALLMENT_PLAN_BLOCK'
+                          )
+                      )
+                    """);
+        }
+        if (tableExists("installment_transactions")) {
+            jdbcTemplate.execute("""
+                    update financial_transactions
+                    set type = 'INSTALLMENT_TRANSACTION'
+                    where id in (
+                        select financial_transaction_id
+                        from installment_transactions
+                    )
+                    """);
+            if (columnExists("financial_transactions", "source_type")
+                    && columnExists("financial_transactions", "source_id")) {
+                jdbcTemplate.execute("""
+                        update financial_transactions
+                        set source_type = 'INSTALLMENT',
+                            source_id = (
+                                select installment_plan_id
+                                from installment_transactions
+                                where financial_transaction_id = financial_transactions.id
+                            )
+                        where id in (
+                            select financial_transaction_id
+                            from installment_transactions
+                        )
+                        """);
+            }
+        }
+        jdbcTemplate.execute("""
+                update financial_transactions
+                set type = 'STANDARD'
+                where type is null
+                   or type not in (
+                       'STANDARD',
+                       'PLAN_DOWN_PAYMENT',
+                       'PLAN_CHECK_IN_PAYMENT',
+                       'PLAN_CHECK_OUT_PAYMENT',
+                       'PLAN_TRANSACTION',
+                       'INSTALLMENT_PLAN_BLOCK',
+                       'INSTALLMENT_TRANSACTION'
+                   )
+                """);
+        jdbcTemplate.execute("""
+                alter table financial_transactions
+                modify column type varchar(50) not null default 'STANDARD'
                 """);
     }
 
@@ -1206,6 +1509,306 @@ public class DatabaseSchemaCompatibilityRunner implements CommandLineRunner {
 
             makeBigIntColumnNullable(tableName, "financial_transaction_id");
         }
+    }
+
+    void ensureCashierMovementTemporalColumns() {
+        ensureCashierMovementTemporalColumns("cashier_entries", "entry_date");
+        ensureCashierMovementTemporalColumns("cashier_expenses", "expense_date");
+    }
+
+    void ensureFinancialTransactionPlanSchema() {
+        jdbcTemplate.execute("""
+                create table if not exists financial_transaction_plans (
+                    id bigint not null auto_increment,
+                    sender_type enum('CASHIER','GUEST') not null,
+                    sender_id bigint not null,
+                    receiver_type enum('CASHIER','GUEST') not null,
+                    receiver_id bigint not null,
+                    source_type enum(
+                        'MANUAL','BOOKING','STAY','CHECK_IN','CHECK_OUT','GUEST'
+                    ) not null,
+                    source_id bigint not null,
+                    total_amount decimal(19,2) not null,
+                    status enum(
+                        'ACTIVE','PARTIALLY_SETTLED','OVERDUE','SETTLED','CANCELED'
+                    ) not null,
+                    plan_due_date date not null,
+                    plan_settlement_date date null,
+                    description varchar(500) not null,
+                    version bigint not null default 0,
+                    created_at datetime(6) not null,
+                    updated_at datetime(6) not null,
+                    primary key (id)
+                )
+                """);
+        if (!indexExists(
+                "financial_transaction_plans",
+                "idx_financial_transaction_plan_source"
+        )) {
+            jdbcTemplate.execute("""
+                    create index idx_financial_transaction_plan_source
+                    on financial_transaction_plans (source_type, source_id)
+                    """);
+        }
+        if (!tableExists("financial_transactions")) {
+            return;
+        }
+
+        jdbcTemplate.execute("""
+                alter table financial_transactions
+                modify column source_type enum(
+                    'MANUAL','BOOKING','STAY','CHECK_IN','CHECK_OUT',
+                    'PLAN','INSTALLMENT','GUEST'
+                ) null
+                """);
+        if (!columnExists("financial_transactions", "plan_component_order")) {
+            jdbcTemplate.execute("""
+                    alter table financial_transactions
+                    add column plan_component_order int null
+                    """);
+        }
+        if (!indexExists(
+                "financial_transactions",
+                "idx_financial_transaction_plan_membership"
+        )) {
+            jdbcTemplate.execute("""
+                    create index idx_financial_transaction_plan_membership
+                    on financial_transactions (
+                        source_type,
+                        source_id,
+                        due_date,
+                        plan_component_order
+                    )
+                    """);
+        }
+    }
+
+    void ensureFinancialCommandIdempotencySchema() {
+        jdbcTemplate.execute("""
+                create table if not exists financial_command_idempotency (
+                    id bigint not null auto_increment,
+                    operation varchar(60) not null,
+                    actor_reference varchar(180) not null,
+                    idempotency_key varchar(120) not null,
+                    status varchar(30) not null,
+                    booking_id bigint null,
+                    plan_id bigint null,
+                    financial_transaction_id bigint null,
+                    created_at datetime(6) not null,
+                    completed_at datetime(6) null,
+                    primary key (id),
+                    constraint uk_financial_command_idempotency_scope unique (
+                        operation,
+                        actor_reference,
+                        idempotency_key
+                    )
+                )
+                """);
+        if (!columnExists(
+                "financial_command_idempotency",
+                "financial_transaction_id"
+        )) {
+            jdbcTemplate.execute("""
+                    alter table financial_command_idempotency
+                    add column financial_transaction_id bigint null
+                    """);
+        }
+        if (!indexExists(
+                "financial_command_idempotency",
+                "idx_financial_command_idempotency_outcome"
+        )) {
+            jdbcTemplate.execute("""
+                    create index idx_financial_command_idempotency_outcome
+                    on financial_command_idempotency (
+                        booking_id,
+                        plan_id,
+                        financial_transaction_id
+                    )
+                    """);
+        }
+    }
+
+    void ensureNotifierSchema() {
+        jdbcTemplate.execute("""
+                create table if not exists notification_intents (
+                    id char(36) not null,
+                    source_system varchar(100) not null,
+                    external_event_id varchar(160) not null,
+                    idempotency_key varchar(200) not null,
+                    correlation_key varchar(200) null,
+                    notification_type varchar(100) not null,
+                    channel varchar(30) not null,
+                    delivery_profile_key varchar(100) not null,
+                    recipient varchar(320) null,
+                    subject varchar(255) null,
+                    text_body longtext null,
+                    html_body longtext null,
+                    status varchar(40) not null,
+                    attempt_count int not null,
+                    next_attempt_at datetime(6) null,
+                    lease_until datetime(6) null,
+                    provider_message_id varchar(255) null,
+                    last_error_category varchar(40) null,
+                    created_at datetime(6) not null,
+                    updated_at datetime(6) not null,
+                    accepted_at datetime(6) null,
+                    delivered_at datetime(6) null,
+                    failed_at datetime(6) null,
+                    retention_until datetime(6) not null,
+                    version bigint not null default 0,
+                    primary key (id),
+                    constraint uk_notification_intent_source_idempotency unique (
+                        source_system,
+                        idempotency_key
+                    ),
+                    constraint uk_notification_intent_provider_message unique (
+                        provider_message_id
+                    )
+                )
+                """);
+        jdbcTemplate.execute("""
+                create table if not exists notification_provider_events (
+                    id char(36) not null,
+                    notification_intent_id char(36) not null,
+                    transport_event_id varchar(255) not null,
+                    provider_event_id varchar(255) null,
+                    provider_message_id varchar(255) not null,
+                    event_type varchar(40) not null,
+                    bounce_type varchar(100) null,
+                    bounce_sub_type varchar(100) null,
+                    provider_status_code varchar(100) null,
+                    failure_category varchar(40) null,
+                    occurred_at datetime(6) not null,
+                    received_at datetime(6) not null,
+                    processed_at datetime(6) null,
+                    raw_event_storage_key varchar(512) null,
+                    primary key (id),
+                    constraint uk_notification_provider_event_transport unique (
+                        transport_event_id
+                    ),
+                    constraint uk_notification_provider_event_provider unique (
+                        provider_event_id
+                    ),
+                    constraint fk_notification_provider_event_intent foreign key (
+                        notification_intent_id
+                    ) references notification_intents(id)
+                )
+                """);
+        ensureNotifierIndex(
+                "notification_intents",
+                "idx_notification_intent_dispatch",
+                "status, next_attempt_at, lease_until"
+        );
+        ensureNotifierIndex(
+                "notification_intents",
+                "idx_notification_intent_retention",
+                "retention_until"
+        );
+        ensureNotifierIndex(
+                "notification_provider_events",
+                "idx_notification_provider_event_intent",
+                "notification_intent_id"
+        );
+        ensureNotifierIndex(
+                "notification_provider_events",
+                "idx_notification_provider_event_message",
+                "provider_message_id"
+        );
+        if (!indexExists(
+                "notification_intents",
+                "uk_notification_intent_source_idempotency"
+        )) {
+            jdbcTemplate.execute("""
+                    create unique index uk_notification_intent_source_idempotency
+                    on notification_intents (source_system, idempotency_key)
+                    """);
+        }
+        if (!indexExists(
+                "notification_intents",
+                "uk_notification_intent_provider_message"
+        )) {
+            jdbcTemplate.execute("""
+                    create unique index uk_notification_intent_provider_message
+                    on notification_intents (provider_message_id)
+                    """);
+        }
+        if (!indexExists(
+                "notification_provider_events",
+                "uk_notification_provider_event_transport"
+        )) {
+            jdbcTemplate.execute("""
+                    create unique index uk_notification_provider_event_transport
+                    on notification_provider_events (transport_event_id)
+                    """);
+        }
+        if (!indexExists(
+                "notification_provider_events",
+                "uk_notification_provider_event_provider"
+        )) {
+            jdbcTemplate.execute("""
+                    create unique index uk_notification_provider_event_provider
+                    on notification_provider_events (provider_event_id)
+                    """);
+        }
+        if (!foreignKeyExists(
+                "notification_provider_events",
+                "notification_intent_id"
+        )) {
+            jdbcTemplate.execute("""
+                    alter table notification_provider_events
+                    add constraint fk_notification_provider_event_intent
+                    foreign key (notification_intent_id)
+                    references notification_intents(id)
+                    """);
+        }
+    }
+
+    private void ensureNotifierIndex(
+            String tableName,
+            String indexName,
+            String columnExpression
+    ) {
+        if (!indexExists(tableName, indexName)) {
+            jdbcTemplate.execute(String.format(
+                    "create index %s on %s (%s)",
+                    indexName,
+                    tableName,
+                    columnExpression
+            ));
+        }
+    }
+
+    private void ensureCashierMovementTemporalColumns(
+            String tableName,
+            String legacyDateColumnName
+    ) {
+        if (!tableExists(tableName)) {
+            return;
+        }
+        if (!columnExists(tableName, "due_date")) {
+            jdbcTemplate.execute(String.format("""
+                    alter table %s
+                    add column due_date date null
+                    """, tableName));
+        }
+        if (columnExists(tableName, legacyDateColumnName)) {
+            jdbcTemplate.execute(String.format("""
+                    update %s
+                    set due_date = %s
+                    where due_date is null
+                    """, tableName, legacyDateColumnName));
+            dropColumnIfExists(tableName, legacyDateColumnName);
+        }
+        if (!columnExists(tableName, "settlement_date")) {
+            jdbcTemplate.execute(String.format("""
+                    alter table %s
+                    add column settlement_date date null
+                    """, tableName));
+        }
+        jdbcTemplate.execute(String.format("""
+                alter table %s
+                modify column due_date date not null
+                """, tableName));
     }
 
     private void ensureCashierOnWaitingColumn() {

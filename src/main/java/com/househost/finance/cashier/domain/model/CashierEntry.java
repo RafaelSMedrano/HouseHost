@@ -17,7 +17,9 @@ public class CashierEntry {
 
     private BigDecimal amount;
 
-    private LocalDate entryDate;
+    private LocalDate dueDate;
+
+    private LocalDate settlementDate;
 
     private String source;
 
@@ -32,15 +34,44 @@ public class CashierEntry {
     public CashierEntry() {
     }
 
-    public CashierEntry(Cashier cashier, String description, BigDecimal amount, LocalDate entryDate, String source, FinancialTransactionStatus status) {
-        this(cashier, description, amount, entryDate, source, status, null);
+    public CashierEntry(
+            Cashier cashier,
+            String description,
+            BigDecimal amount,
+            LocalDate dueDate,
+            String source,
+            FinancialTransactionStatus status
+    ) {
+        this(cashier, description, amount, dueDate, null, source, status, null);
     }
 
-    public CashierEntry(Cashier cashier, String description, BigDecimal amount, LocalDate entryDate, String source, FinancialTransactionStatus status, FinancialTransaction sourceTransaction) {
+    public CashierEntry(
+            Cashier cashier,
+            String description,
+            BigDecimal amount,
+            LocalDate dueDate,
+            String source,
+            FinancialTransactionStatus status,
+            FinancialTransaction sourceTransaction
+    ) {
+        this(cashier, description, amount, dueDate, null, source, status, sourceTransaction);
+    }
+
+    public CashierEntry(
+            Cashier cashier,
+            String description,
+            BigDecimal amount,
+            LocalDate dueDate,
+            LocalDate settlementDate,
+            String source,
+            FinancialTransactionStatus status,
+            FinancialTransaction sourceTransaction
+    ) {
         this.cashier = cashier;
         this.description = description;
         this.amount = normalizeEntryAmount(amount);
-        this.entryDate = entryDate;
+        this.dueDate = validateDueDate(dueDate);
+        this.settlementDate = settlementDate;
         this.source = source;
         this.sourceTransaction = sourceTransaction;
         this.status = status == null ? FinancialTransactionStatus.WAITING : status;
@@ -56,15 +87,30 @@ public class CashierEntry {
         updatedAt = LocalDateTime.now();
     }
 
-    public void updateEntry(Cashier cashier, String description, BigDecimal amount, LocalDate entryDate, String source, FinancialTransactionStatus status) {
-        updateEntry(cashier, description, amount, entryDate, source, status, sourceTransaction);
+    public void updateEntry(
+            Cashier cashier,
+            String description,
+            BigDecimal amount,
+            LocalDate dueDate,
+            String source,
+            FinancialTransactionStatus status
+    ) {
+        updateEntry(cashier, description, amount, dueDate, source, status, sourceTransaction);
     }
 
-    public void updateEntry(Cashier cashier, String description, BigDecimal amount, LocalDate entryDate, String source, FinancialTransactionStatus status, FinancialTransaction sourceTransaction) {
+    public void updateEntry(
+            Cashier cashier,
+            String description,
+            BigDecimal amount,
+            LocalDate dueDate,
+            String source,
+            FinancialTransactionStatus status,
+            FinancialTransaction sourceTransaction
+    ) {
         this.cashier = cashier;
         this.description = description;
         this.amount = normalizeEntryAmount(amount);
-        this.entryDate = entryDate;
+        this.dueDate = validateDueDate(dueDate);
         this.source = source;
         this.sourceTransaction = sourceTransaction;
         this.status = status == null ? FinancialTransactionStatus.WAITING : status;
@@ -72,6 +118,18 @@ public class CashierEntry {
 
     public void setStatus(FinancialTransactionStatus status) {
         this.status = status == null ? FinancialTransactionStatus.WAITING : status;
+    }
+
+    public void settle(LocalDate settlementDate) {
+        if (status == FinancialTransactionStatus.SETTLED) {
+            return;
+        }
+        if (settlementDate == null) {
+            throw new IllegalArgumentException("Data real da entrada e obrigatoria na liquidacao.");
+        }
+
+        status = FinancialTransactionStatus.SETTLED;
+        this.settlementDate = settlementDate;
     }
 
     public void restorePersistenceState(Long id, LocalDateTime createdAt, LocalDateTime updatedAt) {
@@ -96,8 +154,12 @@ public class CashierEntry {
         return amount;
     }
 
-    public LocalDate getEntryDate() {
-        return entryDate;
+    public LocalDate getDueDate() {
+        return dueDate;
+    }
+
+    public LocalDate getSettlementDate() {
+        return settlementDate;
     }
 
     public String getSource() {
@@ -126,5 +188,13 @@ public class CashierEntry {
         }
 
         return amount;
+    }
+
+    private static LocalDate validateDueDate(LocalDate dueDate) {
+        if (dueDate == null) {
+            throw new IllegalArgumentException("Data prevista da entrada e obrigatoria.");
+        }
+
+        return dueDate;
     }
 }

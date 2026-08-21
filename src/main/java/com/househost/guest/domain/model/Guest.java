@@ -30,17 +30,9 @@ public class Guest {
 
     private GuestType guestType = GuestType.REGULAR;
 
-    private GuestStatus status = GuestStatus.IN_BOOKING;
+    private GuestStatus status = GuestStatus.INACTIVE;
 
     private GuestFinancialStatus financialStatus = GuestFinancialStatus.PAYMENT_SETTLED;
-
-    private boolean travelsWithPets;
-
-    private String petType;
-
-    private boolean needsAccessibility;
-
-    private String favoriteRoom;
 
     private Integer stayCount;
 
@@ -48,17 +40,15 @@ public class Guest {
 
     private LocalDate lastStayDate;
 
-    private Integer rating;
-
     private String originChannel;
-
-    private String referredBy;
 
     private String notes;
 
-    private List<String> preferences = new ArrayList<>();
+    private String preferencesAndRestrictions;
 
-    private List<Long> financialTransactionIds = new ArrayList<>();
+    private String accessibilityNeeds;
+
+    private List<Long> financialTransactionIdList = new ArrayList<>();
 
     private LocalDateTime createdAt;
 
@@ -114,19 +104,10 @@ public class Guest {
             LocalDate birthDate,
             String gender,
             GuestType guestType,
-            GuestStatus status,
-            boolean travelsWithPets,
-            String petType,
-            boolean needsAccessibility,
-            String favoriteRoom,
-            Integer stayCount,
-            BigDecimal totalSpent,
-            LocalDate lastStayDate,
-            Integer rating,
             String originChannel,
-            String referredBy,
             String notes,
-            List<String> preferences
+            String preferencesAndRestrictions,
+            String accessibilityNeeds
     ) {
         this.fullName = fullName;
         this.email = email;
@@ -138,26 +119,39 @@ public class Guest {
         this.birthDate = birthDate;
         this.gender = gender;
         this.guestType = guestType == null ? GuestType.REGULAR : guestType;
-        this.status = status == null ? GuestStatus.IN_BOOKING : status;
-        this.travelsWithPets = travelsWithPets;
-        this.petType = petType;
-        this.needsAccessibility = needsAccessibility;
-        this.favoriteRoom = favoriteRoom;
+        this.originChannel = originChannel;
+        this.notes = notes;
+        this.preferencesAndRestrictions = preferencesAndRestrictions;
+        this.accessibilityNeeds = accessibilityNeeds;
+    }
+
+    public void restoreOperationalState(
+            GuestStatus status,
+            Integer stayCount,
+            BigDecimal totalSpent,
+            LocalDate lastStayDate
+    ) {
+        this.status = status == null ? GuestStatus.INACTIVE : status;
         this.stayCount = stayCount;
         this.totalSpent = totalSpent;
         this.lastStayDate = lastStayDate;
-        this.rating = rating;
-        this.originChannel = originChannel;
-        this.referredBy = referredBy;
-        this.notes = notes;
-        this.preferences.clear();
-        if (preferences != null) {
-            this.preferences.addAll(preferences);
-        }
     }
 
-    public void changeStatus(GuestStatus status) {
-        this.status = status == null ? GuestStatus.IN_BOOKING : status;
+    public void setStatus(GuestStatus status) {
+        this.status = status == null ? GuestStatus.INACTIVE : status;
+    }
+
+    public void applyCompletedStay(
+            LocalDate completedStayDate,
+            BigDecimal finalizedStayAmount
+    ) {
+        stayCount = stayCount == null ? 1 : stayCount + 1;
+        BigDecimal currentTotalSpent = totalSpent == null ? BigDecimal.ZERO : totalSpent;
+        BigDecimal amountToAdd = finalizedStayAmount == null
+                ? BigDecimal.ZERO
+                : finalizedStayAmount.max(BigDecimal.ZERO);
+        totalSpent = currentTotalSpent.add(amountToAdd);
+        lastStayDate = completedStayDate;
     }
 
     public void changeFinancialStatus(GuestFinancialStatus financialStatus) {
@@ -222,22 +216,6 @@ public class Guest {
         return financialStatus;
     }
 
-    public boolean isTravelsWithPets() {
-        return travelsWithPets;
-    }
-
-    public String getPetType() {
-        return petType;
-    }
-
-    public boolean isNeedsAccessibility() {
-        return needsAccessibility;
-    }
-
-    public String getFavoriteRoom() {
-        return favoriteRoom;
-    }
-
     public Integer getStayCount() {
         return stayCount;
     }
@@ -250,44 +228,41 @@ public class Guest {
         return lastStayDate;
     }
 
-    public Integer getRating() {
-        return rating;
-    }
-
     public String getOriginChannel() {
         return originChannel;
-    }
-
-    public String getReferredBy() {
-        return referredBy;
     }
 
     public String getNotes() {
         return notes;
     }
 
-    public List<String> getPreferences() {
-        return preferences;
+    public String getPreferencesAndRestrictions() {
+        return preferencesAndRestrictions;
+    }
+
+    public String getAccessibilityNeeds() {
+        return accessibilityNeeds;
     }
 
     public List<Long> getFinancialTransactionIds() {
-        return List.copyOf(financialTransactionIds);
+        return List.copyOf(financialTransactionIdList);
     }
 
     public void addFinancialTransactionId(Long financialTransactionId) {
-        if (financialTransactionId != null && !financialTransactionIds.contains(financialTransactionId)) {
-            financialTransactionIds.add(financialTransactionId);
+        if (financialTransactionId != null
+                && !financialTransactionIdList.contains(financialTransactionId)) {
+            financialTransactionIdList.add(financialTransactionId);
         }
     }
 
     public void removeFinancialTransactionId(Long financialTransactionId) {
-        financialTransactionIds.remove(financialTransactionId);
+        financialTransactionIdList.remove(financialTransactionId);
     }
 
     public void restorePersistenceState(
             Long id,
             GuestFinancialStatus financialStatus,
-            List<Long> financialTransactionIds,
+            List<Long> financialTransactionIdList,
             LocalDateTime createdAt,
             LocalDateTime updatedAt
     ) {
@@ -295,9 +270,9 @@ public class Guest {
         this.financialStatus = financialStatus == null
                 ? GuestFinancialStatus.PAYMENT_SETTLED
                 : financialStatus;
-        this.financialTransactionIds.clear();
-        if (financialTransactionIds != null) {
-            this.financialTransactionIds.addAll(financialTransactionIds);
+        this.financialTransactionIdList.clear();
+        if (financialTransactionIdList != null) {
+            this.financialTransactionIdList.addAll(financialTransactionIdList);
         }
         this.createdAt = createdAt;
         this.updatedAt = updatedAt;
