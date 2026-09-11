@@ -4,7 +4,7 @@
 
 ## Resumo
 
-O HouseHost é um sistema para gestão operacional, financeira e de privacidade de pousadas, casas de temporada, pequenos hotéis e hospedagens independentes. A aplicação centraliza hóspedes, acomodações, reservas, check-in, check-out, caixa, transações financeiras, parcelamentos, métricas, usuários, fornecedores, auditoria e governança LGPD em uma API REST construída com Java e Spring Boot.
+O HouseHost é um sistema para gestão operacional, financeira e de privacidade de pousadas, casas de temporada, pequenos hotéis e hospedagens independentes. A aplicação centraliza hóspedes, acomodações, reservas, check-in, check-out, caixa, transações financeiras, parcelamentos, métricas, usuários, fornecedores, notificações transacionais, auditoria e governança LGPD em uma API REST construída com Java e Spring Boot.
 
 O backend segue arquitetura hexagonal dentro de um monólito modular. Cada contexto separa domínio, casos de uso, portas e adaptadores. Regras de negócio não ficam presas a controllers, JPA, JWT ou ao frontend, permitindo que novas interfaces consumam a mesma aplicação sem duplicar o núcleo funcional.
 
@@ -19,6 +19,7 @@ Na prática, o HouseHost oferece uma estrutura para:
 - autenticar usuários com senha protegida e token JWT;
 - autorizar operações de acordo com o perfil do usuário;
 - receber reservas originadas de um site público;
+- criar notificações transacionais idempotentes, enviá-las pelo Amazon SES e acompanhar seus resultados pelo Amazon SNS;
 - manter inventário das operações de tratamento de dados pessoais;
 - avaliar, revisar, aprovar e versionar bases legais;
 - criar, publicar e disponibilizar versões verificáveis da política de privacidade;
@@ -68,10 +69,12 @@ Na prática, o HouseHost oferece uma estrutura para:
   - [5.8. Auditoria](#58-auditoria)
   - [5.9. Privacidade](#59-privacidade)
   - [5.10. Fornecedores](#510-fornecedores)
+  - [5.11. Notificações](#511-notificações)
 - [6. API REST](#6-api-rest)
   - [6.1. Endpoints públicos](#61-endpoints-públicos)
-  - [6.2. Endpoints administrativos](#62-endpoints-administrativos)
-  - [6.3. Perfis de acesso](#63-perfis-de-acesso)
+  - [6.2. Endpoint de integração SNS](#62-endpoint-de-integração-sns)
+  - [6.3. Endpoints administrativos](#63-endpoints-administrativos)
+  - [6.4. Perfis de acesso](#64-perfis-de-acesso)
 - [7. LGPD e privacidade por construção](#7-lgpd-e-privacidade-por-construção)
   - [7.1. Inventário das operações de tratamento](#71-inventário-das-operações-de-tratamento)
   - [7.2. Avaliação e versionamento das bases legais](#72-avaliação-e-versionamento-das-bases-legais)
@@ -123,6 +126,7 @@ O sistema cobre:
 - caixas, entradas e despesas;
 - métricas para o painel;
 - fornecedores e relações de tratamento;
+- notificações transacionais por e-mail, com envio, repetição controlada e feedback do provedor;
 - eventos de auditoria;
 - inventário de tratamentos e avaliação das bases legais.
 
@@ -217,6 +221,7 @@ src/main/java/com/househost
 │   └── financialtransaction/    transações e parcelas
 ├── guest/                       hóspedes
 ├── metrics/                     indicadores
+├── notifier/                    notificações transacionais e feedback de entrega
 ├── privacy/                     governança LGPD
 ├── publicapi/                   reservas públicas
 ├── room/                        acomodações
@@ -590,6 +595,31 @@ Reservas bloqueiam disponibilidade conforme seu status. Os casos de uso registra
 
 `supplier` registra fornecedores e suas relações de tratamento de dados. O domínio acompanha papel LGPD, finalidade, localização, transferência internacional, retenção, eliminação, segurança, incidentes, suboperadores, contrato, risco, revisão e destino dos dados ao final da relação.
 
+### 5.11. Notificações
+
+`notifier` é o módulo reutilizável de notificações transacionais. Ele recebe solicitações independentes do provedor, persiste uma fotografia imutável do destinatário, assunto e corpos do e-mail, realiza o envio pelo Amazon SES e processa os retornos assíncronos do provedor recebidos pelo Amazon SNS. O módulo não consulta reservas, hóspedes ou outros domínios durante o envio e não mantém chaves estrangeiras para entidades desses consumidores.
+
+Cada solicitação gera uma `NotificationIntent` para um único destinatário. A combinação de sistema de origem e chave de idempotência impede que a mesma solicitação crie mensagens duplicadas. Um agendador reivindica em lotes as intenções elegíveis, aplica lease de processamento e executa fora da transação de claim a chamada ao SES. Falhas ocorridas antes da aceitação pelo provedor podem usar repetição automática limitada, com backoff exponencial e jitter.
+
+```text
+Aplicação consumidora
+  -> solicitação de notificação
+  -> PENDING
+  -> PROCESSING
+  -> Amazon SES
+       | aceitou: ACCEPTED
+       | falha temporária: RETRYABLE_FAILURE -> nova tentativa
+       | falha permanente ou limite atingido: EXHAUSTED
+  -> Amazon SNS
+       | entrega: DELIVERED
+       | devolução: BOUNCED
+       | denúncia de spam: COMPLAINT
+```
+
+`ACCEPTED` significa somente que o SES aceitou a solicitação de envio; a entrega ao servidor de destino é registrada posteriormente como `DELIVERED`. Eventos de bounce, complaint, reject, falha de renderização e atraso de entrega são normalizados e correlacionados pelo `messageId` retornado pelo SES. Eventos duplicados são processados de maneira idempotente, e eventos fora de ordem não desfazem um estado mais recente.
+
+O banco mantém o evento normalizado e minimizado, sem persistir o envelope SNS completo, sua assinatura, os cabeçalhos integrais do e-mail ou o payload SES bruto. Destinatário, assunto e corpos são tratados como dados pessoais, possuem retenção configurável e não devem aparecer em logs operacionais.
+
 ## 6. API REST
 
 ### 6.1. Endpoints públicos
@@ -632,7 +662,15 @@ Exemplo resumido de reserva:
 }
 ```
 
-### 6.2. Endpoints administrativos
+### 6.2. Endpoint de integração SNS
+
+| Método | Endpoint | Função |
+| --- | --- | --- |
+| `POST` | `/notifier/provider-feedback/sns` | Recebe confirmações de assinatura e feedback do SES publicado pelo SNS. |
+
+Esse endpoint não pertence à API pública de reservas e não utiliza JWT de usuário. Quando a integração está habilitada, ele exige transporte seguro conforme a configuração, limita o tamanho da requisição, autentica a assinatura criptográfica do SNS, exige o `TopicArn` configurado e compara o tipo do cabeçalho HTTP com o envelope assinado antes de processar o evento SES. A confirmação automática da assinatura SNS é opcional e valida a URL de confirmação antes de acessá-la.
+
+### 6.3. Endpoints administrativos
 
 | Grupo | Prefixo principal |
 | --- | --- |
@@ -651,7 +689,7 @@ Exemplo resumido de reserva:
 | Políticas de privacidade | `/privacy-policies/**` |
 | Fornecedores | `/suppliers/**` |
 
-### 6.3. Perfis de acesso
+### 6.4. Perfis de acesso
 
 Os perfis reconhecidos são `CEO`, `CTO`, `ADMIN`, `MANAGER`, `RECEPTION` e `HOUSEKEEPING`.
 
@@ -935,6 +973,7 @@ A suíte automatizada cobre:
 - Spring Security;
 - Spring Security Crypto;
 - JJWT 0.13;
+- AWS SDK for Java 2, Amazon SES e Amazon SNS;
 - MySQL;
 - Maven Wrapper;
 - JUnit 5, AssertJ, Mockito e Spring Security Test.
@@ -976,6 +1015,33 @@ HOUSEHOST_LOGIN_LIMIT_HMAC_SECRET=segredo_aleatorio_exclusivo
 ```
 
 As janelas, limites, bloqueios e retenção da proteção de login também podem ser configurados no mesmo arquivo.
+
+O Notifier permanece desativado por padrão. Para ativá-lo em produção, configure credenciais pela cadeia padrão da AWS e defina, no mínimo, as opções compatíveis com o ambiente:
+
+```properties
+HOUSEHOST_NOTIFIER_DISPATCH_ENABLED=true
+HOUSEHOST_NOTIFIER_SES_ENABLED=true
+HOUSEHOST_NOTIFIER_HOUSEHOST_TRANSACTIONAL_ENABLED=true
+HOUSEHOST_NOTIFIER_HOUSEHOST_TRANSACTIONAL_REGION=us-east-1
+HOUSEHOST_NOTIFIER_HOUSEHOST_TRANSACTIONAL_SENDER=no-reply@example.com
+HOUSEHOST_NOTIFIER_HOUSEHOST_TRANSACTIONAL_CONFIGURATION_SET=househost-events
+HOUSEHOST_NOTIFIER_HOUSEHOST_TRANSACTIONAL_SOURCE_SYSTEMS=househost
+HOUSEHOST_NOTIFIER_SNS_ENABLED=true
+HOUSEHOST_NOTIFIER_SNS_TOPIC_ARN=arn:aws:sns:us-east-1:123456789012:househost-events
+HOUSEHOST_NOTIFIER_SNS_REGION=us-east-1
+```
+
+Essas opções ativam a infraestrutura do Notifier. Para que a reserva pública atualmente implementada também crie as notificações destinadas à hospedagem, habilite seu adaptador e informe o destinatário e os dados usados na apresentação do e-mail:
+
+```properties
+HOUSEHOST_PUBLIC_BOOKING_NOTIFICATION_ENABLED=true
+HOUSEHOST_PUBLIC_BOOKING_MANAGEMENT_RECIPIENT=reservas@example.com
+HOUSEHOST_PUBLIC_BOOKING_SITE_URL=https://example.com
+HOUSEHOST_PUBLIC_BOOKING_EMAIL_ASSET_BASE_URL=https://example.com/assets/email
+HOUSEHOST_PUBLIC_BOOKING_LODGING_WHATSAPP=5535999999999
+```
+
+Região, remetente verificado, Configuration Set e tópico devem pertencer ao ambiente AWS utilizado. O Configuration Set do SES deve publicar seus eventos no tópico SNS informado. Limites de lote, lease, tentativas, backoff, retenção, tamanho do payload SNS, obrigatoriedade de HTTPS e confirmação automática de assinatura também possuem variáveis `HOUSEHOST_NOTIFIER_*` com valores padrão definidos em `application.properties`.
 
 ### 9.3. Inicialização do backend
 
